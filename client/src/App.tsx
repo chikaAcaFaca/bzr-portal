@@ -15,6 +15,7 @@ import RiskCategories from "./pages/risk-categories";
 import SafetyMeasures from "./pages/safety-measures";
 import EmployeeTraining from "./pages/employee-training";
 import Reports from "./pages/reports";
+import DocumentProcessor from "./pages/document-processor";
 import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
             <Route path="/safety-measures" component={SafetyMeasures} />
             <Route path="/employee-training" component={EmployeeTraining} />
             <Route path="/reports" component={Reports} />
+            <Route path="/document-processor" component={DocumentProcessor} />
             <Route component={NotFound} />
           </Switch>
         </main>
