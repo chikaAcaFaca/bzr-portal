@@ -297,7 +297,7 @@ export function DocumentProcessorUploadForm() {
                       </Button>
                     </div>
                   </AlertDescription>
-                </Alert>
+                </div>
               )}
             </div>
           )}
