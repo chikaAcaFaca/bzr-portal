@@ -15,6 +15,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { setupDocumentProcessingRoutes } from "./routes/document-processing";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -813,6 +814,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch statistics' });
     }
   });
+
+  // Register document processing routes
+  await setupDocumentProcessingRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

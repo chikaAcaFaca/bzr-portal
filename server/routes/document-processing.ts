@@ -11,7 +11,7 @@ import {
 } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 
-export async function setupDocumentProcessingRoutes(app) {
+export async function setupDocumentProcessingRoutes(app: any) {
   // Endpoint za procesiranje dokumenta o sistematizaciji radnih mesta
   app.post('/api/process/job-positions', async (req: Request, res: Response) => {
     try {

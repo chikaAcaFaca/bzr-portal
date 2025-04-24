@@ -140,11 +140,11 @@ export class OpenRouterService {
         success: true,
         data: jsonResponse
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error parsing job position document:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred'
       };
     }
   }
@@ -193,11 +193,11 @@ export class OpenRouterService {
         success: true,
         data: jsonResponse
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error parsing employee document:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred'
       };
     }
   }
@@ -246,11 +246,11 @@ export class OpenRouterService {
         success: true,
         data: jsonResponse
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error parsing job description document:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred'
       };
     }
   }
