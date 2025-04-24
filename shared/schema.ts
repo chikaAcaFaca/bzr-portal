@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -7,52 +7,63 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  fullName: text("full_name").notNull(),
-  email: text("email").notNull(),
-  role: text("role").notNull().default("user"),
+  email: text("email"),
+  fullName: text("full_name"),
+  role: text("role").notNull().default("user"), // admin, user
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
-  fullName: true,
   email: true,
+  fullName: true,
   role: true,
+  isActive: true,
 });
 
-// Base Documents
+// Basic Documents
 export const baseDocuments = pgTable("base_documents", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  fileName: text("file_name").notNull(),
-  fileType: text("file_type").notNull(),
-  fileSize: integer("file_size").notNull(),
-  uploadDate: timestamp("upload_date").notNull().defaultNow(),
-  category: text("category").notNull(),
+  documentType: text("document_type").notNull(), // act, rulebook, instruction, law, etc.
+  content: text("content"), // Actual document content
+  fileUrl: text("file_url"), // Link to the document file if stored elsewhere
+  version: text("version").notNull().default("1.0"),
+  effectiveDate: timestamp("effective_date"),
+  expirationDate: timestamp("expiration_date"),
+  status: text("status").notNull().default("active"), // draft, active, archived, expired
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertBaseDocumentSchema = createInsertSchema(baseDocuments).pick({
   title: true,
   description: true,
-  fileName: true,
-  fileType: true,
-  fileSize: true,
-  category: true,
+  documentType: true,
+  content: true,
+  fileUrl: true,
+  version: true,
+  effectiveDate: true,
+  expirationDate: true,
+  status: true,
 });
 
-// Define risk level enum
+// Risk Levels for Job Positions
 export const riskLevelEnum = pgEnum('risk_level', ['nisko', 'srednje', 'visoko']);
 
-// Define position type enum
+// Position Types for Job Positions
 export const positionTypeEnum = pgEnum('position_type', ['direktori', 'rukovodioci', 'administrativni', 'radnici', 'vozaci', 'tehnicko_osoblje']);
 
-// Job Positions (without employee names)
+// Job Positions from Systematization
 export const jobPositions = pgTable("job_positions", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
-  department: text("department").notNull(),
-  description: text("description"),
+  department: text("department"),
+  description: text("description").notNull(),
   requiredSkills: text("required_skills").array(),
   responsibilities: text("responsibilities").array(),
   isActive: boolean("is_active").notNull().default(true),
@@ -80,9 +91,19 @@ export const employees = pgTable("employees", {
   lastName: text("last_name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  personalIdNumber: text("personal_id_number"), // JMBG
+  identificationNumber: text("identification_number"), // Broj lične karte
+  // Adresa
+  street: text("street"),
+  streetNumber: text("street_number"),
+  city: text("city"),
+  postalCode: text("postal_code"),
+  country: text("country").default("Srbija"),
+  // Podaci o zaposlenju
   jobPositionId: integer("job_position_id").notNull(),
   hireDate: timestamp("hire_date").notNull().defaultNow(),
   isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
 });
 
 export const insertEmployeeSchema = createInsertSchema(employees).pick({
@@ -90,9 +111,17 @@ export const insertEmployeeSchema = createInsertSchema(employees).pick({
   lastName: true,
   email: true,
   phone: true,
+  personalIdNumber: true,
+  identificationNumber: true,
+  street: true,
+  streetNumber: true,
+  city: true,
+  postalCode: true,
+  country: true,
   jobPositionId: true,
   hireDate: true,
   isActive: true,
+  notes: true,
 });
 
 // Job Descriptions
