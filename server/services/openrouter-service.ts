@@ -305,11 +305,11 @@ export class OpenRouterService {
         success: true,
         data: jsonResponse
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating risk categories:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred'
       };
     }
   }
@@ -364,11 +364,11 @@ export class OpenRouterService {
         success: true,
         data: jsonResponse
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating risks and measures:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred'
       };
     }
   }

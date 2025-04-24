@@ -10,19 +10,21 @@ type NavItemProps = {
 
 const NavItem = ({ href, icon, label, active }: NavItemProps) => {
   return (
-    <Link href={href}>
-      <a
-        className={cn(
-          "block py-2 px-4 rounded flex items-center gap-2",
-          active
-            ? "bg-primary-600 text-white"
-            : "hover:bg-gray-700 text-gray-300"
-        )}
-      >
-        <i className={`${icon} w-5`}></i>
-        <span>{label}</span>
-      </a>
-    </Link>
+    <div>
+      <Link href={href}>
+        <div
+          className={cn(
+            "block py-2 px-4 rounded flex items-center gap-2 cursor-pointer",
+            active
+              ? "bg-primary-600 text-white"
+              : "hover:bg-gray-700 text-gray-300"
+          )}
+        >
+          <i className={`${icon} w-5`}></i>
+          <span>{label}</span>
+        </div>
+      </Link>
+    </div>
   );
 };
 
@@ -71,6 +73,12 @@ export default function Sidebar() {
             />
 
             <NavSection title="Dokumentacija">
+              <NavItem
+                href="/document-processor"
+                icon="fas fa-brain"
+                label="AI Procesor"
+                active={location === "/document-processor"}
+              />
               <NavItem
                 href="/base-documents"
                 icon="fas fa-file"
