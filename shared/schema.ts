@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -41,6 +41,12 @@ export const insertBaseDocumentSchema = createInsertSchema(baseDocuments).pick({
   category: true,
 });
 
+// Define risk level enum
+export const riskLevelEnum = pgEnum('risk_level', ['nisko', 'srednje', 'visoko']);
+
+// Define position type enum
+export const positionTypeEnum = pgEnum('position_type', ['direktori', 'rukovodioci', 'administrativni', 'radnici', 'vozaci', 'tehnicko_osoblje']);
+
 // Job Positions (without employee names)
 export const jobPositions = pgTable("job_positions", {
   id: serial("id").primaryKey(),
@@ -50,6 +56,9 @@ export const jobPositions = pgTable("job_positions", {
   requiredSkills: text("required_skills").array(),
   responsibilities: text("responsibilities").array(),
   isActive: boolean("is_active").notNull().default(true),
+  positionType: positionTypeEnum("position_type"),
+  riskLevel: riskLevelEnum("risk_level"),
+  coefficient: integer("coefficient"), // For sorting by importance 
 });
 
 export const insertJobPositionSchema = createInsertSchema(jobPositions).pick({
@@ -59,6 +68,9 @@ export const insertJobPositionSchema = createInsertSchema(jobPositions).pick({
   requiredSkills: true,
   responsibilities: true,
   isActive: true,
+  positionType: true,
+  riskLevel: true,
+  coefficient: true,
 });
 
 // Employees on Job Positions
