@@ -1,0 +1,17 @@
+želim da napravim aplikaciju web based za pracenje promena u bezbednosti i zdravlju na radu. ona sadrži nekoliko segmenata, dokumenti na osovu kojih se kreiraju ostala dokumenta. sistematizacija radnih mesta bez imena, sistematizacija radnih mesta sa imenima, opisi poslova za svako radno mesto. na osnovu ovih podataka se prave 2 tabele jedna za potrebe klasifikovanja rizika na radnom mestu bez imena ista ili slična radna mesta se grupisu i daju uputstva za bezbedan i zdrav rad. onda se kreira posebna tabela koja sadrži ova uputstva kako bi kasnije mogla da se koristi za popunjavanje obrasca 6. pozivom imena iz sistematizacije program nam kaže na koje mesto je zaposleni raspoređen povlači opise poslova za to radno mesto i popunjava sva polja u obrascu 6. ovo je oblik obrasca 6 potrebno  je popuniti  nazif firme i njene podatke, u delu slučaj odnosno razlog izvršenog osposobljavanja zaposlenog za bezbedan i zdrav rad  bira se iz padajućeg menija jedna od 7 opcija :
+1	01 - приликом заснивања радног односа, односно другог радног ангажовања;							
+2	02 - услед премештаја на друге послове;							
+3	03 - приликом увођења нове технологије;							
+4	04 - приликом увођења нових средстава за рад;							
+5	05 - приликом промене процеса рада;							
+6	06 - ако послодавац одреди запосленом да истовремено обавља послове на два или више радних места;							
+7	07 - ако код послодавца (на основу уговора, споразума или по било ком другом основу) рад обављају запослени код другог послодавца;							
+
+
+8	08 - услед периодичне провере оспособљености запослених.			
+Ризици са којима је запослени упознат приликом оспособљавања за безбедан и здрав рад	
+se popunjavaju iz tabele kategorija i rizika za kategoriju kojoj pripada zaposleni. 
+Конкретне мере за безбедан и здрав рад на том радном месту	
+popunjava se iz kategorije za to radno mesto. jedna kategorija može biti zajednička za više radnih mesta, više radnika može biti na istom radnom mestu.
+Обавештења, упутства или инструкције са којима је запослени упознат ради обављања процеса рада на безбедан начин	
+ovo je u principu zajedničko za sva radna mesta i ovde se unose sva obaveštenja i uputstva i instrukcije sa kojima je zaposleni upoznat radi obavljanja procesa rada na bezbedan način. napravi mi predlog aplikacije koja bi mogla da hendluje ovo znači da sama kreira potrebne tabele na osnovu dokumenata koje joj dostavimo. i naravno zakona o bezbednosti i zdravlju na radu https://www.paragraf.rs/propisi/zakon_o_bezbednosti_i_zdravlju_na_radu.html				 
