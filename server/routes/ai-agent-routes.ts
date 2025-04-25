@@ -82,3 +82,30 @@ export async function setupAIAgentRoutes(app: any) {
     }
   });
 }
+  app.get('/api/agent/faq', async (req: Request, res: Response) => {
+    try {
+      // Ovde možete implementirati učitavanje FAQ iz baze podataka
+      const faqItems = [
+        {
+          question: "Šta su osnovne obaveze poslodavca prema Zakonu o BZR?",
+          answer: "Prema aktuelnom Zakonu o bezbednosti i zdravlju na radu, poslodavac je dužan da obezbedi bezbedan rad na svim radnim mestima, sprovodi mere BZR, i vrši osposobljavanje zaposlenih za bezbedan rad."
+        },
+        {
+          question: "Kada je obavezna procena rizika?",
+          answer: "Procena rizika je obavezna za sva radna mesta u radnoj okolini i mora se ažurirati u slučaju pojave nove opasnosti i promene nivoa rizika."
+        }
+        // Dodajte više FAQ stavki prema potrebi
+      ];
+      
+      return res.json({
+        success: true,
+        items: faqItems
+      });
+    } catch (error) {
+      console.error('Greška pri dobavljanju FAQ:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Greška pri dobavljanju FAQ'
+      });
+    }
+  });

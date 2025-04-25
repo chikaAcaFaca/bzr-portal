@@ -12,6 +12,26 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Label } from '@/components/ui/label';
+
+  const [responseStyle, setResponseStyle] = useState("professional");
+  const [faqItems, setFaqItems] = useState<Array<{question: string, answer: string}>>([]);
+
+  useEffect(() => {
+    // Učitaj FAQ pitanja iz lokalne memorije ili sa servera
+    const loadFAQ = async () => {
+      try {
+        const response = await apiRequest("/api/agent/faq", { method: "GET" });
+        const data = await response.json();
+        if (data.success) {
+          setFaqItems(data.items);
+        }
+      } catch (error) {
+        console.error("Greška pri učitavanju FAQ:", error);
+      }
+    };
+    loadFAQ();
+  }, []);
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AIAssistant = () => {
@@ -72,7 +92,8 @@ const AIAssistant = () => {
         body: JSON.stringify({
           question: question.trim(),
           context: context.trim() || undefined,
-          includeReferences: true
+          includeReferences: true,
+          responseStyle: responseStyle
         }),
         headers: {
           'Content-Type': 'application/json'
@@ -205,11 +226,30 @@ const AIAssistant = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="ask" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="ask">Pitanja & Odgovori</TabsTrigger>
                   <TabsTrigger value="generate">Generisanje dokumenta</TabsTrigger>
                   <TabsTrigger value="analyze">Analiza usklađenosti</TabsTrigger>
+                  <TabsTrigger value="faq">Često postavljana pitanja</TabsTrigger>
                 </TabsList>
+
+                <div className="mt-4">
+                  <Label>Stil odgovora</Label>
+                  <Select 
+                    onValueChange={(value) => setResponseStyle(value)}
+                    defaultValue="professional"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Izaberite stil odgovora" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="friendly">Prijateljski</SelectItem>
+                      <SelectItem value="professional">Stručan</SelectItem>
+                      <SelectItem value="precise">Precizan</SelectItem>
+                      <SelectItem value="detailed">Opširan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <TabsContent value="ask" className="space-y-4 pt-4">
                   <div className="space-y-2">
@@ -328,6 +368,25 @@ const AIAssistant = () => {
                 
                 <TabsContent value="analyze" className="space-y-4 pt-4">
                   <Form {...complianceForm}>
+
+                <TabsContent value="faq" className="space-y-4 pt-4">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Često postavljana pitanja</h3>
+                    <div className="grid gap-4">
+                      {faqItems.map((item, index) => (
+                        <Card key={index}>
+                          <CardHeader>
+                            <CardTitle className="text-base">{item.question}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{item.answer}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+
                     <form onSubmit={complianceForm.handleSubmit(onAnalyzeCompliance)} className="space-y-4">
                       <FormField
                         control={complianceForm.control}
