@@ -80,6 +80,12 @@ export default function Sidebar() {
                 active={location === "/document-processor"}
               />
               <NavItem
+                href="/ai-assistant"
+                icon="fas fa-robot"
+                label="AI Asistent za BZR"
+                active={location === "/ai-assistant"}
+              />
+              <NavItem
                 href="/base-documents"
                 icon="fas fa-file"
                 label="Bazna dokumenta"

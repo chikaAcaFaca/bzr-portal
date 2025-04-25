@@ -69,10 +69,13 @@ const AIAssistant = () => {
     try {
       const response = await apiRequest("/api/agent/ask", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           question: question.trim(),
           context: context.trim() || undefined,
           includeReferences: true
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
 
@@ -111,21 +114,26 @@ const AIAssistant = () => {
         } catch (e) {
           // Ako nije validan JSON, pokušaj parsirati kao parove ključ:vrednost
           const lines = data.additionalParams.split('\n');
+          const params: Record<string, string> = {};
           for (const line of lines) {
             const [key, value] = line.split(':').map(part => part.trim());
             if (key && value) {
-              additionalParams[key] = value;
+              params[key] = value;
             }
           }
+          additionalParams = params;
         }
       }
 
       const response = await apiRequest("/api/agent/generate-document", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           baseDocumentText: data.baseDocumentText,
           documentType: data.documentType,
           additionalParams
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
 
@@ -157,8 +165,11 @@ const AIAssistant = () => {
     try {
       const response = await apiRequest("/api/agent/analyze-compliance", {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           documentText: data.documentText
+        }),
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
 
