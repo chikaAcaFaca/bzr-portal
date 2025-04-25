@@ -1,17 +1,51 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { PlusCircle, Edit, Trash, ExternalLink, Check, X } from "lucide-react";
+
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/data-table";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, BookOpen, Link as LinkIcon, Trash2, Edit, ExternalLink } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 type KnowledgeReference = {
   id: number;
@@ -40,373 +74,483 @@ const initialFormData: KnowledgeReferenceFormData = {
   isActive: true,
 };
 
-const KnowledgeReferenceDialog = ({
-  open,
-  onOpenChange,
-  onSave,
+// Validaciona šema za reference znanja
+const formSchema = z.object({
+  title: z.string().min(3, { message: "Naslov mora imati najmanje 3 karaktera" }),
+  url: z.string().url({ message: "URL mora biti validna web adresa" }),
+  description: z.string().optional(),
+  category: z.string(),
+  isActive: z.boolean().default(true),
+});
+
+// Komponenta forme za unos/izmenu reference znanja
+function KnowledgeReferenceForm({ 
+  onSave, 
   initialData = initialFormData,
-  isEditing = false,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onCancel
+}: { 
   onSave: (data: KnowledgeReferenceFormData) => void;
   initialData?: KnowledgeReferenceFormData;
-  isEditing?: boolean;
-}) => {
-  const [formData, setFormData] = useState<KnowledgeReferenceFormData>(initialData);
+  onCancel: () => void;
+}) {
+  const form = useForm<KnowledgeReferenceFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: initialData,
+  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, category: value }));
-  };
-
-  const handleSwitchChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, isActive: checked }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    onOpenChange(false);
+  const onSubmit = (data: KnowledgeReferenceFormData) => {
+    onSave(data);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Izmena reference" : "Nova referenca znanja"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Naslov</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="Unesite naslov reference"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="url">URL</Label>
-              <Input
-                id="url"
-                name="url"
-                value={formData.url}
-                onChange={handleInputChange}
-                placeholder="https://example.com/document"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Opis</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Kratak opis sadržaja reference"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category">Kategorija</Label>
-              <Select name="category" value={formData.category} onValueChange={handleSelectChange} required>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Izaberite kategoriju" />
-                </SelectTrigger>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Naslov</FormLabel>
+              <FormControl>
+                <Input placeholder="Unesite naslov reference" {...field} />
+              </FormControl>
+              <FormDescription>
+                Naslov reference koji jasno opisuje sadržaj
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/dokument" {...field} />
+              </FormControl>
+              <FormDescription>
+                Unesite validnu URL adresu ka resursu
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Opis</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Kratak opis sadržaja reference" 
+                  {...field} 
+                  value={field.value || ""}
+                />
+              </FormControl>
+              <FormDescription>
+                Opis sadržaja i relevantnosti ovog izvora informacija
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Kategorija</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Izaberite kategoriju" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
                   <SelectItem value="general">Opšte informacije</SelectItem>
-                  <SelectItem value="law">Zakon</SelectItem>
-                  <SelectItem value="regulation">Pravilnik</SelectItem>
-                  <SelectItem value="guideline">Uputstvo</SelectItem>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="research">Istraživanje</SelectItem>
+                  <SelectItem value="law">Zakoni</SelectItem>
+                  <SelectItem value="regulation">Pravilnici</SelectItem>
+                  <SelectItem value="guideline">Uputstva</SelectItem>
+                  <SelectItem value="standard">Standardi</SelectItem>
+                  <SelectItem value="research">Istraživanja</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={handleSwitchChange}
-              />
-              <Label htmlFor="isActive">Aktivna</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="submit">{isEditing ? "Sačuvaj izmene" : "Dodaj referencu"}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <FormDescription>
+                Odaberite kategoriju kojoj referenca pripada
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="isActive"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Aktivno</FormLabel>
+                <FormDescription>
+                  Aktivne reference koristi AI asistent u svojim odgovorima
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Otkaži
+          </Button>
+          <Button type="submit">Sačuvaj</Button>
+        </div>
+      </form>
+    </Form>
   );
-};
+}
 
+// Glavna komponenta stranice za reference znanja
 export default function KnowledgeReferences() {
+  const [openSheet, setOpenSheet] = useState(false);
+  const [sheetMode, setSheetMode] = useState<"create" | "edit">("create");
+  const [selectedReference, setSelectedReference] = useState<KnowledgeReference | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingReference, setEditingReference] = useState<KnowledgeReferenceFormData>(initialFormData);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const queryClient = useQueryClient();
 
-  const { data: references, isLoading } = useQuery({
-    queryKey: ["/api/knowledge-references", selectedCategory],
-    queryFn: async () => {
-      const url = selectedCategory === "all" 
-        ? "/api/knowledge-references" 
-        : `/api/knowledge-references?category=${selectedCategory}`;
-      return apiRequest<KnowledgeReference[]>(url);
-    },
+  // Učitavanje referenci znanja
+  const { data: references = [], isLoading } = useQuery({
+    queryKey: ['/api/knowledge-references'],
+    select: (data: KnowledgeReference[]) => data,
   });
 
+  // Kreiranje nove reference
   const createMutation = useMutation({
     mutationFn: (data: KnowledgeReferenceFormData) => {
-      return apiRequest("/api/knowledge-references", {
-        method: "POST",
-        body: JSON.stringify(data),
+      return apiRequest('/api/knowledge-references', {
+        method: 'POST',
+        body: JSON.stringify(data)
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-references"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-references'] });
+      setOpenSheet(false);
       toast({
-        title: "Uspešno",
-        description: "Referenca je uspešno dodata!",
+        title: "Referenca znanja je kreirana",
+        description: "Nova referenca znanja je uspešno dodata.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Greška",
-        description: "Došlo je do greške prilikom dodavanja reference",
+        description: `Došlo je do greške pri kreiranju: ${error.message}`,
         variant: "destructive",
       });
-    },
+    }
   });
 
+  // Ažuriranje postojeće reference
   const updateMutation = useMutation({
     mutationFn: (data: { id: number; reference: KnowledgeReferenceFormData }) => {
       return apiRequest(`/api/knowledge-references/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data.reference),
+        method: 'PUT',
+        body: JSON.stringify(data.reference)
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-references"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-references'] });
+      setOpenSheet(false);
       toast({
-        title: "Uspešno",
-        description: "Referenca je uspešno ažurirana!",
+        title: "Referenca znanja je ažurirana",
+        description: "Referenca znanja je uspešno ažurirana.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Greška",
-        description: "Došlo je do greške prilikom ažuriranja reference",
+        description: `Došlo je do greške pri ažuriranju: ${error.message}`,
         variant: "destructive",
       });
-    },
+    }
   });
 
+  // Brisanje reference
   const deleteMutation = useMutation({
     mutationFn: (id: number) => {
       return apiRequest(`/api/knowledge-references/${id}`, {
-        method: "DELETE",
+        method: 'DELETE'
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-references"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/knowledge-references'] });
+      setDeleteDialogOpen(false);
       toast({
-        title: "Uspešno",
-        description: "Referenca je uspešno obrisana!",
+        title: "Referenca znanja je obrisana",
+        description: "Referenca znanja je uspešno obrisana.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Greška",
-        description: "Došlo je do greške prilikom brisanja reference",
+        description: `Došlo je do greške pri brisanju: ${error.message}`,
         variant: "destructive",
       });
-    },
+    }
   });
 
+  // Rukovanje dodavanjem nove reference
   const handleCreateReference = (data: KnowledgeReferenceFormData) => {
     createMutation.mutate(data);
   };
 
+  // Rukovanje ažuriranjem reference
   const handleUpdateReference = (data: KnowledgeReferenceFormData) => {
-    if (editingReference && 'id' in editingReference) {
+    if (selectedReference) {
       updateMutation.mutate({
-        id: (editingReference as any).id,
-        reference: data,
+        id: selectedReference.id,
+        reference: data
       });
     }
   };
 
-  const handleDeleteReference = (id: number) => {
-    if (confirm("Da li ste sigurni da želite da obrišete ovu referencu?")) {
-      deleteMutation.mutate(id);
-    }
+  // Otvaranje forme za dodavanje nove reference
+  const handleAddReference = () => {
+    setSelectedReference(null);
+    setSheetMode("create");
+    setOpenSheet(true);
   };
 
+  // Otvaranje forme za izmenu reference
   const handleEditClick = (reference: KnowledgeReference) => {
-    setEditingReference({
-      title: reference.title,
-      url: reference.url,
-      description: reference.description || "",
-      category: reference.category,
-      isActive: reference.isActive,
-    });
-    setEditDialogOpen(true);
+    setSelectedReference(reference);
+    setSheetMode("edit");
+    setOpenSheet(true);
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case "general": return "Opšte informacije";
-      case "law": return "Zakon";
-      case "regulation": return "Pravilnik";
-      case "guideline": return "Uputstvo";
-      case "standard": return "Standard";
-      case "research": return "Istraživanje";
-      default: return category;
+  // Otvaranje dijaloga za potvrdu brisanja
+  const handleDeleteClick = (reference: KnowledgeReference) => {
+    setSelectedReference(reference);
+    setDeleteDialogOpen(true);
+  };
+
+  // Kategorije referenci
+  const categoryLabels: Record<string, string> = {
+    'general': 'Opšte informacije',
+    'law': 'Zakoni',
+    'regulation': 'Pravilnici',
+    'guideline': 'Uputstva',
+    'standard': 'Standardi',
+    'research': 'Istraživanja'
+  };
+  
+  // Dobijanje boje za bedž kategorije
+  const getCategoryBadgeVariant = (category: string) => {
+    switch(category) {
+      case 'law': return 'destructive';
+      case 'regulation': return 'yellow';
+      case 'guideline': return 'blue';
+      case 'standard': return 'green';
+      case 'research': return 'purple';
+      default: return 'default';
     }
   };
+
+  // Definicija kolona tabele
+  const columns = [
+    {
+      header: "Naslov",
+      accessorKey: "title",
+      cell: ({ row }: any) => {
+        const reference = row.original;
+        return (
+          <div className="flex flex-col">
+            <div className="font-medium">{reference.title}</div>
+            {reference.description && (
+              <div className="text-muted-foreground text-sm line-clamp-1">
+                {reference.description}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Kategorija",
+      accessorKey: "category",
+      cell: ({ row }: any) => {
+        const category = row.original.category;
+        return (
+          <Badge variant={getCategoryBadgeVariant(category) as any}>
+            {categoryLabels[category] || category}
+          </Badge>
+        );
+      },
+    },
+    {
+      header: "Status",
+      accessorKey: "isActive",
+      cell: ({ row }: any) => {
+        const isActive = row.original.isActive;
+        return (
+          <div className="flex items-center">
+            {isActive ? (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+                <Check className="h-3 w-3" />
+                <span>Aktivno</span>
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-1">
+                <X className="h-3 w-3" />
+                <span>Neaktivno</span>
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Link",
+      cell: ({ row }: any) => {
+        const reference = row.original;
+        return (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a 
+                  href={reference.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="sr-only">Otvori link</span>
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Otvori u novom prozoru</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+      },
+    },
+    {
+      header: "Akcije",
+      cell: ({ row }: any) => {
+        const reference = row.original;
+        return (
+          <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => handleEditClick(reference)}
+            >
+              <Edit className="h-4 w-4" />
+              <span className="sr-only">Izmeni</span>
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => handleDeleteClick(reference)}
+            >
+              <Trash className="h-4 w-4" />
+              <span className="sr-only">Obriši</span>
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Reference znanja za AI asistenta</h1>
-          <p className="text-muted-foreground mt-2">
-            Upravljajte referencama koje AI asistent koristi za pružanje tačnih informacija u svojim odgovorima.
-          </p>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <BookOpen className="mr-2 h-4 w-4" />
-          Nova referenca
+    <>
+      <PageHeader
+        title="Reference znanja"
+        description="Upravljanje bazom znanja za AI asistenta"
+      />
+
+      <div className="mb-6">
+        <Button onClick={handleAddReference} className="flex items-center gap-1">
+          <PlusCircle className="h-4 w-4" />
+          <span>Dodaj novu referencu</span>
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Pregled referenci</CardTitle>
-          <CardDescription>
-            Lista dostupnih referenci znanja za AI asistenta
-          </CardDescription>
-          <div className="mt-4">
-            <Label htmlFor="filter-category">Filtriraj po kategoriji</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger id="filter-category" className="w-[200px]">
-                <SelectValue placeholder="Sve kategorije" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Sve kategorije</SelectItem>
-                <SelectItem value="general">Opšte informacije</SelectItem>
-                <SelectItem value="law">Zakon</SelectItem>
-                <SelectItem value="regulation">Pravilnik</SelectItem>
-                <SelectItem value="guideline">Uputstvo</SelectItem>
-                <SelectItem value="standard">Standard</SelectItem>
-                <SelectItem value="research">Istraživanje</SelectItem>
-              </SelectContent>
-            </Select>
+      <DataTable
+        data={references}
+        columns={columns}
+        isLoading={isLoading}
+        searchPlaceholder="Pretraži reference znanja..."
+        emptyMessage="Nema definisanih referenci znanja"
+      />
+
+      {/* Forma za dodavanje/izmenu reference */}
+      <Sheet open={openSheet} onOpenChange={setOpenSheet}>
+        <SheetContent className="sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>
+              {sheetMode === "create" ? "Dodaj novu referencu znanja" : "Izmeni referencu znanja"}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <KnowledgeReferenceForm
+              initialData={selectedReference ? {
+                title: selectedReference.title,
+                url: selectedReference.url,
+                description: selectedReference.description || "",
+                category: selectedReference.category,
+                isActive: selectedReference.isActive,
+              } : initialFormData}
+              onSave={sheetMode === "create" ? handleCreateReference : handleUpdateReference}
+              onCancel={() => setOpenSheet(false)}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !references || references.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <LinkIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>Nema dostupnih referenci. Dodajte nove reference za AI asistenta.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Naslov</TableHead>
-                    <TableHead>Kategorija</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Akcije</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {references.map((reference) => (
-                    <TableRow key={reference.id}>
-                      <TableCell>
-                        <div className="font-medium">{reference.title}</div>
-                        {reference.description && (
-                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {reference.description}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>{getCategoryLabel(reference.category)}</TableCell>
-                      <TableCell>
-                        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          reference.isActive
-                            ? "bg-green-50 text-green-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}>
-                          {reference.isActive ? "Aktivna" : "Neaktivna"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => window.open(reference.url, "_blank")}
-                            title="Otvori link"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditClick(reference)}
-                            title="Izmeni"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleDeleteReference(reference.id)}
-                            title="Obriši"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
-      <KnowledgeReferenceDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSave={handleCreateReference}
-      />
-
-      <KnowledgeReferenceDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSave={handleUpdateReference}
-        initialData={editingReference}
-        isEditing
-      />
-    </div>
+      {/* Dijalog za potvrdu brisanja */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Potvrda brisanja</DialogTitle>
+            <DialogDescription>
+              Da li ste sigurni da želite da obrišete referencu znanja "{selectedReference?.title}"?
+              Ova akcija se ne može poništiti.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Otkaži
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => selectedReference && deleteMutation.mutate(selectedReference.id)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Brisanje..." : "Obriši"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

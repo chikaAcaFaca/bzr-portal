@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { geminiService } from './gemini-api-service';
+import { type KnowledgeReference } from '@shared/schema';
 import { storage } from '../storage';
-import { KnowledgeReference } from '@shared/schema';
 
 interface AIAgentResponse {
   success: boolean;
@@ -41,14 +41,6 @@ class AIAgentService {
     } else {
       console.warn('Gemini API ključ nije postavljen. Fallback opcija neće biti dostupna.');
     }
-  }
-  
-  /**
-   * Pomoćna metoda koja osigurava da se vraća Promise od sistemskog prompta
-   * koristi se da pojednostavi pozive geminiService.query
-   */
-  private getSystemPromptForGemini(): Promise<string> {
-    return this.getSystemPrompt();
   }
   
   /**
@@ -232,6 +224,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
         
         let response;
         try {
+          const systemPrompt = await this.getSystemPrompt();
           response = await fetch(this.openRouterUrl, {
             method: 'POST',
             headers: {
@@ -244,7 +237,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
               messages: [
                 {
                   role: 'system',
-                  content: await this.getSystemPrompt()
+                  content: systemPrompt
                 },
                 {
                   role: 'user',
@@ -260,8 +253,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
           console.log('Prebacivanje na Gemini fallback...');
           // Pokušaj sa Gemini fallback-om
           if (this.useGeminiFallback) {
-            const systemPrompt = this.getSystemPrompt();
-            return geminiService.query(userMessage, systemPrompt);
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -276,8 +268,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
           // Pokušaj sa Gemini fallback-om
           if (this.useGeminiFallback) {
             console.log('API vraća grešku. Prebacivanje na Gemini fallback...');
-            const systemPrompt = this.getSystemPrompt();
-            return geminiService.query(userMessage, systemPrompt);
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           
           return {
@@ -295,8 +286,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
           // Pokušaj sa Gemini fallback-om
           if (this.useGeminiFallback) {
             console.log('Greška pri parsiranju. Prebacivanje na Gemini fallback...');
-            const systemPrompt = this.getSystemPrompt();
-            return geminiService.query(userMessage, systemPrompt);
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -407,6 +397,7 @@ Piši profesionalnim stilom prikladnim za zvanične dokumente, ali izbegavaj kom
         
         let response;
         try {
+          const systemPrompt = await this.getSystemPrompt();
           response = await fetch(this.openRouterUrl, {
             method: 'POST',
             headers: {
@@ -419,7 +410,7 @@ Piši profesionalnim stilom prikladnim za zvanične dokumente, ali izbegavaj kom
               messages: [
                 {
                   role: 'system',
-                  content: this.getSystemPrompt()
+                  content: systemPrompt
                 },
                 {
                   role: 'user',
@@ -584,6 +575,7 @@ Piši jasnim, profesionalnim stilom i organizuj tekst u logične paragrafe sa od
         
         let response;
         try {
+          const systemPrompt = await this.getSystemPrompt();
           response = await fetch(this.openRouterUrl, {
             method: 'POST',
             headers: {
@@ -596,15 +588,14 @@ Piši jasnim, profesionalnim stilom i organizuj tekst u logične paragrafe sa od
               messages: [
                 {
                   role: 'system',
-                  content: this.getSystemPrompt()
+                  content: systemPrompt
                 },
                 {
                   role: 'user',
                   content: userMessage
                 }
               ],
-              // Bez response_format za JSON jer želimo prirodan tekst
-              temperature: 0.4
+              temperature: 0.2 // Niža temperatura za precizniju analizu
             })
           });
         } catch (error: any) {
@@ -715,7 +706,7 @@ Piši jasnim, profesionalnim stilom i organizuj tekst u logične paragrafe sa od
         error: 'Nijedan API nije dostupan za procesiranje zahteva.'
       };
     } catch (error: any) {
-      console.error('Greška pri analizi usklađenosti:', error);
+      console.error('Greška pri analizi usklađenosti sa regulativom:', error);
       return {
         success: false,
         error: error.message || 'Nepoznata greška pri analizi usklađenosti'
