@@ -28,13 +28,16 @@ export class GeminiService {
   /**
    * Šalje upit Gemini API-ju i dobija odgovor
    */
-  async query(userMessage: string, systemMessage: string): Promise<GeminiResponse> {
+  async query(userMessage: string, systemMessage: Promise<string>): Promise<GeminiResponse> {
     if (!this.geminiKey) {
       return {
         success: false,
         error: 'Gemini API ključ nije postavljen.'
       };
     }
+    
+    // Sačekaj da se dobije sistemski prompt
+    const resolvedSystemMessage = await systemMessage;
     
     try {
       const fullUrl = `${this.geminiUrl}?key=${this.geminiKey}`;
@@ -49,7 +52,7 @@ export class GeminiService {
             {
               role: 'user',
               parts: [
-                { text: systemMessage },
+                { text: resolvedSystemMessage },
                 { text: userMessage }
               ]
             }

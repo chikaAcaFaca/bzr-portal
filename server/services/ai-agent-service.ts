@@ -1,5 +1,7 @@
 import fetch from 'node-fetch';
 import { geminiService } from './gemini-api-service';
+import { storage } from '../storage';
+import { KnowledgeReference } from '@shared/schema';
 
 interface AIAgentResponse {
   success: boolean;
@@ -40,17 +42,80 @@ class AIAgentService {
       console.warn('Gemini API ključ nije postavljen. Fallback opcija neće biti dostupna.');
     }
   }
+  
+  /**
+   * Učitava aktivne reference znanja iz baze podataka
+   */
+  private async getKnowledgeReferences(): Promise<KnowledgeReference[]> {
+    try {
+      const references = await storage.getActiveKnowledgeReferences();
+      return references;
+    } catch (error) {
+      console.error('Greška pri učitavanju referenci znanja:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Formatira reference znanja za sistemski prompt
+   */
+  private formatKnowledgeReferencesForPrompt(references: KnowledgeReference[]): string {
+    if (!references || references.length === 0) {
+      return '';
+    }
+    
+    // Grupiši reference po kategorijama
+    const categorized: Record<string, KnowledgeReference[]> = {};
+    for (const ref of references) {
+      if (!categorized[ref.category]) {
+        categorized[ref.category] = [];
+      }
+      categorized[ref.category].push(ref);
+    }
+    
+    let result = 'Dodatne reference za specifične oblasti:\n';
+    
+    const categoryLabels: Record<string, string> = {
+      'general': 'Opšte informacije',
+      'law': 'Zakoni',
+      'regulation': 'Pravilnici',
+      'guideline': 'Uputstva',
+      'standard': 'Standardi',
+      'research': 'Istraživanja'
+    };
+    
+    // Izgradi deo za svaku kategoriju
+    for (const [category, refs] of Object.entries(categorized)) {
+      const categoryLabel = categoryLabels[category] || category;
+      result += `\n${categoryLabel}:\n`;
+      
+      for (const ref of refs) {
+        result += `- ${ref.title}: ${ref.url}\n`;
+        if (ref.description) {
+          result += `  Opis: ${ref.description}\n`;
+        }
+      }
+    }
+    
+    return result;
+  }
 
   /**
    * Inicijalizuje sistemski prompt koji sadrži informacije o zakonima i podzakonskim aktima
    */
-  private getSystemPrompt(): string {
+  private async getSystemPrompt(): Promise<string> {
+    // Učitaj sve aktivne reference znanja
+    const knowledgeReferences = await this.getKnowledgeReferences();
+    const referencesText = this.formatKnowledgeReferencesForPrompt(knowledgeReferences);
+    
     return `Ti si AI asistent za bezbednost i zdravlje na radu u Srbiji koji piše tekstove za blog, a ne kompjuterske odgovore sa zagradama.
 
 Koristiš najnovije i ažurirane verzije zakona dostupne na sledećim zvaničnim linkovima:
 - Zakon o bezbednosti i zdravlju na radu: https://www.paragraf.rs/propisi/zakon_o_bezbednosti_i_zdravlju_na_radu.html
 - Zakon o radu: https://www.paragraf.rs/propisi/zakon_o_radu.html
 - Dodatna referenca: https://www.caruk.rs/wp-content/uploads/Bezbednost-i-zdravlje-na-radu1.pdf
+
+${referencesText}
 
 Tvoja baza znanja sadrži aktuelne verzije ključnih propisa:
 1. Zakon o bezbednosti i zdravlju na radu Republike Srbije (sa svim izmenama do 2023. godine)
@@ -171,7 +236,7 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
               messages: [
                 {
                   role: 'system',
-                  content: this.getSystemPrompt()
+                  content: await this.getSystemPrompt()
                 },
                 {
                   role: 'user',
@@ -187,7 +252,8 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
           console.log('Prebacivanje na Gemini fallback...');
           // Pokušaj sa Gemini fallback-om
           if (this.useGeminiFallback) {
-            return geminiService.query(userMessage, this.getSystemPrompt());
+            const systemPrompt = this.getSystemPrompt();
+            return geminiService.query(userMessage, systemPrompt);
           }
           return {
             success: false,
