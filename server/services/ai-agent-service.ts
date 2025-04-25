@@ -112,8 +112,9 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
       // Dodajemo logove za praćenje
       console.log('Slanje zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
       
+      let response;
       try {
-        const response = await fetch(this.apiUrl, {
+        response = await fetch(this.apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -136,25 +137,41 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
             temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
           })
         });
-      } catch (fetchError) {
-        console.error('Greška pri komunikaciji sa OpenRouter API-jem:', fetchError);
+      } catch (error: any) {
+        console.error('Greška pri komunikaciji sa OpenRouter API-jem:', error);
         return {
           success: false,
-          error: `Greška pri komunikaciji sa AI servisom: ${fetchError.message}`
+          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
         };
       }
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('OpenRouter API error:', errorBody);
-        return {
-          success: false,
-          error: `API greška: ${response.status} ${response.statusText}`
-        };
+      if (!response || !response.ok) {
+        try {
+          const errorBody = await response.text();
+          console.error('OpenRouter API error:', errorBody);
+          return {
+            success: false,
+            error: `API greška: ${response.status} ${response.statusText}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: 'API greška: Nije moguće čitati odgovor'
+          };
+        }
       }
 
-      const data = await response.json() as any;
-      console.log('OpenRouter API response:', JSON.stringify(data));
+      let data;
+      try {
+        data = await response.json() as any;
+        console.log('OpenRouter API response:', JSON.stringify(data));
+      } catch (error: any) {
+        console.error('Greška pri parsiranju JSON odgovora sa API-ja:', error);
+        return {
+          success: false,
+          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
+        };
+      }
       
       // Provera strukture odgovora
       if (!data || !data.choices || !data.choices.length) {
@@ -239,41 +256,68 @@ Molim te generiši kompletan dokument usklađen sa srpskim zakonodavstvom iz obl
 Dokument treba da sadrži sve potrebne sekcije, referencira odgovarajuće članove zakona i da je spreman za upotrebu.
 Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i "references" (niz referenci na zakonske odredbe).`;
 
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://replit.com'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus-20240229',
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt()
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.3
-        })
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('OpenRouter API error:', errorBody);
+      console.log('Slanje generateDocument zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+      
+      let response;
+      try {
+        response = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`,
+            'HTTP-Referer': 'https://replit.com'
+          },
+          body: JSON.stringify({
+            model: 'anthropic/claude-3-opus-20240229',
+            messages: [
+              {
+                role: 'system',
+                content: this.getSystemPrompt()
+              },
+              {
+                role: 'user',
+                content: userMessage
+              }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.3
+          })
+        });
+      } catch (error: any) {
+        console.error('Greška pri komunikaciji sa OpenRouter API-jem (generateDocument):', error);
         return {
           success: false,
-          error: `API greška: ${response.status} ${response.statusText}`
+          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
         };
       }
 
-      const data = await response.json() as any;
-      console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
+      if (!response || !response.ok) {
+        try {
+          const errorBody = await response.text();
+          console.error('OpenRouter API error (generateDocument):', errorBody);
+          return {
+            success: false,
+            error: `API greška: ${response.status} ${response.statusText}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: 'API greška: Nije moguće čitati odgovor'
+          };
+        }
+      }
+
+      let data;
+      try {
+        data = await response.json() as any;
+        console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
+      } catch (error: any) {
+        console.error('Greška pri parsiranju JSON odgovora sa API-ja (generateDocument):', error);
+        return {
+          success: false,
+          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
+        };
+      }
       
       // Provera strukture odgovora
       if (!data || !data.choices || !data.choices.length) {
@@ -354,41 +398,68 @@ Molim te da:
 
 Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema), "recommendations" (niz preporuka) i "references" (niz referenci na zakonske odredbe).`;
 
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://replit.com'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus-20240229',
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt()
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.2
-        })
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('OpenRouter API error:', errorBody);
+      console.log('Slanje analyzeCompliance zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+      
+      let response;
+      try {
+        response = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`,
+            'HTTP-Referer': 'https://replit.com'
+          },
+          body: JSON.stringify({
+            model: 'anthropic/claude-3-opus-20240229',
+            messages: [
+              {
+                role: 'system',
+                content: this.getSystemPrompt()
+              },
+              {
+                role: 'user',
+                content: userMessage
+              }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.2
+          })
+        });
+      } catch (error: any) {
+        console.error('Greška pri komunikaciji sa OpenRouter API-jem (analyzeCompliance):', error);
         return {
           success: false,
-          error: `API greška: ${response.status} ${response.statusText}`
+          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
         };
       }
 
-      const data = await response.json() as any;
-      console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
+      if (!response || !response.ok) {
+        try {
+          const errorBody = await response.text();
+          console.error('OpenRouter API error (analyzeCompliance):', errorBody);
+          return {
+            success: false,
+            error: `API greška: ${response.status} ${response.statusText}`
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: 'API greška: Nije moguće čitati odgovor'
+          };
+        }
+      }
+
+      let data;
+      try {
+        data = await response.json() as any;
+        console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
+      } catch (error: any) {
+        console.error('Greška pri parsiranju JSON odgovora sa API-ja (analyzeCompliance):', error);
+        return {
+          success: false,
+          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
+        };
+      }
       
       // Provera strukture odgovora
       if (!data || !data.choices || !data.choices.length) {
