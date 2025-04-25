@@ -76,26 +76,15 @@ export class GeminiService {
         // Izvlačimo tekst odgovora
         const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         
-        // Pokušavamo da ga parsiramo kao JSON
-        try {
-          const jsonContent = JSON.parse(contentText);
-          return {
-            success: true,
-            data: {
-              answer: jsonContent.answer || jsonContent.response || contentText,
-              references: jsonContent.references || []
-            }
-          };
-        } catch (parseError) {
-          // Ako nije parsiran kao JSON, vraćamo ga kao plain tekst
-          return {
-            success: true,
-            data: {
-              answer: contentText,
-              references: []
-            }
-          };
-        }
+        // Sada direktno vraćamo odgovor kao prirodan tekst
+        console.log('Vraćanje prirodnog tekstualnog odgovora iz Gemini API-ja');
+        return {
+          success: true,
+          data: {
+            answer: contentText,
+            references: []
+          }
+        };
       } catch (err) {
         console.error('Greška pri parsiranju Gemini odgovora:', err);
         return {

@@ -5,7 +5,7 @@ export async function setupAIAgentRoutes(app: any) {
   // Ruta za postavljanje pitanja AI agentu
   app.post('/api/agent/ask', async (req: Request, res: Response) => {
     try {
-      const { question, context, documentType, includeReferences } = req.body;
+      const { question, context, documentType, includeReferences, responseStyle } = req.body;
       
       if (!question) {
         return res.status(400).json({
@@ -17,7 +17,8 @@ export async function setupAIAgentRoutes(app: any) {
       const options = {
         context,
         documentType,
-        includeReferences: !!includeReferences
+        includeReferences: !!includeReferences,
+        responseStyle
       };
 
       const result = await aiAgentService.queryAgent(question, options);
