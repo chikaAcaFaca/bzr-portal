@@ -52,11 +52,62 @@ interface RiskCategory {
 class OpenRouterService {
   private apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private apiKey = process.env.OPENROUTER_API_KEY;
+  private lawKnowledgeBase: string;
 
   constructor() {
     if (!this.apiKey) {
       console.warn('OpenRouter API ključ nije postavljen. Obrada dokumenata neće raditi.');
     }
+    this.lawKnowledgeBase = `
+      Zakon o bezbednosti i zdravlju na radu
+      Zakon o radu
+      Pravilnik o preventivnim merama za bezbedan i zdrav rad
+      Pravilnik o evidencijama u oblasti bezbednosti i zdravlja na radu
+    `;
+  }
+
+  async processSystematizationDocument(documentText: string): Promise<AIProcessingResult<JobPosition>> {
+    const prompt = `
+      Analiziraj sledeći dokument sistematizacije:
+      ${documentText}
+      
+      Ekstraktuj sve informacije o radnim mestima i vrati ih u strukturiranom formatu.
+      Obrati pažnju na:
+      1. Nazive radnih mesta
+      2. Potrebne kvalifikacije
+      3. Odgovornosti
+      4. Zahteve radnog mesta
+      5. Rizike povezane sa radnim mestom
+    `;
+    return this.processWithAI<JobPosition>(prompt);
+  }
+
+  async processJobDescriptionDocument(documentText: string): Promise<AIProcessingResult<JobDescription>> {
+    const prompt = `
+      Analiziraj sledeći dokument opisa poslova:
+      ${documentText}
+      
+      Ekstraktuj detaljne informacije o:
+      1. Specifičnim dužnostima
+      2. Radnim zadacima
+      3. Potrebnoj opremi
+      4. Uslovima rada
+      5. Merama zaštite
+    `;
+    return this.processWithAI<JobDescription>(prompt);
+  }
+
+  async analyzeLegalCompliance(question: string): Promise<string> {
+    const prompt = `
+      Kao ekspert za bezbednost i zdravlje na radu, sa detaljnim poznavanjem:
+      ${this.lawKnowledgeBase}
+      
+      Odgovori na sledeće pitanje ili analiziraj usklađenost:
+      ${question}
+    `;
+    
+    const result = await this.processWithAI<{ answer: string }>(prompt);
+    return result.success ? result.data?.[0]?.answer || '' : '';
   }
 
   private async processWithAI<T>(prompt: string): Promise<AIProcessingResult<T>> {

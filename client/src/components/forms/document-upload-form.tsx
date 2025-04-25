@@ -37,13 +37,21 @@ interface DocumentUploadFormProps {
 
 // Document categories
 const documentCategories = [
+  "Sistematizacija",
+  "Sistematizacija sa imenima",
+  "Opis poslova",
   "Pravilnici",
   "Uputstva",
   "Obrasci",
   "Zakoni i propisi",
-  "Sistematizacija",
   "Izveštaji",
   "Ostalo"
+];
+
+const processableCategories = [
+  "Sistematizacija",
+  "Sistematizacija sa imenima",
+  "Opis poslova"
 ];
 
 export function DocumentUploadForm({
