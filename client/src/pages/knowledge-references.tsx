@@ -242,9 +242,10 @@ export default function KnowledgeReferences() {
   // Kreiranje nove reference
   const createMutation = useMutation({
     mutationFn: (data: KnowledgeReferenceFormData) => {
+      console.log("Sending data:", data);
       return apiRequest('/api/knowledge-references', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: data as any
       });
     },
     onSuccess: () => {
@@ -267,9 +268,10 @@ export default function KnowledgeReferences() {
   // Ažuriranje postojeće reference
   const updateMutation = useMutation({
     mutationFn: (data: { id: number; reference: KnowledgeReferenceFormData }) => {
+      console.log("Updating data:", data.reference);
       return apiRequest(`/api/knowledge-references/${data.id}`, {
         method: 'PUT',
-        body: JSON.stringify(data.reference)
+        body: data.reference as any
       });
     },
     onSuccess: () => {
