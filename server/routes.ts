@@ -17,6 +17,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupDocumentProcessingRoutes } from "./routes/document-processing";
 import { setupFileProcessingRoutes } from "./routes/file-processing";
+import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -819,6 +820,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register document processing routes
   await setupDocumentProcessingRoutes(app);
   await setupFileProcessingRoutes(app);
+  
+  // Register AI agent routes
+  await setupAIAgentRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

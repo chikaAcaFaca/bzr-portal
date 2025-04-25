@@ -1,0 +1,404 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2, Send, FileText, AlertCircle, UploadCloud } from "lucide-react";
+import { useState } from "react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const AIAssistant = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [response, setResponse] = useState("");
+  const { toast } = useToast();
+  const [context, setContext] = useState("");
+  const [activeTab, setActiveTab] = useState("ask");
+  const [references, setReferences] = useState<any[]>([]);
+
+  // Generisanje dokumenta
+  const generateDocumentSchema = z.object({
+    baseDocumentText: z.string().min(1, "Bazni dokument je obavezan"),
+    documentType: z.string().min(1, "Tip dokumenta je obavezan"),
+    additionalParams: z.string().optional()
+  });
+
+  const generateDocumentForm = useForm<z.infer<typeof generateDocumentSchema>>({
+    resolver: zodResolver(generateDocumentSchema),
+    defaultValues: {
+      baseDocumentText: "",
+      documentType: "",
+      additionalParams: ""
+    }
+  });
+
+  // Analiza usklađenosti
+  const complianceSchema = z.object({
+    documentText: z.string().min(1, "Tekst dokumenta je obavezan")
+  });
+
+  const complianceForm = useForm<z.infer<typeof complianceSchema>>({
+    resolver: zodResolver(complianceSchema),
+    defaultValues: {
+      documentText: ""
+    }
+  });
+
+  // Funkcija za rad sa AI agentom
+  const handleAskQuestion = async () => {
+    if (!question.trim()) {
+      toast({
+        title: "Greška",
+        description: "Molimo unesite pitanje",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setResponse("");
+    setReferences([]);
+
+    try {
+      const response = await apiRequest("/api/agent/ask", {
+        method: "POST",
+        body: {
+          question: question.trim(),
+          context: context.trim() || undefined,
+          includeReferences: true
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setResponse(data.data.answer);
+        setReferences(data.data.references || []);
+      } else {
+        throw new Error(data.error || "Greška pri komunikaciji sa AI agentom");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: error.message || "Došlo je do greške pri obradi zahteva",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Funkcija za generisanje dokumenta
+  const onGenerateDocument = async (data: z.infer<typeof generateDocumentSchema>) => {
+    setIsLoading(true);
+    setResponse("");
+    setReferences([]);
+
+    try {
+      // Parsiranje dodatnih parametara
+      let additionalParams = {};
+      if (data.additionalParams) {
+        try {
+          // Pokušaj parsiranja kao JSON
+          additionalParams = JSON.parse(data.additionalParams);
+        } catch (e) {
+          // Ako nije validan JSON, pokušaj parsirati kao parove ključ:vrednost
+          const lines = data.additionalParams.split('\n');
+          for (const line of lines) {
+            const [key, value] = line.split(':').map(part => part.trim());
+            if (key && value) {
+              additionalParams[key] = value;
+            }
+          }
+        }
+      }
+
+      const response = await apiRequest("/api/agent/generate-document", {
+        method: "POST",
+        body: {
+          baseDocumentText: data.baseDocumentText,
+          documentType: data.documentType,
+          additionalParams
+        }
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.success && responseData.data) {
+        setResponse(responseData.data.answer);
+        setReferences(responseData.data.references || []);
+      } else {
+        throw new Error(responseData.error || "Greška pri generisanju dokumenta");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: error.message || "Došlo je do greške pri generisanju dokumenta",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Funkcija za analizu usklađenosti
+  const onAnalyzeCompliance = async (data: z.infer<typeof complianceSchema>) => {
+    setIsLoading(true);
+    setResponse("");
+    setReferences([]);
+
+    try {
+      const response = await apiRequest("/api/agent/analyze-compliance", {
+        method: "POST",
+        body: {
+          documentText: data.documentText
+        }
+      });
+
+      const responseData = await response.json();
+
+      if (responseData.success && responseData.data) {
+        setResponse(responseData.data.answer);
+        setReferences(responseData.data.references || []);
+      } else {
+        throw new Error(responseData.error || "Greška pri analizi usklađenosti");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: error.message || "Došlo je do greške pri analizi usklađenosti",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Asistent za bezbednost i zdravlje na radu</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="ask" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="ask">Pitanja & Odgovori</TabsTrigger>
+                  <TabsTrigger value="generate">Generisanje dokumenta</TabsTrigger>
+                  <TabsTrigger value="analyze">Analiza usklađenosti</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="ask" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="question">Pitanje</Label>
+                    <Textarea
+                      id="question"
+                      placeholder="Postavite pitanje o bezbednosti i zdravlju na radu..."
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      className="min-h-32"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="context">Kontekst (opciono)</Label>
+                    <Textarea
+                      id="context"
+                      placeholder="Unesite dodatni kontekst za bolje razumevanje pitanja..."
+                      value={context}
+                      onChange={(e) => setContext(e.target.value)}
+                      className="min-h-24"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleAskQuestion} 
+                    disabled={isLoading || !question.trim()} 
+                    className="w-full"
+                  >
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    Pošalji pitanje
+                  </Button>
+                </TabsContent>
+                
+                <TabsContent value="generate" className="space-y-4 pt-4">
+                  <Form {...generateDocumentForm}>
+                    <form onSubmit={generateDocumentForm.handleSubmit(onGenerateDocument)} className="space-y-4">
+                      <FormField
+                        control={generateDocumentForm.control}
+                        name="documentType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tip dokumenta</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Izaberite tip dokumenta" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="akt_o_proceni_rizika">Akt o proceni rizika</SelectItem>
+                                <SelectItem value="uputstvo_za_bezbedan_rad">Uputstvo za bezbedan rad</SelectItem>
+                                <SelectItem value="program_osposobljavanja">Program osposobljavanja</SelectItem>
+                                <SelectItem value="zapisnik_o_povredi">Zapisnik o povredi na radu</SelectItem>
+                                <SelectItem value="evidencija_opreme">Evidencija opreme za rad</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={generateDocumentForm.control}
+                        name="baseDocumentText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bazni dokument</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Unesite tekst baznog dokumenta..." 
+                                className="min-h-32"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={generateDocumentForm.control}
+                        name="additionalParams"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dodatni parametri (opciono)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Unesite dodatne parametre u formatu ključ: vrednost, jedan par po liniji..."
+                                className="min-h-24"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Unesite dodatne parametre poput naziva kompanije, datuma, itd. u formatu ključ: vrednost
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        disabled={isLoading} 
+                        className="w-full"
+                      >
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                        Generiši dokument
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+                
+                <TabsContent value="analyze" className="space-y-4 pt-4">
+                  <Form {...complianceForm}>
+                    <form onSubmit={complianceForm.handleSubmit(onAnalyzeCompliance)} className="space-y-4">
+                      <FormField
+                        control={complianceForm.control}
+                        name="documentText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dokument za analizu</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Unesite tekst dokumenta za analizu usklađenosti sa zakonskom regulativom..." 
+                                className="min-h-48"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        disabled={isLoading} 
+                        className="w-full"
+                      >
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
+                        Analiziraj usklađenost
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+          
+          <Card className="relative">
+            <CardHeader>
+              <CardTitle>Odgovor AI asistenta</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                  <p className="text-center text-muted-foreground">Obrađujem zahtev...</p>
+                </div>
+              ) : response ? (
+                <div className="space-y-4">
+                  <div className="whitespace-pre-wrap p-4 bg-muted rounded-lg">
+                    {response}
+                  </div>
+                  
+                  {references.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="font-semibold mb-2">Reference:</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {references.map((ref, index) => (
+                          <li key={index} className="text-sm">
+                            <span className="font-medium">{ref.source}</span>
+                            {ref.article && <span className="text-muted-foreground"> (Član {ref.article})</span>}
+                            {ref.text && <p className="text-xs mt-1">{ref.text}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <div className="rounded-full bg-muted p-3 mb-4">
+                    <AlertCircle className="h-6 w-6" />
+                  </div>
+                  <p className="text-center">
+                    {activeTab === "ask" 
+                      ? "Postavite pitanje da biste dobili odgovor" 
+                      : activeTab === "generate" 
+                        ? "Unesite bazni dokument i tip da biste generisali dokument"
+                        : "Unesite dokument za analizu usklađenosti"}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AIAssistant;
