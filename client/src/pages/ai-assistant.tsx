@@ -88,10 +88,13 @@ const AIAssistant = () => {
         throw new Error(data.error || "Greška pri komunikaciji sa AI agentom");
       }
     } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || "Došlo je do greške pri obradi zahteva";
+      console.error('AI Agent greška:', errorMessage);
       toast({
         title: "Greška",
-        description: error.message || "Došlo je do greške pri obradi zahteva",
-        variant: "destructive"
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000
       });
     } finally {
       setIsLoading(false);

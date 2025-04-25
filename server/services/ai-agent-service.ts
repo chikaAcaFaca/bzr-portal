@@ -59,9 +59,17 @@ Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.`;
    */
   async queryAgent(question: string, options: QueryOptions = {}): Promise<AIAgentResponse> {
     if (!this.apiKey) {
+      console.error('OpenRouter API ključ nije postavljen');
       return {
         success: false,
-        error: 'OpenRouter API ključ nije postavljen. Kontaktirajte administratora.'
+        error: 'OpenRouter API ključ nije postavljen. Molimo proverite environment varijable.'
+      };
+    }
+
+    if (!question.trim()) {
+      return {
+        success: false,
+        error: 'Pitanje ne može biti prazno'
       };
     }
 
