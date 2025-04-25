@@ -860,13 +860,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/knowledge-references', async (req: Request, res: Response) => {
     try {
+      console.log('Received knowledge reference data:', req.body);
       const validatedData = insertKnowledgeReferenceSchema.parse(req.body);
+      console.log('Validated data:', validatedData);
       const reference = await storage.createKnowledgeReference(validatedData);
       res.status(201).json(reference);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.format());
         return res.status(400).json({ message: 'Invalid knowledge reference data', errors: error.format() });
       }
+      console.error('Server error:', error);
       res.status(500).json({ message: 'Failed to create knowledge reference' });
     }
   });
