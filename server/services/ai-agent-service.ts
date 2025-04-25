@@ -20,12 +20,30 @@ interface QueryOptions {
 }
 
 class AIAgentService {
-  private apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private apiKey = process.env.OPENROUTER_API_KEY;
+  private openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  private anthropicUrl = 'https://api.anthropic.com/v1/messages';
+  private geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+  private openRouterKey = process.env.OPENROUTER_API_KEY;
+  private anthropicKey = process.env.ANTHROPIC_API_KEY;
+  private geminiKey = process.env.GEMINI_API_KEY;
+  private useAnthropicFallback = true;
+  private useGeminiFallback = false;
 
   constructor() {
-    if (!this.apiKey) {
-      console.warn('OpenRouter API ključ nije postavljen. AI agent neće raditi.');
+    if (!this.openRouterKey) {
+      console.warn('OpenRouter API ključ nije postavljen. Koristiće se alternativni AI servis ako je dostupan.');
+    }
+    
+    if (!this.anthropicKey) {
+      console.warn('Anthropic API ključ nije postavljen. Prva fallback opcija neće biti dostupna.');
+      this.useAnthropicFallback = false;
+    }
+    
+    if (this.geminiKey) {
+      console.log('Gemini API ključ je postavljen. Gemini će biti korišćen kao dodatna fallback opcija.');
+      this.useGeminiFallback = true;
+    } else {
+      console.warn('Gemini API ključ nije postavljen. Druga fallback opcija neće biti dostupna.');
     }
   }
 
@@ -76,14 +94,99 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
   }
 
   /**
+   * Direktno komunicira sa Anthropic API-jem
+   */
+  private async queryAnthropicAPI(userMessage: string, systemMessage: string): Promise<AIAgentResponse> {
+    console.log('Koristi se Anthropic API kao fallback...');
+    
+    if (!this.anthropicKey) {
+      return {
+        success: false,
+        error: 'Anthropic API ključ nije postavljen. Nije moguće koristiti fallback opciju.'
+      };
+    }
+    
+    try {
+      const response = await fetch(this.anthropicUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.anthropicKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-opus-20240229',
+          max_tokens: 4000,
+          system: systemMessage,
+          messages: [
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          temperature: 0.2
+        })
+      });
+      
+      if (!response.ok) {
+        console.error('Anthropic API greška:', response.status, response.statusText);
+        return {
+          success: false,
+          error: `Anthropic API greška: ${response.status} ${response.statusText}`
+        };
+      }
+      
+      const data = await response.json() as any;
+      console.log('Anthropic API response:', JSON.stringify(data));
+      
+      try {
+        // Odgovor je plain tekst, ali pokušaćemo da ga parsiramo kao JSON
+        const contentText = data.content?.[0]?.text || '';
+        let jsonContent;
+        try {
+          jsonContent = JSON.parse(contentText);
+          return {
+            success: true,
+            data: {
+              answer: jsonContent.answer || jsonContent.response || contentText,
+              references: jsonContent.references || []
+            }
+          };
+        } catch (parseError) {
+          // Ako nije parsiran kao JSON, vraćamo ga kao plain tekst
+          return {
+            success: true,
+            data: {
+              answer: contentText,
+              references: []
+            }
+          };
+        }
+      } catch (err) {
+        console.error('Greška pri parsiranju Anthropic odgovora:', err);
+        return {
+          success: false,
+          error: 'Greška pri parsiranju Anthropic odgovora'
+        };
+      }
+    } catch (error: any) {
+      console.error('Greška pri komunikaciji sa Anthropic API-jem:', error);
+      return {
+        success: false,
+        error: `Anthropic API greška: ${error.message || 'Nepoznata greška'}`
+      };
+    }
+  }
+
+  /**
    * Postavlja pitanje AI agentu i dobija odgovor
    */
   async queryAgent(question: string, options: QueryOptions = {}): Promise<AIAgentResponse> {
-    if (!this.apiKey) {
-      console.error('OpenRouter API ključ nije postavljen');
+    if (!this.openRouterKey && !this.anthropicKey) {
+      console.error('Ni OpenRouter ni Anthropic API ključevi nisu postavljeni');
       return {
         success: false,
-        error: 'OpenRouter API ključ nije postavljen. Molimo proverite environment varijable.'
+        error: 'API ključevi nisu postavljeni. Molimo proverite environment varijable.'
       };
     }
 
@@ -109,115 +212,147 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
         userMessage += "\n\nMolim te da u odgovoru uključiš reference na relevantne članove zakona.";
       }
 
-      // Dodajemo logove za praćenje
-      console.log('Slanje zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
-      
-      let response;
-      try {
-        response = await fetch(this.apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`,
-            'HTTP-Referer': 'https://replit.com'
-          },
-          body: JSON.stringify({
-            model: 'anthropic/claude-3-opus-20240229',
-            messages: [
-              {
-                role: 'system',
-                content: this.getSystemPrompt()
-              },
-              {
-                role: 'user',
-                content: userMessage
-              }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
-          })
-        });
-      } catch (error: any) {
-        console.error('Greška pri komunikaciji sa OpenRouter API-jem:', error);
-        return {
-          success: false,
-          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-
-      if (!response || !response.ok) {
+      // Prvo probaj sa OpenRouter API-jem
+      if (this.openRouterKey) {
+        // Dodajemo logove za praćenje
+        console.log('Slanje zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+        
+        let response;
         try {
-          const errorBody = await response.text();
+          response = await fetch(this.openRouterUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.openRouterKey}`,
+              'HTTP-Referer': 'https://replit.com'
+            },
+            body: JSON.stringify({
+              model: 'anthropic/claude-3-opus-20240229',
+              messages: [
+                {
+                  role: 'system',
+                  content: this.getSystemPrompt()
+                },
+                {
+                  role: 'user',
+                  content: userMessage
+                }
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
+            })
+          });
+        } catch (error: any) {
+          console.error('Greška pri komunikaciji sa OpenRouter API-jem:', error);
+          console.log('Prebacivanje na fallback...');
+          // Ako je došlo do greške i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
+          return {
+            success: false,
+            error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
+          };
+        }
+
+        if (!response || !response.ok) {
+          const errorBody = await response.text().catch(() => 'Nema odgovora');
           console.error('OpenRouter API error:', errorBody);
+          
+          // Ako API vraća grešku i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('API vraća grešku. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
+          
           return {
             success: false,
             error: `API greška: ${response.status} ${response.statusText}`
           };
-        } catch (error) {
+        }
+
+        let data;
+        try {
+          data = await response.json() as any;
+          console.log('OpenRouter API response:', JSON.stringify(data));
+        } catch (error: any) {
+          console.error('Greška pri parsiranju JSON odgovora sa API-ja:', error);
+          // Ako parsiranje ne uspe i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Greška pri parsiranju. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
           return {
             success: false,
-            error: 'API greška: Nije moguće čitati odgovor'
+            error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
           };
         }
-      }
-
-      let data;
-      try {
-        data = await response.json() as any;
-        console.log('OpenRouter API response:', JSON.stringify(data));
-      } catch (error: any) {
-        console.error('Greška pri parsiranju JSON odgovora sa API-ja:', error);
-        return {
-          success: false,
-          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-      
-      // Provera strukture odgovora
-      if (!data || !data.choices || !data.choices.length) {
-        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-        return {
-          success: false,
-          error: 'Primljen nepotpun odgovor od API-ja'
-        };
-      }
-      
-      // Provera da li postoji message i content
-      const messageContent = data.choices[0]?.message?.content;
-      if (!messageContent) {
-        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-        return {
-          success: true,
-          data: {
-            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
-            references: []
-          }
-        };
-      }
-      
-      let parsedData;
-      try {
-        parsedData = JSON.parse(messageContent);
         
-        // Standardizovanje strukture odgovora
-        return {
-          success: true,
-          data: {
-            answer: parsedData.answer || parsedData.response || parsedData.text || messageContent,
-            references: parsedData.references || []
+        // Provera strukture odgovora
+        if (!data || !data.choices || !data.choices.length) {
+          console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
-      } catch (e) {
-        console.error('Greška pri parsiranju JSON odgovora:', e);
-        // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-        return {
-          success: true,
-          data: {
-            answer: messageContent,
-            references: []
+          return {
+            success: false,
+            error: 'Primljen nepotpun odgovor od API-ja'
+          };
+        }
+        
+        // Provera da li postoji message i content
+        const messageContent = data.choices[0]?.message?.content;
+        if (!messageContent) {
+          console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+          // Ako nema sadržaja i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nema sadržaja. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
+          return {
+            success: true,
+            data: {
+              answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+              references: []
+            }
+          };
+        }
+        
+        let parsedData;
+        try {
+          parsedData = JSON.parse(messageContent);
+          
+          // Standardizovanje strukture odgovora
+          return {
+            success: true,
+            data: {
+              answer: parsedData.answer || parsedData.response || parsedData.text || messageContent,
+              references: parsedData.references || []
+            }
+          };
+        } catch (e) {
+          console.error('Greška pri parsiranju JSON odgovora:', e);
+          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
+          return {
+            success: true,
+            data: {
+              answer: messageContent,
+              references: []
+            }
+          };
+        }
+      } else if (this.useAnthropicFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
+        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
       }
+      
+      // Ako nema nijednog dostupnog API-ja
+      return {
+        success: false,
+        error: 'Nijedan API nije dostupan za procesiranje zahteva.'
+      };
     } catch (error: any) {
       console.error('Greška pri komunikaciji sa AI agentom:', error);
       return {
@@ -231,10 +366,11 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
    * Generiše dokumentaciju na osnovu bazne dokumentacije i dodatnih parametara
    */
   async generateDocument(baseDocumentText: string, documentType: string, additionalParams: Record<string, any> = {}): Promise<AIAgentResponse> {
-    if (!this.apiKey) {
+    // Provera da li imamo bar jedan API ključ
+    if (!this.openRouterKey && !this.anthropicKey) {
       return {
         success: false,
-        error: 'OpenRouter API ključ nije postavljen. Kontaktirajte administratora.'
+        error: 'API ključevi nisu postavljeni. Kontaktirajte administratora.'
       };
     }
 
@@ -256,114 +392,155 @@ Molim te generiši kompletan dokument usklađen sa srpskim zakonodavstvom iz obl
 Dokument treba da sadrži sve potrebne sekcije, referencira odgovarajuće članove zakona i da je spreman za upotrebu.
 Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i "references" (niz referenci na zakonske odredbe).`;
 
-      console.log('Slanje generateDocument zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
-      
-      let response;
-      try {
-        response = await fetch(this.apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`,
-            'HTTP-Referer': 'https://replit.com'
-          },
-          body: JSON.stringify({
-            model: 'anthropic/claude-3-opus-20240229',
-            messages: [
-              {
-                role: 'system',
-                content: this.getSystemPrompt()
-              },
-              {
-                role: 'user',
-                content: userMessage
-              }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.3
-          })
-        });
-      } catch (error: any) {
-        console.error('Greška pri komunikaciji sa OpenRouter API-jem (generateDocument):', error);
-        return {
-          success: false,
-          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-
-      if (!response || !response.ok) {
+      // Prvo probaj sa OpenRouter API-jem ako je dostupan
+      if (this.openRouterKey) {
+        console.log('Slanje generateDocument zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+        
+        let response;
         try {
-          const errorBody = await response.text();
-          console.error('OpenRouter API error (generateDocument):', errorBody);
+          response = await fetch(this.openRouterUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.openRouterKey}`,
+              'HTTP-Referer': 'https://replit.com'
+            },
+            body: JSON.stringify({
+              model: 'anthropic/claude-3-opus-20240229',
+              messages: [
+                {
+                  role: 'system',
+                  content: this.getSystemPrompt()
+                },
+                {
+                  role: 'user',
+                  content: userMessage
+                }
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.3
+            })
+          });
+        } catch (error: any) {
+          console.error('Greška pri komunikaciji sa OpenRouter API-jem (generateDocument):', error);
+          // Ako je došlo do greške i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Greška. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
           return {
             success: false,
-            error: `API greška: ${response.status} ${response.statusText}`
-          };
-        } catch (error) {
-          return {
-            success: false,
-            error: 'API greška: Nije moguće čitati odgovor'
+            error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
           };
         }
-      }
 
-      let data;
-      try {
-        data = await response.json() as any;
-        console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
-      } catch (error: any) {
-        console.error('Greška pri parsiranju JSON odgovora sa API-ja (generateDocument):', error);
-        return {
-          success: false,
-          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-      
-      // Provera strukture odgovora
-      if (!data || !data.choices || !data.choices.length) {
-        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-        return {
-          success: false,
-          error: 'Primljen nepotpun odgovor od API-ja'
-        };
-      }
-      
-      // Provera da li postoji message i content
-      const messageContent = data.choices[0]?.message?.content;
-      if (!messageContent) {
-        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-        return {
-          success: true,
-          data: {
-            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
-            references: []
+        if (!response || !response.ok) {
+          try {
+            const errorBody = await response.text();
+            console.error('OpenRouter API error (generateDocument):', errorBody);
+            // Ako API vraća grešku i imamo fallback, prebaci se na njega
+            if (this.useAnthropicFallback) {
+              console.log('API greška. Prebacivanje na fallback...');
+              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            }
+            return {
+              success: false,
+              error: `API greška: ${response.status} ${response.statusText}`
+            };
+          } catch (error) {
+            // Ako ne možemo čitati odgovor i imamo fallback, prebaci se na njega
+            if (this.useAnthropicFallback) {
+              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            }
+            return {
+              success: false,
+              error: 'API greška: Nije moguće čitati odgovor'
+            };
           }
-        };
-      }
-      
-      let parsedData;
-      try {
-        parsedData = JSON.parse(messageContent);
+        }
+
+        let data;
+        try {
+          data = await response.json() as any;
+          console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
+        } catch (error: any) {
+          console.error('Greška pri parsiranju JSON odgovora sa API-ja (generateDocument):', error);
+          // Ako je došlo do greške parsiranja i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Greška parsiranja. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
+          return {
+            success: false,
+            error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
+          };
+        }
         
-        // Standardizovanje strukture odgovora
-        return {
-          success: true,
-          data: {
-            answer: parsedData.document || parsedData.text || messageContent,
-            references: parsedData.references || []
+        // Provera strukture odgovora
+        if (!data || !data.choices || !data.choices.length) {
+          console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
-      } catch (e) {
-        console.error('Greška pri parsiranju JSON odgovora:', e);
-        // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-        return {
-          success: true,
-          data: {
-            answer: messageContent,
-            references: []
+          return {
+            success: false,
+            error: 'Primljen nepotpun odgovor od API-ja'
+          };
+        }
+        
+        // Provera da li postoji message i content
+        const messageContent = data.choices[0]?.message?.content;
+        if (!messageContent) {
+          console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+          // Ako nema sadržaja i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nema sadržaja. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
+          return {
+            success: true,
+            data: {
+              answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+              references: []
+            }
+          };
+        }
+        
+        let parsedData;
+        try {
+          parsedData = JSON.parse(messageContent);
+          
+          // Standardizovanje strukture odgovora
+          return {
+            success: true,
+            data: {
+              answer: parsedData.document || parsedData.text || messageContent,
+              references: parsedData.references || []
+            }
+          };
+        } catch (e) {
+          console.error('Greška pri parsiranju JSON odgovora:', e);
+          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
+          return {
+            success: true,
+            data: {
+              answer: messageContent,
+              references: []
+            }
+          };
+        }
+      } else if (this.useAnthropicFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
+        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
       }
+      
+      // Ako nema nijednog dostupnog API-ja
+      return {
+        success: false,
+        error: 'Nijedan API nije dostupan za procesiranje zahteva.'
+      };
     } catch (error: any) {
       console.error('Greška pri generisanju dokumenta:', error);
       return {
@@ -377,10 +554,11 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
    * Analizira usklađenost dokumenta sa zakonskom regulativom
    */
   async analyzeComplianceWithRegulations(documentText: string): Promise<AIAgentResponse> {
-    if (!this.apiKey) {
+    // Provera da li imamo bar jedan API ključ
+    if (!this.openRouterKey && !this.anthropicKey) {
       return {
         success: false,
-        error: 'OpenRouter API ključ nije postavljen. Kontaktirajte administratora.'
+        error: 'API ključevi nisu postavljeni. Kontaktirajte administratora.'
       };
     }
 
@@ -398,116 +576,157 @@ Molim te da:
 
 Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema), "recommendations" (niz preporuka) i "references" (niz referenci na zakonske odredbe).`;
 
-      console.log('Slanje analyzeCompliance zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
-      
-      let response;
-      try {
-        response = await fetch(this.apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.apiKey}`,
-            'HTTP-Referer': 'https://replit.com'
-          },
-          body: JSON.stringify({
-            model: 'anthropic/claude-3-opus-20240229',
-            messages: [
-              {
-                role: 'system',
-                content: this.getSystemPrompt()
-              },
-              {
-                role: 'user',
-                content: userMessage
-              }
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2
-          })
-        });
-      } catch (error: any) {
-        console.error('Greška pri komunikaciji sa OpenRouter API-jem (analyzeCompliance):', error);
-        return {
-          success: false,
-          error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-
-      if (!response || !response.ok) {
+      // Prvo probaj sa OpenRouter API-jem ako je dostupan
+      if (this.openRouterKey) {
+        console.log('Slanje analyzeCompliance zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+        
+        let response;
         try {
-          const errorBody = await response.text();
-          console.error('OpenRouter API error (analyzeCompliance):', errorBody);
+          response = await fetch(this.openRouterUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.openRouterKey}`,
+              'HTTP-Referer': 'https://replit.com'
+            },
+            body: JSON.stringify({
+              model: 'anthropic/claude-3-opus-20240229',
+              messages: [
+                {
+                  role: 'system',
+                  content: this.getSystemPrompt()
+                },
+                {
+                  role: 'user',
+                  content: userMessage
+                }
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.2
+            })
+          });
+        } catch (error: any) {
+          console.error('Greška pri komunikaciji sa OpenRouter API-jem (analyzeCompliance):', error);
+          // Ako je došlo do greške i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Greška. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
           return {
             success: false,
-            error: `API greška: ${response.status} ${response.statusText}`
-          };
-        } catch (error) {
-          return {
-            success: false,
-            error: 'API greška: Nije moguće čitati odgovor'
+            error: `Greška pri komunikaciji sa AI servisom: ${error.message || 'Nepoznata greška'}`
           };
         }
-      }
 
-      let data;
-      try {
-        data = await response.json() as any;
-        console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
-      } catch (error: any) {
-        console.error('Greška pri parsiranju JSON odgovora sa API-ja (analyzeCompliance):', error);
-        return {
-          success: false,
-          error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
-        };
-      }
-      
-      // Provera strukture odgovora
-      if (!data || !data.choices || !data.choices.length) {
-        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-        return {
-          success: false,
-          error: 'Primljen nepotpun odgovor od API-ja'
-        };
-      }
-      
-      // Provera da li postoji message i content
-      const messageContent = data.choices[0]?.message?.content;
-      if (!messageContent) {
-        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-        return {
-          success: true,
-          data: {
-            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
-            references: []
+        if (!response || !response.ok) {
+          try {
+            const errorBody = await response.text();
+            console.error('OpenRouter API error (analyzeCompliance):', errorBody);
+            // Ako API vraća grešku i imamo fallback, prebaci se na njega
+            if (this.useAnthropicFallback) {
+              console.log('API greška. Prebacivanje na fallback...');
+              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            }
+            return {
+              success: false,
+              error: `API greška: ${response.status} ${response.statusText}`
+            };
+          } catch (error) {
+            // Ako ne možemo čitati odgovor i imamo fallback, prebaci se na njega
+            if (this.useAnthropicFallback) {
+              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            }
+            return {
+              success: false,
+              error: 'API greška: Nije moguće čitati odgovor'
+            };
           }
-        };
-      }
-      
-      let parsedData;
-      try {
-        parsedData = JSON.parse(messageContent);
+        }
+
+        let data;
+        try {
+          data = await response.json() as any;
+          console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
+        } catch (error: any) {
+          console.error('Greška pri parsiranju JSON odgovora sa API-ja (analyzeCompliance):', error);
+          // Ako je došlo do greške parsiranja i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Greška parsiranja. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          }
+          return {
+            success: false,
+            error: `Greška pri parsiranju odgovora: ${error.message || 'Nepoznata greška'}`
+          };
+        }
         
-        // Standardizovanje strukture odgovora
-        return {
-          success: true,
-          data: {
-            answer: `Ocena usklađenosti: ${parsedData.complianceScore || 'N/A'}/10\n\n` +
-                   `Problemi:\n${parsedData.issues?.join('\n') || 'Nisu pronađeni problemi'}\n\n` +
-                   `Preporuke:\n${parsedData.recommendations?.join('\n') || 'Nema preporuka'}`,
-            references: parsedData.references || []
+        // Provera strukture odgovora
+        if (!data || !data.choices || !data.choices.length) {
+          console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
-      } catch (e) {
-        console.error('Greška pri parsiranju JSON odgovora:', e);
-        // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-        return {
-          success: true,
-          data: {
-            answer: messageContent,
-            references: []
+          return {
+            success: false,
+            error: 'Primljen nepotpun odgovor od API-ja'
+          };
+        }
+        
+        // Provera da li postoji message i content
+        const messageContent = data.choices[0]?.message?.content;
+        if (!messageContent) {
+          console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+          // Ako nema sadržaja i imamo fallback, prebaci se na njega
+          if (this.useAnthropicFallback) {
+            console.log('Nema sadržaja. Prebacivanje na fallback...');
+            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
           }
-        };
+          return {
+            success: true,
+            data: {
+              answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+              references: []
+            }
+          };
+        }
+        
+        let parsedData;
+        try {
+          parsedData = JSON.parse(messageContent);
+          
+          // Standardizovanje strukture odgovora
+          return {
+            success: true,
+            data: {
+              answer: `Ocena usklađenosti: ${parsedData.complianceScore || 'N/A'}/10\n\n` +
+                     `Problemi:\n${parsedData.issues?.join('\n') || 'Nisu pronađeni problemi'}\n\n` +
+                     `Preporuke:\n${parsedData.recommendations?.join('\n') || 'Nema preporuka'}`,
+              references: parsedData.references || []
+            }
+          };
+        } catch (e) {
+          console.error('Greška pri parsiranju JSON odgovora:', e);
+          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
+          return {
+            success: true,
+            data: {
+              answer: messageContent,
+              references: []
+            }
+          };
+        }
+      } else if (this.useAnthropicFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
+        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
       }
+      
+      // Ako nema nijednog dostupnog API-ja
+      return {
+        success: false,
+        error: 'Nijedan API nije dostupan za procesiranje zahteva.'
+      };
     } catch (error: any) {
       console.error('Greška pri analizi usklađenosti:', error);
       return {
