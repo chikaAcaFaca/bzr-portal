@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { geminiService } from './gemini-api-service';
 
 interface AIAgentResponse {
   success: boolean;
@@ -34,16 +35,15 @@ class AIAgentService {
       console.warn('OpenRouter API ključ nije postavljen. Koristiće se alternativni AI servis ako je dostupan.');
     }
     
-    if (!this.anthropicKey) {
-      console.warn('Anthropic API ključ nije postavljen. Prva fallback opcija neće biti dostupna.');
-      this.useAnthropicFallback = false;
-    }
+    // Blokiran Anthropic API na zahtev korisnika
+    console.warn('Anthropic API je blokiran na zahtev korisnika. Prva fallback opcija neće biti dostupna.');
+    this.useAnthropicFallback = false;
     
     if (this.geminiKey) {
-      console.log('Gemini API ključ je postavljen. Gemini će biti korišćen kao dodatna fallback opcija.');
+      console.log('Gemini API ključ je postavljen. Gemini će biti korišćen kao fallback opcija.');
       this.useGeminiFallback = true;
     } else {
-      console.warn('Gemini API ključ nije postavljen. Druga fallback opcija neće biti dostupna.');
+      console.warn('Gemini API ključ nije postavljen. Fallback opcija neće biti dostupna.');
     }
   }
 
@@ -244,10 +244,10 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
           });
         } catch (error: any) {
           console.error('Greška pri komunikaciji sa OpenRouter API-jem:', error);
-          console.log('Prebacivanje na fallback...');
-          // Ako je došlo do greške i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          console.log('Prebacivanje na Gemini fallback...');
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -259,10 +259,10 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
           const errorBody = await response.text().catch(() => 'Nema odgovora');
           console.error('OpenRouter API error:', errorBody);
           
-          // Ako API vraća grešku i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('API vraća grešku. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('API vraća grešku. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           
           return {
@@ -279,8 +279,20 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
           console.error('Greška pri parsiranju JSON odgovora sa API-ja:', error);
           // Ako parsiranje ne uspe i imamo fallback, prebaci se na njega
           if (this.useAnthropicFallback) {
-            console.log('Greška pri parsiranju. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            console.log('Greška pri parsiranju. Prebacivanje na Anthropic fallback...');
+            const anthropicResult = await this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            
+            // Ako je Anthropic uspešan, vrati njegov rezultat
+            if (anthropicResult.success) {
+              return anthropicResult;
+            } 
+            // Ako Anthropic nije uspešan i imamo Gemini kao fallback, prebaci se na njega
+            else if (this.useGeminiFallback) {
+              console.log('Anthropic API greška. Prebacivanje na Gemini fallback...');
+              return geminiService.query(userMessage, this.getSystemPrompt());
+            }
+            // Ako ni Gemini nije dostupan, vrati Anthropic grešku
+            return anthropicResult;
           }
           return {
             success: false,
