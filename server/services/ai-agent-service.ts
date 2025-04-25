@@ -22,22 +22,15 @@ interface QueryOptions {
 
 class AIAgentService {
   private openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private anthropicUrl = 'https://api.anthropic.com/v1/messages';
   private geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
   private openRouterKey = process.env.OPENROUTER_API_KEY;
-  private anthropicKey = process.env.ANTHROPIC_API_KEY;
   private geminiKey = process.env.GEMINI_API_KEY;
-  private useAnthropicFallback = true;
   private useGeminiFallback = false;
 
   constructor() {
     if (!this.openRouterKey) {
       console.warn('OpenRouter API ključ nije postavljen. Koristiće se alternativni AI servis ako je dostupan.');
     }
-    
-    // Blokiran Anthropic API na zahtev korisnika
-    console.warn('Anthropic API je blokiran na zahtev korisnika. Prva fallback opcija neće biti dostupna.');
-    this.useAnthropicFallback = false;
     
     if (this.geminiKey) {
       console.log('Gemini API ključ je postavljen. Gemini će biti korišćen kao fallback opcija.');
@@ -94,96 +87,11 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
   }
 
   /**
-   * Direktno komunicira sa Anthropic API-jem
-   */
-  private async queryAnthropicAPI(userMessage: string, systemMessage: string): Promise<AIAgentResponse> {
-    console.log('Koristi se Anthropic API kao fallback...');
-    
-    if (!this.anthropicKey) {
-      return {
-        success: false,
-        error: 'Anthropic API ključ nije postavljen. Nije moguće koristiti fallback opciju.'
-      };
-    }
-    
-    try {
-      const response = await fetch(this.anthropicUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.anthropicKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-opus-20240229',
-          max_tokens: 4000,
-          system: systemMessage,
-          messages: [
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          temperature: 0.2
-        })
-      });
-      
-      if (!response.ok) {
-        console.error('Anthropic API greška:', response.status, response.statusText);
-        return {
-          success: false,
-          error: `Anthropic API greška: ${response.status} ${response.statusText}`
-        };
-      }
-      
-      const data = await response.json() as any;
-      console.log('Anthropic API response:', JSON.stringify(data));
-      
-      try {
-        // Odgovor je plain tekst, ali pokušaćemo da ga parsiramo kao JSON
-        const contentText = data.content?.[0]?.text || '';
-        let jsonContent;
-        try {
-          jsonContent = JSON.parse(contentText);
-          return {
-            success: true,
-            data: {
-              answer: jsonContent.answer || jsonContent.response || contentText,
-              references: jsonContent.references || []
-            }
-          };
-        } catch (parseError) {
-          // Ako nije parsiran kao JSON, vraćamo ga kao plain tekst
-          return {
-            success: true,
-            data: {
-              answer: contentText,
-              references: []
-            }
-          };
-        }
-      } catch (err) {
-        console.error('Greška pri parsiranju Anthropic odgovora:', err);
-        return {
-          success: false,
-          error: 'Greška pri parsiranju Anthropic odgovora'
-        };
-      }
-    } catch (error: any) {
-      console.error('Greška pri komunikaciji sa Anthropic API-jem:', error);
-      return {
-        success: false,
-        error: `Anthropic API greška: ${error.message || 'Nepoznata greška'}`
-      };
-    }
-  }
-
-  /**
    * Postavlja pitanje AI agentu i dobija odgovor
    */
   async queryAgent(question: string, options: QueryOptions = {}): Promise<AIAgentResponse> {
-    if (!this.openRouterKey && !this.anthropicKey) {
-      console.error('Ni OpenRouter ni Anthropic API ključevi nisu postavljeni');
+    if (!this.openRouterKey && !this.geminiKey) {
+      console.error('Ni OpenRouter ni Gemini API ključevi nisu postavljeni');
       return {
         success: false,
         error: 'API ključevi nisu postavljeni. Molimo proverite environment varijable.'
@@ -277,22 +185,10 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
           console.log('OpenRouter API response:', JSON.stringify(data));
         } catch (error: any) {
           console.error('Greška pri parsiranju JSON odgovora sa API-ja:', error);
-          // Ako parsiranje ne uspe i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Greška pri parsiranju. Prebacivanje na Anthropic fallback...');
-            const anthropicResult = await this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
-            
-            // Ako je Anthropic uspešan, vrati njegov rezultat
-            if (anthropicResult.success) {
-              return anthropicResult;
-            } 
-            // Ako Anthropic nije uspešan i imamo Gemini kao fallback, prebaci se na njega
-            else if (this.useGeminiFallback) {
-              console.log('Anthropic API greška. Prebacivanje na Gemini fallback...');
-              return geminiService.query(userMessage, this.getSystemPrompt());
-            }
-            // Ako ni Gemini nije dostupan, vrati Anthropic grešku
-            return anthropicResult;
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Greška pri parsiranju. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -303,10 +199,10 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
         // Provera strukture odgovora
         if (!data || !data.choices || !data.choices.length) {
           console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -318,10 +214,10 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
         const messageContent = data.choices[0]?.message?.content;
         if (!messageContent) {
           console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-          // Ako nema sadržaja i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nema sadržaja. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nema sadržaja. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: true,
@@ -355,9 +251,9 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
             }
           };
         }
-      } else if (this.useAnthropicFallback) {
-        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
-        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+      } else if (this.useGeminiFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
+        return geminiService.query(userMessage, this.getSystemPrompt());
       }
       
       // Ako nema nijednog dostupnog API-ja
@@ -379,7 +275,7 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
    */
   async generateDocument(baseDocumentText: string, documentType: string, additionalParams: Record<string, any> = {}): Promise<AIAgentResponse> {
     // Provera da li imamo bar jedan API ključ
-    if (!this.openRouterKey && !this.anthropicKey) {
+    if (!this.openRouterKey && !this.geminiKey) {
       return {
         success: false,
         error: 'API ključevi nisu postavljeni. Kontaktirajte administratora.'
@@ -435,10 +331,10 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
           });
         } catch (error: any) {
           console.error('Greška pri komunikaciji sa OpenRouter API-jem (generateDocument):', error);
-          // Ako je došlo do greške i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Greška. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Greška. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -450,19 +346,20 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
           try {
             const errorBody = await response.text();
             console.error('OpenRouter API error (generateDocument):', errorBody);
-            // Ako API vraća grešku i imamo fallback, prebaci se na njega
-            if (this.useAnthropicFallback) {
-              console.log('API greška. Prebacivanje na fallback...');
-              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            // Pokušaj sa Gemini fallback-om
+            if (this.useGeminiFallback) {
+              console.log('API greška. Prebacivanje na Gemini fallback...');
+              return geminiService.query(userMessage, this.getSystemPrompt());
             }
             return {
               success: false,
               error: `API greška: ${response.status} ${response.statusText}`
             };
           } catch (error) {
-            // Ako ne možemo čitati odgovor i imamo fallback, prebaci se na njega
-            if (this.useAnthropicFallback) {
-              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            // Ako ne možemo čitati odgovor, pokušaj sa Gemini fallback-om
+            if (this.useGeminiFallback) {
+              console.log('Greška čitanja odgovora. Prebacivanje na Gemini fallback...');
+              return geminiService.query(userMessage, this.getSystemPrompt());
             }
             return {
               success: false,
@@ -477,10 +374,10 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
           console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
         } catch (error: any) {
           console.error('Greška pri parsiranju JSON odgovora sa API-ja (generateDocument):', error);
-          // Ako je došlo do greške parsiranja i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Greška parsiranja. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Greška parsiranja. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -491,10 +388,10 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
         // Provera strukture odgovora
         if (!data || !data.choices || !data.choices.length) {
           console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -506,10 +403,10 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
         const messageContent = data.choices[0]?.message?.content;
         if (!messageContent) {
           console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-          // Ako nema sadržaja i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nema sadržaja. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nema sadržaja. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: true,
@@ -543,9 +440,9 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
             }
           };
         }
-      } else if (this.useAnthropicFallback) {
-        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
-        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+      } else if (this.useGeminiFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
+        return geminiService.query(userMessage, this.getSystemPrompt());
       }
       
       // Ako nema nijednog dostupnog API-ja
@@ -567,7 +464,7 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
    */
   async analyzeComplianceWithRegulations(documentText: string): Promise<AIAgentResponse> {
     // Provera da li imamo bar jedan API ključ
-    if (!this.openRouterKey && !this.anthropicKey) {
+    if (!this.openRouterKey && !this.geminiKey) {
       return {
         success: false,
         error: 'API ključevi nisu postavljeni. Kontaktirajte administratora.'
@@ -619,10 +516,10 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
           });
         } catch (error: any) {
           console.error('Greška pri komunikaciji sa OpenRouter API-jem (analyzeCompliance):', error);
-          // Ako je došlo do greške i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Greška. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Greška. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -634,19 +531,20 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
           try {
             const errorBody = await response.text();
             console.error('OpenRouter API error (analyzeCompliance):', errorBody);
-            // Ako API vraća grešku i imamo fallback, prebaci se na njega
-            if (this.useAnthropicFallback) {
-              console.log('API greška. Prebacivanje na fallback...');
-              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            // Pokušaj sa Gemini fallback-om
+            if (this.useGeminiFallback) {
+              console.log('API greška. Prebacivanje na Gemini fallback...');
+              return geminiService.query(userMessage, this.getSystemPrompt());
             }
             return {
               success: false,
               error: `API greška: ${response.status} ${response.statusText}`
             };
           } catch (error) {
-            // Ako ne možemo čitati odgovor i imamo fallback, prebaci se na njega
-            if (this.useAnthropicFallback) {
-              return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+            // Ako ne možemo čitati odgovor, pokušaj sa Gemini fallback-om
+            if (this.useGeminiFallback) {
+              console.log('Greška čitanja odgovora. Prebacivanje na Gemini fallback...');
+              return geminiService.query(userMessage, this.getSystemPrompt());
             }
             return {
               success: false,
@@ -661,10 +559,10 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
           console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
         } catch (error: any) {
           console.error('Greška pri parsiranju JSON odgovora sa API-ja (analyzeCompliance):', error);
-          // Ako je došlo do greške parsiranja i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Greška parsiranja. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Greška parsiranja. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -675,10 +573,10 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
         // Provera strukture odgovora
         if (!data || !data.choices || !data.choices.length) {
           console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
-          // Ako je odgovor nepotpun i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nepotpun odgovor. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nepotpun odgovor. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: false,
@@ -690,10 +588,10 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
         const messageContent = data.choices[0]?.message?.content;
         if (!messageContent) {
           console.error('Nema sadržaja u odgovoru:', data.choices[0]);
-          // Ako nema sadržaja i imamo fallback, prebaci se na njega
-          if (this.useAnthropicFallback) {
-            console.log('Nema sadržaja. Prebacivanje na fallback...');
-            return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+          // Pokušaj sa Gemini fallback-om
+          if (this.useGeminiFallback) {
+            console.log('Nema sadržaja. Prebacivanje na Gemini fallback...');
+            return geminiService.query(userMessage, this.getSystemPrompt());
           }
           return {
             success: true,
@@ -708,13 +606,13 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
         try {
           parsedData = JSON.parse(messageContent);
           
-          // Standardizovanje strukture odgovora
+          // Standardizovanje strukture odgovora za analizu usklađenosti
           return {
             success: true,
             data: {
-              answer: `Ocena usklađenosti: ${parsedData.complianceScore || 'N/A'}/10\n\n` +
-                     `Problemi:\n${parsedData.issues?.join('\n') || 'Nisu pronađeni problemi'}\n\n` +
-                     `Preporuke:\n${parsedData.recommendations?.join('\n') || 'Nema preporuka'}`,
+              answer: `Ocena usklađenosti: ${parsedData.complianceScore}/10\n\n` +
+                      `Problemi:\n${(parsedData.issues || []).map((issue: string, i: number) => `${i+1}. ${issue}`).join('\n')}\n\n` +
+                      `Preporuke:\n${(parsedData.recommendations || []).map((rec: string, i: number) => `${i+1}. ${rec}`).join('\n')}`,
               references: parsedData.references || []
             }
           };
@@ -729,9 +627,9 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
             }
           };
         }
-      } else if (this.useAnthropicFallback) {
-        // Ako OpenRouter API nije dostupan, koristi Anthropic API direktno
-        return this.queryAnthropicAPI(userMessage, this.getSystemPrompt());
+      } else if (this.useGeminiFallback) {
+        // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
+        return geminiService.query(userMessage, this.getSystemPrompt());
       }
       
       // Ako nema nijednog dostupnog API-ja
