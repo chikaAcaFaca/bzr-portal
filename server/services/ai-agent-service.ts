@@ -37,21 +37,42 @@ class AIAgentService {
 Posedujuš opsežno znanje o:
 1. Zakonu o bezbednosti i zdravlju na radu Republike Srbije
 2. Zakonu o radu Republike Srbije
-3. Podzakonskim aktima povezanim sa ovim zakonima
+3. Pravilniku o preventivnim merama za bezbedan i zdrav rad
+4. Pravilniku o postupku pregleda i provere opreme za rad
+5. Pravilniku o evidencijama u oblasti bezbednosti i zdravlja na radu
+6. Pravilniku o načinu i postupku procene rizika na radnom mestu
+7. Ostalim relevantnim podzakonskim aktima povezanim sa ovim zakonima
+
+Poznati su ti svi članovi Zakona o bezbednosti i zdravlju na radu, naročito:
+- Članovi 9-13 (Preventivne mere)
+- Članovi 14-15 (Obaveze poslodavca)
+- Članovi 24-29 (Osposobljavanje zaposlenih)
+- Članovi 30-32 (Prava i obaveze zaposlenih)
+- Članovi 33-40 (Organizovanje poslova bezbednosti i zdravlja na radu)
+- Članovi 41-48 (Procena rizika)
 
 Tvoja uloga je da:
 - Daješ precizne informacije o zakonskoj regulativi
 - Tumačiš zakonske odredbe
 - Pomažeš u formiranju dokumentacije u skladu sa zakonom
 - Donosiš odluke koje su usklađene sa zakonskom regulativom
+- Analiziraš usklađenost dokumenata sa važećim propisima
 
 Kada odgovaraš na pitanja:
 1. Uvek naznači konkretan član zakona ili podzakonskog akta
-2. Objasni kako se primenjuje na konkretnu situaciju
+2. Objasni kako se odredba primenjuje na konkretnu situaciju
 3. Ukoliko postoje izuzeci ili posebni slučajevi, napomeni ih
 4. Ako pitanje zahteva tumačenje koje nije jasno definisano u zakonu, napomeni to i ponudi najprikladnije tumačenje
+5. Odgovori treba da budu strukturirani i precizni
+6. Svaki odgovor mora sadržati reference na relevantne zakonske odredbe
 
-Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.`;
+Za generisanje dokumentacije:
+1. Koristi zvanične formate i formulacije propisane zakonima
+2. Prilagodi sadržaj konkretnoj situaciji i kontekstu
+3. Navedi sve obavezne elemente za traženi tip dokumenta
+
+Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.
+Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
   }
 
   /**
@@ -88,29 +109,40 @@ Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.`;
         userMessage += "\n\nMolim te da u odgovoru uključiš reference na relevantne članove zakona.";
       }
 
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://replit.com'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus-20240229',
-          messages: [
-            {
-              role: 'system',
-              content: this.getSystemPrompt()
-            },
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
-        })
-      });
+      // Dodajemo logove za praćenje
+      console.log('Slanje zahteva na OpenRouter API:', userMessage.substring(0, 100) + '...');
+      
+      try {
+        const response = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`,
+            'HTTP-Referer': 'https://replit.com'
+          },
+          body: JSON.stringify({
+            model: 'anthropic/claude-3-opus-20240229',
+            messages: [
+              {
+                role: 'system',
+                content: this.getSystemPrompt()
+              },
+              {
+                role: 'user',
+                content: userMessage
+              }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
+          })
+        });
+      } catch (fetchError) {
+        console.error('Greška pri komunikaciji sa OpenRouter API-jem:', fetchError);
+        return {
+          success: false,
+          error: `Greška pri komunikaciji sa AI servisom: ${fetchError.message}`
+        };
+      }
 
       if (!response.ok) {
         const errorBody = await response.text();
@@ -122,17 +154,39 @@ Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.`;
       }
 
       const data = await response.json() as any;
-      const content = data.choices[0].message.content;
+      console.log('OpenRouter API response:', JSON.stringify(data));
+      
+      // Provera strukture odgovora
+      if (!data || !data.choices || !data.choices.length) {
+        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+        return {
+          success: false,
+          error: 'Primljen nepotpun odgovor od API-ja'
+        };
+      }
+      
+      // Provera da li postoji message i content
+      const messageContent = data.choices[0]?.message?.content;
+      if (!messageContent) {
+        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+        return {
+          success: true,
+          data: {
+            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+            references: []
+          }
+        };
+      }
       
       let parsedData;
       try {
-        parsedData = JSON.parse(content);
+        parsedData = JSON.parse(messageContent);
         
         // Standardizovanje strukture odgovora
         return {
           success: true,
           data: {
-            answer: parsedData.answer || parsedData.response || parsedData.text || content,
+            answer: parsedData.answer || parsedData.response || parsedData.text || messageContent,
             references: parsedData.references || []
           }
         };
@@ -142,7 +196,7 @@ Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.`;
         return {
           success: true,
           data: {
-            answer: content,
+            answer: messageContent,
             references: []
           }
         };
@@ -219,17 +273,39 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
       }
 
       const data = await response.json() as any;
-      const content = data.choices[0].message.content;
+      console.log('OpenRouter API response (generateDocument):', JSON.stringify(data));
+      
+      // Provera strukture odgovora
+      if (!data || !data.choices || !data.choices.length) {
+        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+        return {
+          success: false,
+          error: 'Primljen nepotpun odgovor od API-ja'
+        };
+      }
+      
+      // Provera da li postoji message i content
+      const messageContent = data.choices[0]?.message?.content;
+      if (!messageContent) {
+        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+        return {
+          success: true,
+          data: {
+            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+            references: []
+          }
+        };
+      }
       
       let parsedData;
       try {
-        parsedData = JSON.parse(content);
+        parsedData = JSON.parse(messageContent);
         
         // Standardizovanje strukture odgovora
         return {
           success: true,
           data: {
-            answer: parsedData.document || parsedData.text || content,
+            answer: parsedData.document || parsedData.text || messageContent,
             references: parsedData.references || []
           }
         };
@@ -239,7 +315,7 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
         return {
           success: true,
           data: {
-            answer: content,
+            answer: messageContent,
             references: []
           }
         };
@@ -312,19 +388,41 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
       }
 
       const data = await response.json() as any;
-      const content = data.choices[0].message.content;
+      console.log('OpenRouter API response (analyzeCompliance):', JSON.stringify(data));
+      
+      // Provera strukture odgovora
+      if (!data || !data.choices || !data.choices.length) {
+        console.error('Nepotpun odgovor od OpenRouter API-ja:', data);
+        return {
+          success: false,
+          error: 'Primljen nepotpun odgovor od API-ja'
+        };
+      }
+      
+      // Provera da li postoji message i content
+      const messageContent = data.choices[0]?.message?.content;
+      if (!messageContent) {
+        console.error('Nema sadržaja u odgovoru:', data.choices[0]);
+        return {
+          success: true,
+          data: {
+            answer: "Primljen prazan odgovor od AI-ja. Molimo pokušajte ponovo.",
+            references: []
+          }
+        };
+      }
       
       let parsedData;
       try {
-        parsedData = JSON.parse(content);
+        parsedData = JSON.parse(messageContent);
         
         // Standardizovanje strukture odgovora
         return {
           success: true,
           data: {
-            answer: `Ocena usklađenosti: ${parsedData.complianceScore}/10\n\n` +
-                   `Problemi:\n${parsedData.issues?.join('\n')}\n\n` +
-                   `Preporuke:\n${parsedData.recommendations?.join('\n')}`,
+            answer: `Ocena usklađenosti: ${parsedData.complianceScore || 'N/A'}/10\n\n` +
+                   `Problemi:\n${parsedData.issues?.join('\n') || 'Nisu pronađeni problemi'}\n\n` +
+                   `Preporuke:\n${parsedData.recommendations?.join('\n') || 'Nema preporuka'}`,
             references: parsedData.references || []
           }
         };
@@ -334,7 +432,7 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
         return {
           success: true,
           data: {
-            answer: content,
+            answer: messageContent,
             references: []
           }
         };
