@@ -89,13 +89,24 @@ export async function setupAIAgentRoutes(app: any) {
       const faqItems = [
         {
           question: "Šta su osnovne obaveze poslodavca prema Zakonu o BZR?",
-          answer: "Prema aktuelnom Zakonu o bezbednosti i zdravlju na radu, poslodavac je dužan da obezbedi bezbedan rad na svim radnim mestima, sprovodi mere BZR, i vrši osposobljavanje zaposlenih za bezbedan rad."
+          answer: "Prema aktuelnom Zakonu o bezbednosti i zdravlju na radu, poslodavac je dužan da obezbedi bezbedan rad na svim radnim mestima, sprovodi mere BZR, vrši osposobljavanje zaposlenih za bezbedan rad, obezbedi sredstva i opremu za ličnu zaštitu, i organizuje periodične preglede i ispitivanja opreme za rad."
         },
         {
           question: "Kada je obavezna procena rizika?",
-          answer: "Procena rizika je obavezna za sva radna mesta u radnoj okolini i mora se ažurirati u slučaju pojave nove opasnosti i promene nivoa rizika."
+          answer: "Procena rizika je obavezna za sva radna mesta u radnoj okolini i mora se ažurirati u slučaju pojave nove opasnosti i promene nivoa rizika. Takođe se mora sprovesti pre opremanja i uređivanja radnog mesta, nakon svake teže povrede na radu, i kada se promene tehnološki procesi."
+        },
+        {
+          question: "Kako se kategorizuju radna mesta sa povećanim rizikom?",
+          answer: "Radna mesta sa povećanim rizikom kategorizuju se prema Aktu o proceni rizika. To su mesta gde postoji povećana opasnost od povređivanja, nastanka profesionalnih oboljenja ili oštećenja zdravlja zaposlenog uprkos primeni svih mera zaštite. Kategorizacija se vrši na osnovu identifikovanih opasnosti, štetnosti i faktora rizika."
+        },
+        {
+          question: "Koja je razlika između povrede na radu i profesionalnog oboljenja?",
+          answer: "Povreda na radu je iznenadan i nepredviđen događaj koji je nastao tokom rada i koji je prouzrokovao telesno oštećenje zaposlenog. Profesionalno oboljenje je bolest nastala usled dugotrajne izloženosti štetnostima koje proizilaze iz radnog procesa i radne okoline."
+        },
+        {
+          question: "Šta sve obuhvata program osposobljavanja za bezbedan rad?",
+          answer: "Program osposobljavanja za bezbedan rad obuhvata upoznavanje sa opasnostima na radnom mestu, merama za bezbedan rad, pravilnom upotrebom opreme i sredstava za ličnu zaštitu, postupcima u slučaju povrede ili opasnosti, i pravima i obavezama u oblasti bezbednosti i zdravlja na radu."
         }
-        // Dodajte više FAQ stavki prema potrebi
       ];
       
       return res.json({

@@ -21,7 +21,25 @@ const AIAssistant = () => {
   const { toast } = useToast();
   const [context, setContext] = useState("");
   const [activeTab, setActiveTab] = useState("ask");
+  const [responseStyle, setResponseStyle] = useState("professional");
+  const [faqItems, setFaqItems] = useState<Array<{question: string, answer: string}>>([]);
   const [references, setReferences] = useState<any[]>([]);
+
+  // Učitavanje često postavljanih pitanja
+  useEffect(() => {
+    const loadFAQ = async () => {
+      try {
+        const response = await apiRequest("/api/agent/faq", { method: "GET" });
+        const data = await response.json();
+        if (data.success) {
+          setFaqItems(data.items);
+        }
+      } catch (error) {
+        console.error("Greška pri učitavanju FAQ:", error);
+      }
+    };
+    loadFAQ();
+  }, []);
 
   // Generisanje dokumenta
   const generateDocumentSchema = z.object({

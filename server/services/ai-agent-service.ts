@@ -18,6 +18,7 @@ interface QueryOptions {
   context?: string;
   documentType?: string;
   includeReferences?: boolean;
+  responseStyle?: 'friendly' | 'professional' | 'precise' | 'detailed';
 }
 
 class AIAgentService {
@@ -124,6 +125,28 @@ Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši
 
       if (options.includeReferences) {
         userMessage += "\n\nMolim te da u odgovoru uključiš reference na relevantne članove zakona.";
+      }
+      
+      // Dodavanje stila odgovora
+      if (options.responseStyle) {
+        let styleText = "";
+        switch(options.responseStyle.toLowerCase()) {
+          case 'friendly':
+            styleText = "PRIJATELJSKI: Neformalan, pristupačan ton sa primerima i metaforama";
+            break;
+          case 'professional':
+            styleText = "STRUČAN: Profesionalan ton sa preciznim činjenicama i objašnjenjima";
+            break;
+          case 'precise':
+            styleText = "PRECIZAN: Kratak, jasan i direktan odgovor na pitanje";
+            break;
+          case 'detailed':
+            styleText = "OPŠIRAN: Detaljan odgovor sa svim relevantnim informacijama i kontekstom";
+            break;
+          default:
+            styleText = "STRUČAN: Profesionalan ton sa preciznim činjenicama i objašnjenjima";
+        }
+        userMessage += `\n\nStil odgovora: ${styleText}`;
       }
 
       // Prvo probaj sa OpenRouter API-jem
