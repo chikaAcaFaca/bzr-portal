@@ -8,26 +8,28 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  method: string,
   url: string,
-  data?: unknown | undefined,
-  isFormData: boolean = false
-): Promise<any> {
+  options?: RequestInit
+): Promise<Response> {
   const headers: Record<string, string> = {};
   
-  if (data && !isFormData) {
+  if (options?.body && options.body instanceof FormData) {
+    // Za FormData ne postavljamo Content-Type, browser će automatski postaviti
+  } else if (options?.body && typeof options.body !== 'string') {
     headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(options.body);
   }
   
   const res = await fetch(url, {
-    method,
-    headers,
-    body: isFormData ? (data as FormData) : (data ? JSON.stringify(data) : undefined),
+    ...options,
+    headers: {
+      ...headers,
+      ...options?.headers,
+    },
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
-  return res.json();
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
