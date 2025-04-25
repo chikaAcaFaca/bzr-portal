@@ -5,33 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Send, FileText, AlertCircle, UploadCloud } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Label } from '@/components/ui/label';
-
-  const [responseStyle, setResponseStyle] = useState("professional");
-  const [faqItems, setFaqItems] = useState<Array<{question: string, answer: string}>>([]);
-
-  useEffect(() => {
-    // Učitaj FAQ pitanja iz lokalne memorije ili sa servera
-    const loadFAQ = async () => {
-      try {
-        const response = await apiRequest("/api/agent/faq", { method: "GET" });
-        const data = await response.json();
-        if (data.success) {
-          setFaqItems(data.items);
-        }
-      } catch (error) {
-        console.error("Greška pri učitavanju FAQ:", error);
-      }
-    };
-    loadFAQ();
-  }, []);
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const AIAssistant = () => {

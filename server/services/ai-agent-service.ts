@@ -44,52 +44,52 @@ class AIAgentService {
    * Inicijalizuje sistemski prompt koji sadrži informacije o zakonima i podzakonskim aktima
    */
   private getSystemPrompt(): string {
-    return `Ti si AI asistent specijalizovan za bezbednost i zdravlje na radu u Srbiji.
-Tvoja baza znanja uključuje ažurne verzije zakona sa:
-1. Zakon o bezbednosti i zdravlju na radu (https://www.paragraf.rs/propisi/zakon_o_bezbednosti_i_zdravlju_na_radu.html)
-2. Zakon o radu (https://www.paragraf.rs/propisi/zakon_o_radu.html)
+    return `Ti si AI asistent za bezbednost i zdravlje na radu u Srbiji koji piše tekstove za blog, a ne kompjuterske odgovore sa zagradama.
+
+Koristiš najnovije i ažurirane verzije zakona dostupne na sledećim zvaničnim linkovima:
+- Zakon o bezbednosti i zdravlju na radu: https://www.paragraf.rs/propisi/zakon_o_bezbednosti_i_zdravlju_na_radu.html
+- Zakon o radu: https://www.paragraf.rs/propisi/zakon_o_radu.html
+
+Tvoja baza znanja sadrži aktuelne verzije ključnih propisa:
+1. Zakon o bezbednosti i zdravlju na radu Republike Srbije (sa svim izmenama do 2023. godine)
+2. Zakon o radu Republike Srbije (sa svim izmenama do 2023. godine)
 3. Pravilnik o preventivnim merama za bezbedan i zdrav rad
+4. Pravilnik o postupku pregleda i provere opreme za rad
+5. Pravilnik o evidencijama u oblasti bezbednosti i zdravlja na radu
+6. Pravilnik o načinu i postupku procene rizika na radnom mestu
+7. Druge relevantne podzakonske akte
 
-Kada daješ odgovore:
-- Koristi prirodan, konverzacioni ton
-- Izbegavaj tehničke termine osim kad su neophodni
-- Strukturiraj odgovore u čitljive paragrafe
-- Ne prikazuj JSON ili tehničke formate u odgovorima
-4. Pravilniku o postupku pregleda i provere opreme za rad
-5. Pravilniku o evidencijama u oblasti bezbednosti i zdravlja na radu
-6. Pravilniku o načinu i postupku procene rizika na radnom mestu
-7. Ostalim relevantnim podzakonskim aktima povezanim sa ovim zakonima
-
-Poznati su ti svi članovi Zakona o bezbednosti i zdravlju na radu, naročito:
-- Članovi 9-13 (Preventivne mere)
-- Članovi 14-15 (Obaveze poslodavca)
-- Članovi 24-29 (Osposobljavanje zaposlenih)
-- Članovi 30-32 (Prava i obaveze zaposlenih)
-- Članovi 33-40 (Organizovanje poslova bezbednosti i zdravlja na radu)
-- Članovi 41-48 (Procena rizika)
+Detaljno poznaješ ključne delove Zakona o bezbednosti i zdravlju na radu:
+- Preventivne mere (čl. 9-13)
+- Obaveze poslodavca (čl. 14-15)
+- Osposobljavanje zaposlenih (čl. 24-29)
+- Prava i obaveze zaposlenih (čl. 30-32)
+- Organizovanje poslova bezbednosti i zdravlja na radu (čl. 33-40)
+- Procena rizika (čl. 41-48)
 
 Tvoja uloga je da:
-- Daješ precizne informacije o zakonskoj regulativi
-- Tumačiš zakonske odredbe
-- Pomažeš u formiranju dokumentacije u skladu sa zakonom
-- Donosiš odluke koje su usklađene sa zakonskom regulativom
-- Analiziraš usklađenost dokumenata sa važećim propisima
+- Pružaš tačne informacije o zakonima i propisima 
+- Objašnjavaš zakonske odredbe prirodnim, pristupačnim jezikom
+- Pomažeš u pripremanju dokumentacije usklađene sa zakonom
+- Daješ savete koji su u skladu sa važećim propisima
+- Procenjuješ usaglašenost dokumenata sa regulativom
 
 Kada odgovaraš na pitanja:
-1. Uvek naznači konkretan član zakona ili podzakonskog akta
-2. Objasni kako se odredba primenjuje na konkretnu situaciju
-3. Ukoliko postoje izuzeci ili posebni slučajevi, napomeni ih
-4. Ako pitanje zahteva tumačenje koje nije jasno definisano u zakonu, napomeni to i ponudi najprikladnije tumačenje
-5. Odgovori treba da budu strukturirani i precizni
-6. Svaki odgovor mora sadržati reference na relevantne zakonske odredbe
+1. Piši kao da pišeš blogove ili članke, koristi prirodan jezik bez tehničkih zapisa
+2. Navedi konkretan član zakona i objasni ga svakodnevnim jezikom
+3. Pojasni kako se propis odnosi na konkretnu situaciju
+4. Napomeni izuzetke ili posebne slučajeve kad je to važno
+5. Kada zakon nije jasan, to napomeni i predloži razumno tumačenje
+6. Struktuiraj odgovore u čitkim pasusima, koristi nabrajanja gde je to prikladno
+7. Uključi reference na propise na kraju teksta
 
-Za generisanje dokumentacije:
-1. Koristi zvanične formate i formulacije propisane zakonima
-2. Prilagodi sadržaj konkretnoj situaciji i kontekstu
-3. Navedi sve obavezne elemente za traženi tip dokumenta
+Za ton odgovora, prilagodi se sledećim stilovima prema zahtevu korisnika:
+- PRIJATELJSKI: Neformalan, pristupačan ton sa primerima i metaforama
+- STRUČAN: Profesionalan ton sa preciznim činjenicama i objašnjenjima
+- PRECIZAN: Kratak, jasan i direktan odgovor na pitanje
+- OPŠIRAN: Detaljan odgovor sa svim relevantnim informacijama i kontekstom
 
-Odgovaraj jasno, precizno i s poštovanjem prema pravnoj struci.
-Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
+Važno: Ne prikazuj odgovore u JSON formatu ili sa programerskim zagradam. Piši prirodnim jezikom kao za blog ili stručni članak.`;
   }
 
   /**
@@ -152,8 +152,8 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
                   content: userMessage
                 }
               ],
-              response_format: { type: "json_object" },
-              temperature: 0.2 // Niža temperatura za preciznije i konzistentnije odgovore
+              // Bez response_format za JSON jer želimo prirodan tekst
+              temperature: 0.4 // Srednja temperatura za prirodniji tekst
             })
           });
         } catch (error: any) {
@@ -234,29 +234,15 @@ Pri odgovaranju koristi JSON format sa ključevima "answer" i "references".`;
           };
         }
         
-        let parsedData;
-        try {
-          parsedData = JSON.parse(messageContent);
-          
-          // Standardizovanje strukture odgovora
-          return {
-            success: true,
-            data: {
-              answer: parsedData.answer || parsedData.response || parsedData.text || messageContent,
-              references: parsedData.references || []
-            }
-          };
-        } catch (e) {
-          console.error('Greška pri parsiranju JSON odgovora:', e);
-          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-          return {
-            success: true,
-            data: {
-              answer: messageContent,
-              references: []
-            }
-          };
-        }
+        // Sada direktno vraćamo odgovor bez pokušaja parsiranja JSON-a
+        console.log('Vraćanje prirodnog tekstualnog odgovora bez JSON parsiranja');
+        return {
+          success: true,
+          data: {
+            answer: messageContent,
+            references: []
+          }
+        };
       } else if (this.useGeminiFallback) {
         // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
         return geminiService.query(userMessage, this.getSystemPrompt());
@@ -303,8 +289,15 @@ Dodatni parametri:
 ${paramsText}
 
 Molim te generiši kompletan dokument usklađen sa srpskim zakonodavstvom iz oblasti bezbednosti i zdravlja na radu. 
-Dokument treba da sadrži sve potrebne sekcije, referencira odgovarajuće članove zakona i da je spreman za upotrebu.
-Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i "references" (niz referenci na zakonske odredbe).`;
+Dokument treba da sadrži sve potrebne sekcije, jasno navede odgovarajuće članove zakona i bude spreman za upotrebu.
+
+Dokument organizuj na sledeći način:
+1. Naslov i uvod (sa pravnim osnovom)
+2. Glavni sadržaj dokumenta organizovan u odgovarajuće sekcije
+3. Zaključak ili završne odredbe
+4. Na kraju dodaj listu referenci na korišćene zakonske odredbe
+
+Piši profesionalnim stilom prikladnim za zvanične dokumente, ali izbegavaj komplikovane pravne konstrukcije kad god je to moguće.`;
 
       // Prvo probaj sa OpenRouter API-jem ako je dostupan
       if (this.openRouterKey) {
@@ -331,8 +324,8 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
                   content: userMessage
                 }
               ],
-              response_format: { type: "json_object" },
-              temperature: 0.3
+              // Bez response_format za JSON jer želimo prirodan tekst 
+              temperature: 0.4
             })
           });
         } catch (error: any) {
@@ -423,29 +416,15 @@ Odgovor daj u JSON formatu sa poljima "document" (tekst generisanog dokumenta) i
           };
         }
         
-        let parsedData;
-        try {
-          parsedData = JSON.parse(messageContent);
-          
-          // Standardizovanje strukture odgovora
-          return {
-            success: true,
-            data: {
-              answer: parsedData.document || parsedData.text || messageContent,
-              references: parsedData.references || []
-            }
-          };
-        } catch (e) {
-          console.error('Greška pri parsiranju JSON odgovora:', e);
-          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-          return {
-            success: true,
-            data: {
-              answer: messageContent,
-              references: []
-            }
-          };
-        }
+        // Sada direktno vraćamo odgovor bez pokušaja parsiranja JSON-a
+        console.log('Vraćanje prirodnog tekstualnog odgovora bez JSON parsiranja');
+        return {
+          success: true,
+          data: {
+            answer: messageContent,
+            references: []
+          }
+        };
       } else if (this.useGeminiFallback) {
         // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
         return geminiService.query(userMessage, this.getSystemPrompt());
@@ -489,7 +468,13 @@ Molim te da:
 3. Za svaku neusklađenost navedeš konkretan član zakona koji se krši
 4. Predložiš izmene koje bi učinile dokument potpuno usklađenim sa zakonom
 
-Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema), "recommendations" (niz preporuka) i "references" (niz referenci na zakonske odredbe).`;
+Strukturiraj analizu na sledeći način:
+- Prvo daj ukupnu ocenu usklađenosti sa kratkim objašnjenjem
+- Zatim navedi stavke koje nisu usklađene sa regulativom, za svaku referenciraj odgovarajući član zakona
+- Nakon toga predloži konkretne izmene za rešavanje svakog problema
+- Na kraju dodaj listu najvažnijih zakonskih referenci
+
+Piši jasnim, profesionalnim stilom i organizuj tekst u logične paragrafe sa odgovarajućim podnaslovima.`;
 
       // Prvo probaj sa OpenRouter API-jem ako je dostupan
       if (this.openRouterKey) {
@@ -516,8 +501,8 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
                   content: userMessage
                 }
               ],
-              response_format: { type: "json_object" },
-              temperature: 0.2
+              // Bez response_format za JSON jer želimo prirodan tekst
+              temperature: 0.4
             })
           });
         } catch (error: any) {
@@ -608,31 +593,15 @@ Odgovor daj u JSON formatu sa poljima "complianceScore", "issues" (niz problema)
           };
         }
         
-        let parsedData;
-        try {
-          parsedData = JSON.parse(messageContent);
-          
-          // Standardizovanje strukture odgovora za analizu usklađenosti
-          return {
-            success: true,
-            data: {
-              answer: `Ocena usklađenosti: ${parsedData.complianceScore}/10\n\n` +
-                      `Problemi:\n${(parsedData.issues || []).map((issue: string, i: number) => `${i+1}. ${issue}`).join('\n')}\n\n` +
-                      `Preporuke:\n${(parsedData.recommendations || []).map((rec: string, i: number) => `${i+1}. ${rec}`).join('\n')}`,
-              references: parsedData.references || []
-            }
-          };
-        } catch (e) {
-          console.error('Greška pri parsiranju JSON odgovora:', e);
-          // Ako parsiranje ne uspe, vrati sirovi tekst kao odgovor
-          return {
-            success: true,
-            data: {
-              answer: messageContent,
-              references: []
-            }
-          };
-        }
+        // Sada direktno vraćamo odgovor bez pokušaja parsiranja JSON-a
+        console.log('Vraćanje prirodnog tekstualnog odgovora bez JSON parsiranja');
+        return {
+          success: true,
+          data: {
+            answer: messageContent,
+            references: []
+          }
+        };
       } else if (this.useGeminiFallback) {
         // Ako OpenRouter API nije dostupan, koristi Gemini API direktno
         return geminiService.query(userMessage, this.getSystemPrompt());
