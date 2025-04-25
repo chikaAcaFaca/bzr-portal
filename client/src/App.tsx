@@ -17,6 +17,7 @@ import EmployeeTraining from "./pages/employee-training";
 import Reports from "./pages/reports";
 import DocumentProcessor from "./pages/document-processor";
 import AIAssistant from "./pages/ai-assistant";
+import KnowledgeReferences from "./pages/knowledge-references";
 import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
             <Route path="/reports" component={Reports} />
             <Route path="/document-processor" component={DocumentProcessor} />
             <Route path="/ai-assistant" component={AIAssistant} />
+            <Route path="/knowledge-references" component={KnowledgeReferences} />
             <Route component={NotFound} />
           </Switch>
         </main>

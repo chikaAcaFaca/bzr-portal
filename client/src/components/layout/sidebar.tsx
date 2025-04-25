@@ -86,6 +86,12 @@ export default function Sidebar() {
                 active={location === "/ai-assistant"}
               />
               <NavItem
+                href="/knowledge-references"
+                icon="fas fa-book"
+                label="Reference znanja"
+                active={location === "/knowledge-references"}
+              />
+              <NavItem
                 href="/base-documents"
                 icon="fas fa-file"
                 label="Bazna dokumenta"
