@@ -11,7 +11,8 @@ import {
   insertSafetyMeasureSchema,
   insertTrainingTypeSchema,
   insertEmployeeTrainingSchema,
-  insertCommonInstructionSchema
+  insertCommonInstructionSchema,
+  insertKnowledgeReferenceSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -820,6 +821,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register document processing routes
   await setupDocumentProcessingRoutes(app);
   await setupFileProcessingRoutes(app);
+  
+  // Knowledge References
+  app.get('/api/knowledge-references', async (req: Request, res: Response) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const onlyActive = req.query.active === 'true';
+      
+      let references;
+      if (category) {
+        references = await storage.getKnowledgeReferencesByCategory(category);
+      } else if (onlyActive) {
+        references = await storage.getActiveKnowledgeReferences();
+      } else {
+        references = await storage.getAllKnowledgeReferences();
+      }
+      
+      res.json(references);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch knowledge references' });
+    }
+  });
+
+  app.get('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const reference = await storage.getKnowledgeReference(id);
+      
+      if (!reference) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+      
+      res.json(reference);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch knowledge reference' });
+    }
+  });
+
+  app.post('/api/knowledge-references', async (req: Request, res: Response) => {
+    try {
+      const validatedData = insertKnowledgeReferenceSchema.parse(req.body);
+      const reference = await storage.createKnowledgeReference(validatedData);
+      res.status(201).json(reference);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid knowledge reference data', errors: error.format() });
+      }
+      res.status(500).json({ message: 'Failed to create knowledge reference' });
+    }
+  });
+
+  app.put('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertKnowledgeReferenceSchema.partial().parse(req.body);
+      const reference = await storage.updateKnowledgeReference(id, validatedData);
+      
+      if (!reference) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+      
+      res.json(reference);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid knowledge reference data', errors: error.format() });
+      }
+      res.status(500).json({ message: 'Failed to update knowledge reference' });
+    }
+  });
+
+  app.delete('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteKnowledgeReference(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to delete knowledge reference' });
+    }
+  });
   
   // Register AI agent routes
   await setupAIAgentRoutes(app);

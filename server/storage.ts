@@ -119,6 +119,7 @@ export class MemStorage implements IStorage {
   private trainingTypes: Map<number, TrainingType>;
   private employeeTrainings: Map<number, EmployeeTraining>;
   private commonInstructions: Map<number, CommonInstruction>;
+  private knowledgeReferences: Map<number, KnowledgeReference>;
   
   private userCurrentId: number;
   private baseDocumentCurrentId: number;
@@ -131,6 +132,7 @@ export class MemStorage implements IStorage {
   private trainingTypeCurrentId: number;
   private employeeTrainingCurrentId: number;
   private commonInstructionCurrentId: number;
+  private knowledgeReferenceCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -144,6 +146,7 @@ export class MemStorage implements IStorage {
     this.trainingTypes = new Map();
     this.employeeTrainings = new Map();
     this.commonInstructions = new Map();
+    this.knowledgeReferences = new Map();
     
     this.userCurrentId = 1;
     this.baseDocumentCurrentId = 1;
@@ -156,6 +159,7 @@ export class MemStorage implements IStorage {
     this.trainingTypeCurrentId = 1;
     this.employeeTrainingCurrentId = 1;
     this.commonInstructionCurrentId = 1;
+    this.knowledgeReferenceCurrentId = 1;
     
     // Initialize with some data
     this.initializeData();
@@ -547,6 +551,58 @@ export class MemStorage implements IStorage {
 
   async deleteCommonInstruction(id: number): Promise<boolean> {
     return this.commonInstructions.delete(id);
+  }
+
+  // Knowledge References
+  async getKnowledgeReference(id: number): Promise<KnowledgeReference | undefined> {
+    return this.knowledgeReferences.get(id);
+  }
+
+  async getAllKnowledgeReferences(): Promise<KnowledgeReference[]> {
+    return Array.from(this.knowledgeReferences.values());
+  }
+
+  async getActiveKnowledgeReferences(): Promise<KnowledgeReference[]> {
+    return Array.from(this.knowledgeReferences.values()).filter(
+      (reference) => reference.isActive,
+    );
+  }
+
+  async getKnowledgeReferencesByCategory(category: string): Promise<KnowledgeReference[]> {
+    return Array.from(this.knowledgeReferences.values()).filter(
+      (reference) => reference.category === category,
+    );
+  }
+
+  async createKnowledgeReference(reference: InsertKnowledgeReference): Promise<KnowledgeReference> {
+    const id = this.knowledgeReferenceCurrentId++;
+    const now = new Date();
+    const knowledgeReference: KnowledgeReference = { 
+      ...reference, 
+      id, 
+      createdAt: now, 
+      updatedAt: now 
+    };
+    this.knowledgeReferences.set(id, knowledgeReference);
+    return knowledgeReference;
+  }
+
+  async updateKnowledgeReference(id: number, reference: Partial<InsertKnowledgeReference>): Promise<KnowledgeReference | undefined> {
+    const existingReference = this.knowledgeReferences.get(id);
+    if (!existingReference) return undefined;
+    
+    const now = new Date();
+    const updatedReference: KnowledgeReference = { 
+      ...existingReference, 
+      ...reference, 
+      updatedAt: now 
+    };
+    this.knowledgeReferences.set(id, updatedReference);
+    return updatedReference;
+  }
+
+  async deleteKnowledgeReference(id: number): Promise<boolean> {
+    return this.knowledgeReferences.delete(id);
   }
 }
 
