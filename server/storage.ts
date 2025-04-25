@@ -9,7 +9,8 @@ import {
   safetyMeasures, type SafetyMeasure, type InsertSafetyMeasure,
   trainingTypes, type TrainingType, type InsertTrainingType,
   employeeTrainings, type EmployeeTraining, type InsertEmployeeTraining,
-  commonInstructions, type CommonInstruction, type InsertCommonInstruction
+  commonInstructions, type CommonInstruction, type InsertCommonInstruction,
+  knowledgeReferences, type KnowledgeReference, type InsertKnowledgeReference
 } from "@shared/schema";
 
 export interface IStorage {
@@ -95,6 +96,15 @@ export interface IStorage {
   createCommonInstruction(instruction: InsertCommonInstruction): Promise<CommonInstruction>;
   updateCommonInstruction(id: number, instruction: Partial<InsertCommonInstruction>): Promise<CommonInstruction | undefined>;
   deleteCommonInstruction(id: number): Promise<boolean>;
+  
+  // Knowledge References
+  getKnowledgeReference(id: number): Promise<KnowledgeReference | undefined>;
+  getAllKnowledgeReferences(): Promise<KnowledgeReference[]>;
+  getActiveKnowledgeReferences(): Promise<KnowledgeReference[]>;
+  getKnowledgeReferencesByCategory(category: string): Promise<KnowledgeReference[]>;
+  createKnowledgeReference(reference: InsertKnowledgeReference): Promise<KnowledgeReference>;
+  updateKnowledgeReference(id: number, reference: Partial<InsertKnowledgeReference>): Promise<KnowledgeReference | undefined>;
+  deleteKnowledgeReference(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {

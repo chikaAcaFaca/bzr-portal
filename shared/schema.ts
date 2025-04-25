@@ -248,6 +248,26 @@ export const insertCommonInstructionSchema = createInsertSchema(commonInstructio
   isActive: true,
 });
 
+// Knowledge References for AI Agent
+export const knowledgeReferences = pgTable("knowledge_references", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"), // general, law, regulation, guideline, etc.
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertKnowledgeReferenceSchema = createInsertSchema(knowledgeReferences).pick({
+  title: true,
+  url: true,
+  description: true,
+  category: true,
+  isActive: true,
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -281,3 +301,6 @@ export type InsertEmployeeTraining = z.infer<typeof insertEmployeeTrainingSchema
 
 export type CommonInstruction = typeof commonInstructions.$inferSelect;
 export type InsertCommonInstruction = z.infer<typeof insertCommonInstructionSchema>;
+
+export type KnowledgeReference = typeof knowledgeReferences.$inferSelect;
+export type InsertKnowledgeReference = z.infer<typeof insertKnowledgeReferenceSchema>;
