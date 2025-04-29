@@ -19,6 +19,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupDocumentProcessingRoutes } from "./routes/document-processing";
 import { setupFileProcessingRoutes } from "./routes/file-processing";
 import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
+import { setupDocumentRoutes } from './routes/document-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -35,11 +36,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const document = await storage.getBaseDocument(id);
-      
+
       if (!document) {
         return res.status(404).json({ message: 'Document not found' });
       }
-      
+
       res.json(document);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch document' });
@@ -64,11 +65,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertBaseDocumentSchema.partial().parse(req.body);
       const document = await storage.updateBaseDocument(id, validatedData);
-      
+
       if (!document) {
         return res.status(404).json({ message: 'Document not found' });
       }
-      
+
       res.json(document);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -82,11 +83,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteBaseDocument(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Document not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete document' });
@@ -107,11 +108,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const position = await storage.getJobPosition(id);
-      
+
       if (!position) {
         return res.status(404).json({ message: 'Job position not found' });
       }
-      
+
       res.json(position);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch job position' });
@@ -136,11 +137,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertJobPositionSchema.partial().parse(req.body);
       const position = await storage.updateJobPosition(id, validatedData);
-      
+
       if (!position) {
         return res.status(404).json({ message: 'Job position not found' });
       }
-      
+
       res.json(position);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -154,11 +155,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteJobPosition(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Job position not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete job position' });
@@ -169,14 +170,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/employees', async (req: Request, res: Response) => {
     try {
       const jobPositionId = req.query.jobPositionId ? parseInt(req.query.jobPositionId as string) : undefined;
-      
+
       let employees;
       if (jobPositionId) {
         employees = await storage.getEmployeesByJobPosition(jobPositionId);
       } else {
         employees = await storage.getAllEmployees();
       }
-      
+
       res.json(employees);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch employees' });
@@ -187,11 +188,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const employee = await storage.getEmployee(id);
-      
+
       if (!employee) {
         return res.status(404).json({ message: 'Employee not found' });
       }
-      
+
       res.json(employee);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch employee' });
@@ -216,11 +217,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertEmployeeSchema.partial().parse(req.body);
       const employee = await storage.updateEmployee(id, validatedData);
-      
+
       if (!employee) {
         return res.status(404).json({ message: 'Employee not found' });
       }
-      
+
       res.json(employee);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -234,11 +235,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteEmployee(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Employee not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete employee' });
@@ -249,12 +250,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/job-descriptions', async (req: Request, res: Response) => {
     try {
       const jobPositionId = req.query.jobPositionId ? parseInt(req.query.jobPositionId as string) : undefined;
-      
+
       if (jobPositionId) {
         const description = await storage.getJobDescriptionByJobPosition(jobPositionId);
         return res.json(description || null);
       }
-      
+
       const descriptions = await storage.getAllJobDescriptions();
       res.json(descriptions);
     } catch (error) {
@@ -266,11 +267,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const description = await storage.getJobDescription(id);
-      
+
       if (!description) {
         return res.status(404).json({ message: 'Job description not found' });
       }
-      
+
       res.json(description);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch job description' });
@@ -295,11 +296,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertJobDescriptionSchema.partial().parse(req.body);
       const description = await storage.updateJobDescription(id, validatedData);
-      
+
       if (!description) {
         return res.status(404).json({ message: 'Job description not found' });
       }
-      
+
       res.json(description);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -313,11 +314,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteJobDescription(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Job description not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete job description' });
@@ -328,14 +329,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/risk-categories', async (req: Request, res: Response) => {
     try {
       const jobPositionId = req.query.jobPositionId ? parseInt(req.query.jobPositionId as string) : undefined;
-      
+
       let categories;
       if (jobPositionId) {
         categories = await storage.getRiskCategoriesByJobPosition(jobPositionId);
       } else {
         categories = await storage.getAllRiskCategories();
       }
-      
+
       res.json(categories);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch risk categories' });
@@ -346,11 +347,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const category = await storage.getRiskCategory(id);
-      
+
       if (!category) {
         return res.status(404).json({ message: 'Risk category not found' });
       }
-      
+
       res.json(category);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch risk category' });
@@ -375,11 +376,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertRiskCategorySchema.partial().parse(req.body);
       const category = await storage.updateRiskCategory(id, validatedData);
-      
+
       if (!category) {
         return res.status(404).json({ message: 'Risk category not found' });
       }
-      
+
       res.json(category);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -393,11 +394,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteRiskCategory(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Risk category not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete risk category' });
@@ -408,14 +409,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/risks', async (req: Request, res: Response) => {
     try {
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      
+
       let risks;
       if (categoryId) {
         risks = await storage.getRisksByCategory(categoryId);
       } else {
         risks = await storage.getAllRisks();
       }
-      
+
       res.json(risks);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch risks' });
@@ -426,11 +427,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const risk = await storage.getRisk(id);
-      
+
       if (!risk) {
         return res.status(404).json({ message: 'Risk not found' });
       }
-      
+
       res.json(risk);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch risk' });
@@ -455,11 +456,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertRiskSchema.partial().parse(req.body);
       const risk = await storage.updateRisk(id, validatedData);
-      
+
       if (!risk) {
         return res.status(404).json({ message: 'Risk not found' });
       }
-      
+
       res.json(risk);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -473,11 +474,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteRisk(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Risk not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete risk' });
@@ -488,14 +489,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/safety-measures', async (req: Request, res: Response) => {
     try {
       const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
-      
+
       let measures;
       if (categoryId) {
         measures = await storage.getSafetyMeasuresByRiskCategory(categoryId);
       } else {
         measures = await storage.getAllSafetyMeasures();
       }
-      
+
       res.json(measures);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch safety measures' });
@@ -506,11 +507,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const measure = await storage.getSafetyMeasure(id);
-      
+
       if (!measure) {
         return res.status(404).json({ message: 'Safety measure not found' });
       }
-      
+
       res.json(measure);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch safety measure' });
@@ -535,11 +536,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertSafetyMeasureSchema.partial().parse(req.body);
       const measure = await storage.updateSafetyMeasure(id, validatedData);
-      
+
       if (!measure) {
         return res.status(404).json({ message: 'Safety measure not found' });
       }
-      
+
       res.json(measure);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -553,11 +554,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteSafetyMeasure(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Safety measure not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete safety measure' });
@@ -578,11 +579,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const type = await storage.getTrainingType(id);
-      
+
       if (!type) {
         return res.status(404).json({ message: 'Training type not found' });
       }
-      
+
       res.json(type);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch training type' });
@@ -607,11 +608,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertTrainingTypeSchema.partial().parse(req.body);
       const type = await storage.updateTrainingType(id, validatedData);
-      
+
       if (!type) {
         return res.status(404).json({ message: 'Training type not found' });
       }
-      
+
       res.json(type);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -625,11 +626,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteTrainingType(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Training type not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete training type' });
@@ -641,7 +642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const employeeId = req.query.employeeId ? parseInt(req.query.employeeId as string) : undefined;
       const status = req.query.status as string | undefined;
-      
+
       let trainings;
       if (employeeId) {
         trainings = await storage.getEmployeeTrainingsByEmployee(employeeId);
@@ -650,7 +651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         trainings = await storage.getAllEmployeeTrainings();
       }
-      
+
       res.json(trainings);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch employee trainings' });
@@ -661,11 +662,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const training = await storage.getEmployeeTraining(id);
-      
+
       if (!training) {
         return res.status(404).json({ message: 'Employee training not found' });
       }
-      
+
       res.json(training);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch employee training' });
@@ -690,11 +691,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertEmployeeTrainingSchema.partial().parse(req.body);
       const training = await storage.updateEmployeeTraining(id, validatedData);
-      
+
       if (!training) {
         return res.status(404).json({ message: 'Employee training not found' });
       }
-      
+
       res.json(training);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -708,11 +709,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteEmployeeTraining(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Employee training not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete employee training' });
@@ -733,11 +734,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const instruction = await storage.getCommonInstruction(id);
-      
+
       if (!instruction) {
         return res.status(404).json({ message: 'Common instruction not found' });
       }
-      
+
       res.json(instruction);
     } catch (error) {
       res.status(500).json({ message: 'Failed to fetch common instruction' });
@@ -762,11 +763,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const validatedData = insertCommonInstructionSchema.partial().parse(req.body);
       const instruction = await storage.updateCommonInstruction(id, validatedData);
-      
+
       if (!instruction) {
         return res.status(404).json({ message: 'Common instruction not found' });
       }
-      
+
       res.json(instruction);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -780,32 +781,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteCommonInstruction(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: 'Common instruction not found' });
       }
-      
+
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ message: 'Failed to delete common instruction' });
     }
   });
-  
+
   // Dashboard statistics
   app.get('/api/stats', async (req: Request, res: Response) => {
     try {
       const employees = await storage.getAllEmployees();
       const employeeCount = employees.length;
-      
+
       const employeeTrainings = await storage.getAllEmployeeTrainings();
-      
+
       const completedTrainings = employeeTrainings.filter(t => t.status === 'Završeno').length;
       const inProgressTrainings = employeeTrainings.filter(t => t.status === 'U toku').length;
       const scheduledTrainings = employeeTrainings.filter(t => t.status === 'Zakazano').length;
-      
+
       const documents = await storage.getAllBaseDocuments();
       const documentCount = documents.length;
-      
+
       res.json({
         employeeCount,
         completedTrainings,
@@ -820,96 +821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register document processing routes
   await setupDocumentProcessingRoutes(app);
-  await setupFileProcessingRoutes(app);
-  
-  // Knowledge References
-  app.get('/api/knowledge-references', async (req: Request, res: Response) => {
-    try {
-      const category = req.query.category as string | undefined;
-      const onlyActive = req.query.active === 'true';
-      
-      let references;
-      if (category) {
-        references = await storage.getKnowledgeReferencesByCategory(category);
-      } else if (onlyActive) {
-        references = await storage.getActiveKnowledgeReferences();
-      } else {
-        references = await storage.getAllKnowledgeReferences();
-      }
-      
-      res.json(references);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch knowledge references' });
-    }
-  });
-
-  app.get('/api/knowledge-references/:id', async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const reference = await storage.getKnowledgeReference(id);
-      
-      if (!reference) {
-        return res.status(404).json({ message: 'Knowledge reference not found' });
-      }
-      
-      res.json(reference);
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to fetch knowledge reference' });
-    }
-  });
-
-  app.post('/api/knowledge-references', async (req: Request, res: Response) => {
-    try {
-      console.log('Received knowledge reference data:', req.body);
-      const validatedData = insertKnowledgeReferenceSchema.parse(req.body);
-      console.log('Validated data:', validatedData);
-      const reference = await storage.createKnowledgeReference(validatedData);
-      res.status(201).json(reference);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.format());
-        return res.status(400).json({ message: 'Invalid knowledge reference data', errors: error.format() });
-      }
-      console.error('Server error:', error);
-      res.status(500).json({ message: 'Failed to create knowledge reference' });
-    }
-  });
-
-  app.put('/api/knowledge-references/:id', async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const validatedData = insertKnowledgeReferenceSchema.partial().parse(req.body);
-      const reference = await storage.updateKnowledgeReference(id, validatedData);
-      
-      if (!reference) {
-        return res.status(404).json({ message: 'Knowledge reference not found' });
-      }
-      
-      res.json(reference);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid knowledge reference data', errors: error.format() });
-      }
-      res.status(500).json({ message: 'Failed to update knowledge reference' });
-    }
-  });
-
-  app.delete('/api/knowledge-references/:id', async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteKnowledgeReference(id);
-      
-      if (!success) {
-        return res.status(404).json({ message: 'Knowledge reference not found' });
-      }
-      
-      res.status(204).end();
-    } catch (error) {
-      res.status(500).json({ message: 'Failed to delete knowledge reference' });
-    }
-  });
-  
-  // Register AI agent routes
+  await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
 
   const httpServer = createServer(app);
