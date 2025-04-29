@@ -43,20 +43,22 @@ export default function QuickActions() {
           Brze akcije
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-5 space-y-4">
-        {actions.map((action, index) => (
-          <Link href={action.href} key={index}>
-            <a className="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="rounded-full bg-primary-100 p-2 mr-3">
-                <i className={`${action.icon} text-primary-600`}></i>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">{action.title}</p>
+      <CardContent className="p-5">
+        <div className="grid grid-cols-2 gap-4">
+          {actions.map((action, index) => (
+            <Link href={action.href} key={index}>
+              <a className="flex flex-col p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors h-full">
+                <div className="flex items-center mb-2">
+                  <div className="rounded-full bg-primary-100 p-2 mr-2">
+                    <i className={`${action.icon} text-primary-600`}></i>
+                  </div>
+                  <p className="text-sm font-medium text-gray-900">{action.title}</p>
+                </div>
                 <p className="text-xs text-gray-500">{action.description}</p>
-              </div>
-            </a>
-          </Link>
-        ))}
+              </a>
+            </Link>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
