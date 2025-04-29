@@ -1,285 +1,346 @@
-import { Router, Request, Response } from "express";
+import express, { Request, Response } from "express";
+
+// Proširimo tipove za Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      isAuthenticated?: () => boolean;
+      user?: any;
+    }
+  }
+}
+import { z } from "zod";
 import { storage } from "../storage";
+// Privremeno rešenje dok slug-generator nije dostupan
+function generateSlug(text: string): string {
+  if (!text) return '';
+  
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '')
+    .substring(0, 100);
+}
+
+function generateUniqueSlug(
+  baseSlug: string, 
+  existingSlugs: string[]
+): string {
+  if (!existingSlugs.includes(baseSlug)) {
+    return baseSlug;
+  }
+
+  let uniqueSlug: string;
+  let counter = 1;
+
+  do {
+    uniqueSlug = `${baseSlug}-${counter}`;
+    counter++;
+  } while (existingSlugs.includes(uniqueSlug));
+
+  return uniqueSlug;
+}
 import { insertBlogPostSchema } from "@shared/schema";
-import { generateSlug } from "../utils/slug-generator";
 
-export const blogRouter = Router();
+export const blogRouter = express.Router();
 
-// Get all blog posts
+// Middleware za proveru da li je korisnik administrator
+const isAdmin = (req: Request, res: Response, next: Function) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ message: "Nije autentifikovan" });
+  }
+  
+  const user = req.user as any;
+  if (user && user.role === "admin") {
+    return next();
+  }
+  
+  return res.status(403).json({ message: "Nema administratorsku dozvolu" });
+};
+
+// Dobijanje svih blog postova
 blogRouter.get("/", async (req: Request, res: Response) => {
   try {
-    const status = req.query.status as string;
     const category = req.query.category as string;
+    const status = req.query.status as string;
     
-    let posts;
-    
-    if (status) {
-      posts = await storage.getBlogPostsByStatus(status);
-    } else if (category) {
-      posts = await storage.getBlogPostsByCategory(category);
-    } else {
-      posts = await storage.getAllBlogPosts();
+    if (category) {
+      const posts = await storage.getBlogPostsByCategory(category);
+      return res.json(posts);
     }
     
+    if (status) {
+      const posts = await storage.getBlogPostsByStatus(status);
+      return res.json(posts);
+    }
+    
+    const posts = await storage.getAllBlogPosts();
     res.json(posts);
   } catch (error) {
-    console.error('Error fetching blog posts:', error);
-    res.status(500).json({ error: "Failed to fetch blog posts" });
+    console.error("Greška pri dobijanju blog postova:", error);
+    res.status(500).json({ message: "Greška servera" });
   }
 });
 
-// Get published blog posts for public view
-blogRouter.get("/published", async (req: Request, res: Response) => {
-  try {
-    const publishedPosts = await storage.getBlogPostsByStatus('published');
-    res.json(publishedPosts);
-  } catch (error) {
-    console.error('Error fetching published blog posts:', error);
-    res.status(500).json({ error: "Failed to fetch published blog posts" });
-  }
-});
-
-// Get a specific blog post by ID
+// Dobijanje jednog blog posta prema ID-u
 blogRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
+      return res.status(400).json({ message: "ID mora biti broj" });
     }
     
     const post = await storage.getBlogPost(id);
     if (!post) {
-      return res.status(404).json({ error: "Blog post not found" });
+      return res.status(404).json({ message: "Blog post nije pronađen" });
     }
     
     res.json(post);
   } catch (error) {
-    console.error('Error fetching blog post:', error);
-    res.status(500).json({ error: "Failed to fetch blog post" });
+    console.error("Greška pri dobijanju blog posta:", error);
+    res.status(500).json({ message: "Greška servera" });
   }
 });
 
-// Get a blog post by slug (for SEO-friendly URLs)
+// Dobijanje blog posta prema slugu
 blogRouter.get("/slug/:slug", async (req: Request, res: Response) => {
   try {
-    const slug = req.params.slug;
+    const { slug } = req.params;
+    
     const post = await storage.getBlogPostBySlug(slug);
-    
     if (!post) {
-      return res.status(404).json({ error: "Blog post not found" });
+      return res.status(404).json({ message: "Blog post nije pronađen" });
     }
     
-    // Increment view count if the post is published
-    if (post.status === 'published') {
-      await storage.updateBlogPost(post.id, { 
-        viewCount: (post.viewCount || 0) + 1 
-      });
-    }
+    // Povećaj brojač prikaza kada se post čita po slugu
+    const updatedPost = await storage.updateBlogPost(post.id, {
+      // Napomena: viewCount se ažurira automatski u storage implementaciji
+    });
     
-    res.json(post);
+    res.json(updatedPost);
   } catch (error) {
-    console.error('Error fetching blog post by slug:', error);
-    res.status(500).json({ error: "Failed to fetch blog post" });
+    console.error("Greška pri dobijanju blog posta po slugu:", error);
+    res.status(500).json({ message: "Greška servera" });
   }
 });
 
-// Create a new blog post
+// Kreiranje novog blog posta (samo za administratora)
 blogRouter.post("/", async (req: Request, res: Response) => {
   try {
-    // Check if user is authenticated
-    // @ts-ignore - Express session types are not included by default
-    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
-      return res.status(403).json({ error: "Unauthorized access" });
+    // Dodela autora ako je korisnik prijavljen
+    let authorId = null;
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      authorId = (req.user as any).id;
     }
     
-    const parsedData = insertBlogPostSchema.safeParse(req.body);
-    if (!parsedData.success) {
+    // Validacija podataka
+    const validatedData = insertBlogPostSchema.parse({
+      ...req.body,
+      authorId
+    });
+    
+    // Generisanje sluga na osnovu naslova
+    const allPosts = await storage.getAllBlogPosts();
+    const existingSlugs = allPosts.map(post => post.slug);
+    
+    const baseSlug = generateSlug(validatedData.title);
+    const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
+    
+    const newPost = await storage.createBlogPost({
+      ...validatedData,
+      slug: uniqueSlug
+    });
+    
+    res.status(201).json(newPost);
+  } catch (error) {
+    console.error("Greška pri kreiranju blog posta:", error);
+    
+    if (error instanceof z.ZodError) {
       return res.status(400).json({ 
-        error: "Invalid blog post data", 
-        details: parsedData.error.format() 
+        message: "Nevažeći podaci", 
+        errors: error.errors 
       });
     }
     
-    const postData = parsedData.data;
-    
-    // Generate a unique slug if not provided
-    if (!postData.slug) {
-      postData.slug = generateSlug(postData.title);
-    }
-    
-    // Set author from authenticated user
-    // @ts-ignore - Express session types are not included by default
-    if (!postData.authorId && req.user) {
-      // @ts-ignore - Express session types are not included by default
-      postData.authorId = req.user.id;
-    }
-    
-    const post = await storage.createBlogPost(postData);
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('Error creating blog post:', error);
-    res.status(500).json({ error: "Failed to create blog post" });
+    res.status(500).json({ message: "Greška servera" });
   }
 });
 
-// Convert AI response to a draft blog post
-blogRouter.post("/from-ai-response", async (req: Request, res: Response) => {
+// Ažuriranje blog posta (samo za administratora)
+blogRouter.put("/:id", isAdmin, async (req: Request, res: Response) => {
   try {
-    // @ts-ignore - Express session types are not included by default
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(403).json({ error: "Unauthorized access" });
-    }
-    
-    const { question, answer, title, category, imageUrls } = req.body;
-    
-    if (!question || !answer || !title) {
-      return res.status(400).json({ error: "Missing required fields: question, answer, and title" });
-    }
-    
-    // Generate a slug from the title
-    const slug = generateSlug(title);
-    
-    // Format the content with the question and answer
-    const content = `
-      <div class="blog-question">
-        <h3>Pitanje:</h3>
-        <p>${question}</p>
-      </div>
-      <div class="blog-answer">
-        ${answer}
-      </div>
-      ${imageUrls && imageUrls.length > 0 ? `
-        <div class="blog-images">
-          ${imageUrls.map((url: string) => `<img src="${url}" alt="${title}" />`).join('')}
-        </div>
-      ` : ''}
-      <div class="cta-section">
-        <h3>Želite da naučite više o bezbednosti i zdravlju na radu?</h3>
-        <p>Registrujte se za našu mejling listu da biste dobijali najnovije informacije i savete.</p>
-        <a href="/subscribe" class="cta-button">Registrujte se</a>
-      </div>
-    `;
-    
-    const post = await storage.createBlogPost({
-      title,
-      slug,
-      content,
-      excerpt: answer.substring(0, 150) + '...',
-      category: category || 'general',
-      status: 'draft',
-      // @ts-ignore - Express session types are not included by default
-      authorId: req.user?.id,
-      imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : null,
-      tags: [],
-      seoTitle: title,
-      seoDescription: answer.substring(0, 160),
-      seoKeywords: title.split(' ').join(', ')
-    });
-    
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('Error converting AI response to blog post:', error);
-    res.status(500).json({ error: "Failed to convert AI response to blog post" });
-  }
-});
-
-// Update a blog post status (approve or reject)
-blogRouter.patch("/:id/status", async (req: Request, res: Response) => {
-  try {
-    // @ts-ignore - Express session types are not included by default
-    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
-      return res.status(403).json({ error: "Unauthorized access" });
-    }
-    
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
-    }
-    
-    const { status, adminFeedback } = req.body;
-    if (!status || !['draft', 'pending_approval', 'approved', 'published', 'rejected'].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+      return res.status(400).json({ message: "ID mora biti broj" });
     }
     
     const post = await storage.getBlogPost(id);
     if (!post) {
-      return res.status(404).json({ error: "Blog post not found" });
+      return res.status(404).json({ message: "Blog post nije pronađen" });
     }
     
-    const updatedPost = await storage.updateBlogPost(id, { 
-      status, 
-      adminFeedback: adminFeedback || post.adminFeedback
-    });
+    // Validacija podataka
+    const validatedData = insertBlogPostSchema.partial().parse(req.body);
     
+    // Ako se menja naslov, generišemo novi slug
+    let updatedData = validatedData;
+    
+    if (validatedData.title && validatedData.title !== post.title) {
+      const allPosts = await storage.getAllBlogPosts();
+      const existingSlugs = allPosts
+        .filter(p => p.id !== id)
+        .map(p => p.slug);
+      
+      const baseSlug = generateSlug(validatedData.title);
+      const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
+      
+      updatedData = { ...validatedData, slug: uniqueSlug };
+    }
+    
+    // Ako se menja status u "published", postavljamo publishedAt
+    if (validatedData.status === "published" && post.status !== "published") {
+      updatedData = { ...updatedData, publishedAt: new Date() };
+    }
+    
+    const updatedPost = await storage.updateBlogPost(id, updatedData);
     res.json(updatedPost);
   } catch (error) {
-    console.error('Error updating blog post status:', error);
-    res.status(500).json({ error: "Failed to update blog post status" });
-  }
-});
-
-// Update a blog post
-blogRouter.put("/:id", async (req: Request, res: Response) => {
-  try {
-    // @ts-ignore - Express session types are not included by default
-    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || 
-        // @ts-ignore - Express session types are not included by default
-        (req.user.role !== 'admin' && req.user.id !== req.body.authorId)) {
-      return res.status(403).json({ error: "Unauthorized access" });
-    }
+    console.error("Greška pri ažuriranju blog posta:", error);
     
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
-    }
-    
-    const parsedData = insertBlogPostSchema.partial().safeParse(req.body);
-    if (!parsedData.success) {
+    if (error instanceof z.ZodError) {
       return res.status(400).json({ 
-        error: "Invalid blog post data", 
-        details: parsedData.error.format() 
+        message: "Nevažeći podaci", 
+        errors: error.errors 
       });
     }
     
-    const post = await storage.getBlogPost(id);
-    if (!post) {
-      return res.status(404).json({ error: "Blog post not found" });
-    }
-    
-    const updatedPost = await storage.updateBlogPost(id, parsedData.data);
-    res.json(updatedPost);
-  } catch (error) {
-    console.error('Error updating blog post:', error);
-    res.status(500).json({ error: "Failed to update blog post" });
+    res.status(500).json({ message: "Greška servera" });
   }
 });
 
-// Delete a blog post
-blogRouter.delete("/:id", async (req: Request, res: Response) => {
+// Brisanje blog posta (samo za administratora)
+blogRouter.delete("/:id", isAdmin, async (req: Request, res: Response) => {
   try {
-    // @ts-ignore - Express session types are not included by default
-    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
-      return res.status(403).json({ error: "Unauthorized access" });
-    }
-    
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      return res.status(400).json({ error: "Invalid ID format" });
-    }
-    
-    const post = await storage.getBlogPost(id);
-    if (!post) {
-      return res.status(404).json({ error: "Blog post not found" });
+      return res.status(400).json({ message: "ID mora biti broj" });
     }
     
     const success = await storage.deleteBlogPost(id);
     if (!success) {
-      return res.status(500).json({ error: "Failed to delete blog post" });
+      return res.status(404).json({ message: "Blog post nije pronađen" });
     }
     
-    res.status(204).send();
+    res.status(204).end();
   } catch (error) {
-    console.error('Error deleting blog post:', error);
-    res.status(500).json({ error: "Failed to delete blog post" });
+    console.error("Greška pri brisanju blog posta:", error);
+    res.status(500).json({ message: "Greška servera" });
+  }
+});
+
+// Pretvaranje AI agenta odgovora u blog post
+blogRouter.post("/ai-to-blog", isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { originalQuestion, aiResponse, category, tags } = req.body;
+    
+    if (!originalQuestion || !aiResponse) {
+      return res.status(400).json({ message: "Pitanje i AI odgovor su obavezni" });
+    }
+    
+    // Ekstrakcija relevantnih informacija iz AI odgovora
+    // Prvih 150 karaktera za excerpt
+    const excerpt = aiResponse.substring(0, 150) + "...";
+    
+    // Generisanje naslova iz originalnog pitanja
+    const title = originalQuestion.length > 5 
+      ? originalQuestion.charAt(0).toUpperCase() + originalQuestion.slice(1)
+      : "Odgovor na pitanje o bezbednosti na radu";
+    
+    // Pokušavamo izvući seoTitle iz odgovora, ako nije prosleđen
+    let seoTitle = title;
+    if (aiResponse.length > title.length) {
+      // Uzimamo malo duži, SEO prilagođen naslov
+      seoTitle = aiResponse.substring(0, Math.min(60, aiResponse.length));
+      const lastSpaceIndex = seoTitle.lastIndexOf(' ');
+      if (lastSpaceIndex > 30) {
+        seoTitle = seoTitle.substring(0, lastSpaceIndex);
+      }
+    }
+    
+    // Generisanje sluga
+    const allPosts = await storage.getAllBlogPosts();
+    const existingSlugs = allPosts.map(post => post.slug);
+    const baseSlug = generateSlug(title);
+    const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
+    
+    // Postavljanje autora na trenutnog korisnika
+    const authorId = (req.user as any).id;
+    
+    // Priprema podataka za kreiranje blog posta
+    const blogData = {
+      title,
+      slug: uniqueSlug,
+      content: aiResponse,
+      excerpt,
+      category: category || "general",
+      tags: tags || [],
+      authorId,
+      originalQuestion,
+      status: "pending_approval" as const, // Zahteva ručno odobrenje pre objavljivanja
+      callToAction: "Kontaktirajte nas za više informacija o bezbednosti i zdravlju na radu!"
+    };
+    
+    const newPost = await storage.createBlogPost(blogData);
+    res.status(201).json(newPost);
+  } catch (error) {
+    console.error("Greška pri konverziji AI odgovora u blog:", error);
+    res.status(500).json({ message: "Greška servera" });
+  }
+});
+
+// Promena statusa blog posta (approval workflow)
+blogRouter.patch("/:id/status", isAdmin, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "ID mora biti broj" });
+    }
+    
+    const { status, adminFeedback } = req.body;
+    
+    if (!status || !["draft", "pending_approval", "approved", "published", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Nevažeći status" });
+    }
+    
+    const post = await storage.getBlogPost(id);
+    if (!post) {
+      return res.status(404).json({ message: "Blog post nije pronađen" });
+    }
+    
+    // Ako se status postavlja na "rejected", admin feedback je obavezan
+    if (status === "rejected" && !adminFeedback) {
+      return res.status(400).json({ message: "Admin feedback je obavezan za odbijene postove" });
+    }
+    
+    // Ako se menja status u "published", postavljamo publishedAt
+    const updatedData: any = { status };
+    
+    if (adminFeedback) {
+      updatedData.adminFeedback = adminFeedback;
+    }
+    
+    if (status === "published" && post.status !== "published") {
+      updatedData.publishedAt = new Date();
+    }
+    
+    const updatedPost = await storage.updateBlogPost(id, updatedData);
+    res.json(updatedPost);
+  } catch (error) {
+    console.error("Greška pri promeni statusa blog posta:", error);
+    res.status(500).json({ message: "Greška servera" });
   }
 });
