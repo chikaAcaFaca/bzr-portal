@@ -63,9 +63,9 @@ export default function ModuleCards() {
                 {module.stats}
               </span>
               <Link href={module.href}>
-                <a className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                <span className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 cursor-pointer">
                   Pristupi modulu <i className="fas fa-arrow-right ml-1"></i>
-                </a>
+                </span>
               </Link>
             </div>
           </CardContent>

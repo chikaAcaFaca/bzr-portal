@@ -59,7 +59,7 @@ export default function QuickActions() {
         <div className="grid grid-cols-2 gap-4">
           {actions.map((action, index) => (
             <Link href={action.href} key={index}>
-              <a className="flex flex-col p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors h-full">
+              <div className="flex flex-col p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors h-full cursor-pointer">
                 <div className="flex items-center mb-2">
                   <div className="rounded-full bg-primary-100 p-2 mr-2">
                     <i className={`${action.icon} text-primary-600`}></i>
@@ -67,7 +67,7 @@ export default function QuickActions() {
                   <p className="text-sm font-medium text-gray-900">{action.title}</p>
                 </div>
                 <p className="text-xs text-gray-500">{action.description}</p>
-              </a>
+              </div>
             </Link>
           ))}
         </div>

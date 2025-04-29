@@ -88,9 +88,9 @@ export default function RecentDocuments() {
       </CardContent>
       <CardFooter className="bg-gray-50 px-5 py-3 border-t text-center">
         <Link href="/base-documents">
-          <a className="text-sm font-medium text-primary-600 hover:text-primary-700">
+          <span className="text-sm font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
             Prikaži sve dokumente
-          </a>
+          </span>
         </Link>
       </CardFooter>
     </Card>
