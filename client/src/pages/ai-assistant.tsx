@@ -224,11 +224,11 @@ const AIAssistant = () => {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="ask" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="ask">Pitanja & Odgovori</TabsTrigger>
-                  <TabsTrigger value="generate">Generisanje dokumenta</TabsTrigger>
-                  <TabsTrigger value="analyze">Analiza usklađenosti</TabsTrigger>
-                  <TabsTrigger value="faq">Često postavljana pitanja</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 gap-2">
+                  <TabsTrigger value="ask" className="py-2">Pitanja & Odgovori</TabsTrigger>
+                  <TabsTrigger value="generate" className="py-2">Generisanje dokumenta</TabsTrigger>
+                  <TabsTrigger value="analyze" className="py-2">Analiza usklađenosti</TabsTrigger>
+                  <TabsTrigger value="faq" className="py-2">Često postavljana pitanja</TabsTrigger>
                 </TabsList>
 
                 <div className="mt-4">
@@ -248,7 +248,7 @@ const AIAssistant = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <TabsContent value="ask" className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="question">Pitanje</Label>
@@ -260,7 +260,7 @@ const AIAssistant = () => {
                       className="min-h-32"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="context">Kontekst (opciono)</Label>
                     <Textarea
@@ -271,7 +271,7 @@ const AIAssistant = () => {
                       className="min-h-24"
                     />
                   </div>
-                  
+
                   <Button 
                     onClick={handleAskQuestion} 
                     disabled={isLoading || !question.trim()} 
@@ -281,7 +281,7 @@ const AIAssistant = () => {
                     Pošalji pitanje
                   </Button>
                 </TabsContent>
-                
+
                 <TabsContent value="generate" className="space-y-4 pt-4">
                   <Form {...generateDocumentForm}>
                     <form onSubmit={generateDocumentForm.handleSubmit(onGenerateDocument)} className="space-y-4">
@@ -312,7 +312,7 @@ const AIAssistant = () => {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={generateDocumentForm.control}
                         name="baseDocumentText"
@@ -330,7 +330,7 @@ const AIAssistant = () => {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={generateDocumentForm.control}
                         name="additionalParams"
@@ -351,7 +351,7 @@ const AIAssistant = () => {
                           </FormItem>
                         )}
                       />
-                      
+
                       <Button 
                         type="submit" 
                         disabled={isLoading} 
@@ -363,28 +363,9 @@ const AIAssistant = () => {
                     </form>
                   </Form>
                 </TabsContent>
-                
+
                 <TabsContent value="analyze" className="space-y-4 pt-4">
                   <Form {...complianceForm}>
-
-                <TabsContent value="faq" className="space-y-4 pt-4">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Često postavljana pitanja</h3>
-                    <div className="grid gap-4">
-                      {faqItems.map((item, index) => (
-                        <Card key={index}>
-                          <CardHeader>
-                            <CardTitle className="text-base">{item.question}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">{item.answer}</p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-
                     <form onSubmit={complianceForm.handleSubmit(onAnalyzeCompliance)} className="space-y-4">
                       <FormField
                         control={complianceForm.control}
@@ -403,7 +384,7 @@ const AIAssistant = () => {
                           </FormItem>
                         )}
                       />
-                      
+
                       <Button 
                         type="submit" 
                         disabled={isLoading} 
@@ -415,10 +396,27 @@ const AIAssistant = () => {
                     </form>
                   </Form>
                 </TabsContent>
+                <TabsContent value="faq" className="space-y-4 pt-4">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Često postavljana pitanja</h3>
+                    <div className="grid gap-4">
+                      {faqItems.map((item, index) => (
+                        <Card key={index}>
+                          <CardHeader>
+                            <CardTitle className="text-base">{item.question}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{item.answer}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
-          
+
           <Card className="relative">
             <CardHeader>
               <CardTitle>Odgovor AI asistenta</CardTitle>
@@ -434,7 +432,7 @@ const AIAssistant = () => {
                   <div className="whitespace-pre-wrap p-4 bg-muted rounded-lg">
                     {response}
                   </div>
-                  
+
                   {references.length > 0 && (
                     <div className="mt-4">
                       <h4 className="font-semibold mb-2">Reference:</h4>
