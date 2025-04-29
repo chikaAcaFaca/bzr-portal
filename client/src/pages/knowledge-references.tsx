@@ -5,7 +5,7 @@ import { PlusCircle, Edit, Trash, ExternalLink, Check, X } from "lucide-react";
 
 import PageHeader from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "@/components/shared/data-table";
 import {
   Sheet,
   SheetContent,

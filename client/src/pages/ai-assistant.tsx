@@ -13,6 +13,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useQuery } from "@tanstack/react-query";
+import PageHeader from "@/components/layout/page-header";
 
 const AIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
