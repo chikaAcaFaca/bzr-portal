@@ -19,13 +19,62 @@ import DocumentProcessor from "./pages/document-processor";
 import AIAssistant from "./pages/ai-assistant";
 import KnowledgeReferences from "./pages/knowledge-references";
 import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
+import { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js'
+
+
+// Supabase client (replace with your actual config)
+const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+const AuthContext = createContext();
+
+const AuthProvider = ({ children }) => {
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    const session = supabase.auth.session();
+    setSession(session);
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      authListener.unsubscribe();
+    }
+  }, []);
+
+  const signIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google' // Or another provider
+    });
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthContext.Provider value={{ session, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+
+const useAuth = () => {
+  return useContext(AuthContext);
+};
+
 
 function Router() {
+  const { session } = useAuth();
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      {session && <Sidebar />} {/* Show sidebar only if logged in */}
       <div className="flex-1 overflow-y-auto">
-        <Header />
+        {session && <Header />} {/* Show header only if logged in */}
         <main className="p-6">
           <Switch>
             <Route path="/" component={Dashboard} />
@@ -49,15 +98,17 @@ function Router() {
 
 function App() {
   useMobileSidebar();
-  
+
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

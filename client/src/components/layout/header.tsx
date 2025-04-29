@@ -46,15 +46,27 @@ export default function Header() {
               <i className="fas fa-bell"></i>
             </button>
             <div className="relative">
-              <button className="flex items-center text-sm focus:outline-none">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src={userProfile.imageUrl}
-                  alt="Profilna slika"
-                />
-                <span className="ml-2 hidden md:block">{userProfile.name}</span>
-                <i className="fas fa-chevron-down ml-1 hidden md:block"></i>
-              </button>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center text-sm focus:outline-none">
+                      <Avatar>
+                        <AvatarImage src={user.user_metadata.avatar_url} />
+                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="ml-2 hidden md:block">{user.email}</span>
+                      <i className="fas fa-chevron-down ml-1 hidden md:block"></i>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => signOut()}>
+                      Odjava
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button onClick={() => signIn()}>Prijava</Button>
+              )}
             </div>
           </div>
         </div>

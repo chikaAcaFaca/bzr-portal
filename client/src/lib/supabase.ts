@@ -7,5 +7,18 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
 
 export const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true
+    }
+  }
 )
+
+export type Profile = {
+  id: string
+  email: string
+  full_name?: string
+  avatar_url?: string
+}
