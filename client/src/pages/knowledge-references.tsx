@@ -239,13 +239,27 @@ export default function KnowledgeReferences() {
     select: (data: KnowledgeReference[]) => data,
   });
 
+  // Sanitizacija opisa - uklanjanje HTML/XML tagova
+  const sanitizeDescription = (description: string): string => {
+    // Uklanja DOCTYPE deklaracije i druge HTML/XML tagove
+    return description
+      .replace(/<!DOCTYPE[^>]*>/i, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+  };
+
   // Kreiranje nove reference
   const createMutation = useMutation({
     mutationFn: (data: KnowledgeReferenceFormData) => {
-      console.log("Sending data:", data);
+      // Sanitizacija opisa pre slanja
+      const sanitizedData = {
+        ...data,
+        description: data.description ? sanitizeDescription(data.description) : data.description
+      };
+      console.log("Sending data:", sanitizedData);
       return apiRequest('/api/knowledge-references', {
         method: 'POST',
-        body: data as any
+        body: sanitizedData as any
       });
     },
     onSuccess: () => {
@@ -268,10 +282,15 @@ export default function KnowledgeReferences() {
   // Ažuriranje postojeće reference
   const updateMutation = useMutation({
     mutationFn: (data: { id: number; reference: KnowledgeReferenceFormData }) => {
-      console.log("Updating data:", data.reference);
+      // Sanitizacija opisa pre slanja
+      const sanitizedData = {
+        ...data.reference,
+        description: data.reference.description ? sanitizeDescription(data.reference.description) : data.reference.description
+      };
+      console.log("Updating data:", sanitizedData);
       return apiRequest(`/api/knowledge-references/${data.id}`, {
         method: 'PUT',
-        body: data.reference as any
+        body: sanitizedData as any
       });
     },
     onSuccess: () => {
