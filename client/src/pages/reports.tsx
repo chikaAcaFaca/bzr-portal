@@ -341,9 +341,20 @@ export default function Reports() {
                     <SelectContent>
                       <SelectItem value="all">Svi dokumenti</SelectItem>
                       <SelectItem value="riskAssessment">Akt o proceni rizika</SelectItem>
-                      <SelectItem value="form6">Obrazac 6 - Evidencija o zaposlenima osposobljenim za bezbedan i zdrav rad</SelectItem>
-                      <SelectItem value="form3">Obrazac 3 - Evidencija o povredama na radu</SelectItem>
-                      <SelectItem value="form11">Obrazac 11 - Izveštaj o povredi na radu</SelectItem>
+                      <SelectItem value="form1">Obrazac 1 - Prijava povrede na radu</SelectItem>
+                      <SelectItem value="form2">Obrazac 2 - Evidencija o prethodnim i periodičnim lekarskim pregledima</SelectItem>
+                      <SelectItem value="form3">Obrazac 3 - Evidencija o radnim mestima sa povećanim rizikom</SelectItem>
+                      <SelectItem value="form4">Obrazac 4 - Evidencija o zaposlenima na radnim mestima sa povećanim rizikom</SelectItem>
+                      <SelectItem value="form5">Obrazac 5 - Evidencija o povredama na radu</SelectItem>
+                      <SelectItem value="form6">Obrazac 6 - Evidencija o profesionalnim oboljenjima</SelectItem>
+                      <SelectItem value="form7">Obrazac 7 - Evidencija o bolestima u vezi sa radom</SelectItem>
+                      <SelectItem value="form8">Obrazac 8 - Evidencija o zaposlenima osposobljenim za bezbedan i zdrav rad</SelectItem>
+                      <SelectItem value="form9">Obrazac 9 - Evidencija o opasnim materijama koje se koriste u toku rada</SelectItem>
+                      <SelectItem value="form10">Obrazac 10 - Evidencija o izvršenim ispitivanjima radne okoline</SelectItem>
+                      <SelectItem value="form11">Obrazac 11 - Evidencija o izvršenim pregledima i proverama opreme za rad</SelectItem>
+                      <SelectItem value="form12">Obrazac 12 - Evidencija o izdatim sredstvima i opremi za ličnu zaštitu na radu</SelectItem>
+                      <SelectItem value="form13">Obrazac 13 - Evidencija o prijavama smrtnih, kolektivnih i teških povreda</SelectItem>
+                      <SelectItem value="form14">Obrazac 14 - Evidencija o prijavama profesionalnih oboljenja</SelectItem>
                       <SelectItem value="injuryReport">Prijava povrede inspektoru rada</SelectItem>
                     </SelectContent>
                   </Select>
