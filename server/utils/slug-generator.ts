@@ -1,52 +1,59 @@
 /**
- * Funkcija za generisanje SEO-friendly URL slugova
- * - Pretvara ćirilicu u latinicu
- * - Konvertuje slova u mala slova
- * - Zamenjuje razmake sa crtama
- * - Uklanja specijalne karaktere
- * - Skraćuje na maksimalnu dužinu od 100 karaktera
+ * Utility functions za generisanje i upravljanje URL slugovima za blog postove.
+ * Uključuje podršku za ćirilične znakove koja ih automatski transliteracijom pretvara u latinični ekvivalent.
  */
-
-const cyrillicToLatin: Record<string, string> = {
-  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z',
-  'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n',
-  'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c', 'у': 'u',
-  'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
-  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Dj', 'Е': 'E', 'Ж': 'Z',
-  'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 'М': 'M', 'Н': 'N',
-  'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U',
-  'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'Dz', 'Ш': 'S'
-};
 
 /**
- * Pretvara ćirilični tekst u latinični
+ * Pretvara ćirilični text u latinični
+ * @param text Ćirilični tekst koji treba konvertovati
+ * @returns Latinični ekvivalent
  */
-function transliterateCyrillic(text: string): string {
-  return text.split('').map(char => cyrillicToLatin[char] || char).join('');
+export function cyrillicToLatin(text: string): string {
+  if (!text) return '';
+  
+  const cyrillicMap: { [key: string]: string } = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 
+    'ж': 'z', 'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 
+    'м': 'm', 'н': 'n', 'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 
+    'т': 't', 'ћ': 'c', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 
+    'џ': 'dz', 'ш': 's',
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Dj', 'Е': 'E', 
+    'Ж': 'Z', 'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 
+    'М': 'M', 'Н': 'N', 'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 
+    'Т': 'T', 'Ћ': 'C', 'У': 'U', 'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 
+    'Џ': 'Dz', 'Ш': 'S'
+  };
+  
+  return text.split('').map(char => cyrillicMap[char] || char).join('');
 }
 
 /**
- * Glavna funkcija za generisanje slugova
+ * Generiše SEO-friendly slug od teksta
+ * @param text Originalni tekst (može sadržati ćirilicu, razmake, specijalne znakove)
+ * @returns Čist slug prilagođen za URL (sve mala slova, razmaci zamenjeni crticama)
  */
 export function generateSlug(text: string): string {
   if (!text) return '';
   
-  // Konvertuj ćirilicu u latinicu
-  const latinText = transliterateCyrillic(text);
+  // Prvo konvertuj ćirilicu u latinicu
+  const latinText = cyrillicToLatin(text);
   
   return latinText
-    .toLowerCase()                     // Konvertuj u mala slova
-    .trim()                            // Ukloni razmake na krajevima
-    .replace(/\s+/g, '-')              // Zameni razmake sa crtama
-    .replace(/[^\w\-]+/g, '')          // Ukloni sve što nije slovo, broj ili crta
-    .replace(/\-\-+/g, '-')            // Zameni više uzastopnih crta sa jednom crtom
-    .replace(/^-+/, '')                // Ukloni crte sa početka
-    .replace(/-+$/, '')                // Ukloni crte sa kraja
-    .substring(0, 100);                // Ograniči dužinu na 100 karaktera
+    .toLowerCase()                   // konvertuj u mala slova
+    .trim()                          // ukloni praznine sa početka i kraja
+    .replace(/\s+/g, '-')            // zameni razmake sa crticama
+    .replace(/[^\w\-]+/g, '')        // ukloni sve osim alfanumeričke znakove i crtice
+    .replace(/\-\-+/g, '-')          // zameni više uzastopnih crtica sa jednom
+    .replace(/^-+/, '')              // ukloni crtice sa početka
+    .replace(/-+$/, '')              // ukloni crtice sa kraja
+    .substring(0, 100);              // ograniči dužinu na 100 znakova
 }
 
 /**
- * Generiše jedinstven slug dodavanjem brojeva na kraju ako već postoji
+ * Generiše jedinstven slug na osnovu osnovnog sluga i liste postojećih slugova
+ * @param baseSlug Osnovni slug
+ * @param existingSlugs Lista postojećih slugova
+ * @returns Jedinstven slug koji ne postoji u listi postojećih slugova
  */
 export function generateUniqueSlug(
   baseSlug: string, 

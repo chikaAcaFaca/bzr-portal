@@ -201,10 +201,9 @@ blogRouter.put("/:id", isAdmin, async (req: Request, res: Response) => {
       updatedData = { ...validatedData, slug: uniqueSlug };
     }
     
-    // Ako se menja status u "published", postavljamo publishedAt
-    if (validatedData.status === "published" && post.status !== "published") {
-      updatedData = { ...updatedData, publishedAt: new Date() };
-    }
+    // Ako se menja status u "published", postavljamo publishedAt 
+    // Napomena: publishedAt će biti postavljen u storage.updateBlogPost
+    // zato što nije deo schema definicije
     
     const updatedPost = await storage.updateBlogPost(id, updatedData);
     res.json(updatedPost);
@@ -326,16 +325,14 @@ blogRouter.patch("/:id/status", isAdmin, async (req: Request, res: Response) => 
       return res.status(400).json({ message: "Admin feedback je obavezan za odbijene postove" });
     }
     
-    // Ako se menja status u "published", postavljamo publishedAt
+    // Priprema podataka za ažuriranje
     const updatedData: any = { status };
     
     if (adminFeedback) {
       updatedData.adminFeedback = adminFeedback;
     }
     
-    if (status === "published" && post.status !== "published") {
-      updatedData.publishedAt = new Date();
-    }
+    // Napomena: u storage.updateBlogPost će se rukovati postavljanjem publishedAt ako je status "published"
     
     const updatedPost = await storage.updateBlogPost(id, updatedData);
     res.json(updatedPost);
