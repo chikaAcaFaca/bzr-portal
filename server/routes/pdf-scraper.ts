@@ -8,7 +8,8 @@ export function setupPdfScraperRoutes(app: Express) {
   app.post('/api/scrape-pdfs', async (req: Request, res: Response) => {
     try {
       console.log('Request body:', req.body);
-      const { url } = req.body;
+      // Ekstraktujemo URL iz tela zahteva ili pokušavamo da dobijemo ceo body kao URL
+      const { url } = req.body || {};
       
       if (!url) {
         return res.status(400).json({ error: 'URL je obavezan' });
