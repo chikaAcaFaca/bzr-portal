@@ -84,9 +84,8 @@ export async function setupAIAgentRoutes(app: any) {
   });
   
   // Ruta za dobavljanje često postavljenih pitanja (FAQ)
-  app.get('/api/agent/faq', async (req: Request, res: Response) => {
+  app.get('/api/agent/faq', async (_req: Request, res: Response) => {
     try {
-      // Ovde možete implementirati učitavanje FAQ iz baze podataka
       const faqItems = [
         {
           question: "Šta su osnovne obaveze poslodavca prema Zakonu o BZR?",

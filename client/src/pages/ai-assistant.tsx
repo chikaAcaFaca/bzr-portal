@@ -26,20 +26,23 @@ const AIAssistant = () => {
   const [references, setReferences] = useState<any[]>([]);
 
   // Učitavanje često postavljanih pitanja
-  useEffect(() => {
-    const loadFAQ = async () => {
-      try {
-        const response = await apiRequest("/api/agent/faq", { method: "GET" });
-        const data = await response.json();
-        if (data.success) {
-          setFaqItems(data.items);
-        }
-      } catch (error) {
-        console.error("Greška pri učitavanju FAQ:", error);
+  const { data: faqData } = useQuery({
+    queryKey: ['/api/agent/faq'],
+    queryFn: async () => {
+      const response = await apiRequest("/api/agent/faq", { method: "GET" });
+      const data = await response.json();
+      if (data.success) {
+        return data.items;
       }
-    };
-    loadFAQ();
-  }, []);
+      throw new Error(data.error || 'Greška pri učitavanju FAQ');
+    }
+  });
+
+  useEffect(() => {
+    if (faqData) {
+      setFaqItems(faqData);
+    }
+  }, [faqData]);
 
   // Generisanje dokumenta
   const generateDocumentSchema = z.object({
