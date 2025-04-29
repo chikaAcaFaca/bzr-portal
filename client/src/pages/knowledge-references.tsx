@@ -678,7 +678,7 @@ export default function KnowledgeReferences() {
 
       {/* Dijalog za masovni uvoz PDF dokumenata */}
       <Dialog open={bulkImportDialogOpen} onOpenChange={setBulkImportDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Masovni uvoz PDF dokumenata</DialogTitle>
             <DialogDescription>
@@ -686,7 +686,7 @@ export default function KnowledgeReferences() {
               Svi PDF dokumenti sa te stranice biće dodati u bazu.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto pr-1 flex-1">
             <div className="space-y-2">
               <label htmlFor="import-url" className="text-sm font-medium">
                 URL stranice sa PDF dokumentima
@@ -727,13 +727,13 @@ export default function KnowledgeReferences() {
             {foundFiles.length > 0 && (
               <div className="space-y-2 border rounded-md p-3">
                 <h4 className="font-medium">Pronađeni dokumenti ({foundFiles.length})</h4>
-                <div className="max-h-40 overflow-y-auto space-y-1">
+                <div className="max-h-[calc(80vh-320px)] overflow-y-auto space-y-1">
                   {foundFiles.map((file, index) => (
-                    <div key={index} className="flex items-center text-sm">
-                      <div className="w-4 h-4 mr-2 flex-shrink-0">
+                    <div key={index} className="flex items-start text-sm py-1">
+                      <div className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5">
                         <Download className="w-4 h-4" />
                       </div>
-                      <span className="truncate">{file.title}</span>
+                      <span className="break-words">{file.title}</span>
                     </div>
                   ))}
                 </div>
@@ -741,7 +741,7 @@ export default function KnowledgeReferences() {
             )}
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 flex flex-col sm:flex-row">
+          <DialogFooter className="gap-2 sm:gap-0 flex flex-col sm:flex-row pt-4 border-t mt-4 sticky bottom-0 bg-background">
             {foundFiles.length > 0 ? (
               <>
                 <Button
@@ -763,7 +763,7 @@ export default function KnowledgeReferences() {
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
-                      <span>Dodaj sve u bazu znanja</span>
+                      <span>Dodaj sve u bazu znanja ({foundFiles.length})</span>
                     </>
                   )}
                 </Button>
