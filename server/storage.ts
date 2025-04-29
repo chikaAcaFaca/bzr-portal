@@ -160,6 +160,7 @@ export class MemStorage implements IStorage {
     this.employeeTrainings = new Map();
     this.commonInstructions = new Map();
     this.knowledgeReferences = new Map();
+    this.blogPosts = new Map();
     
     this.userCurrentId = 1;
     this.baseDocumentCurrentId = 1;
@@ -173,6 +174,7 @@ export class MemStorage implements IStorage {
     this.employeeTrainingCurrentId = 1;
     this.commonInstructionCurrentId = 1;
     this.knowledgeReferenceCurrentId = 1;
+    this.blogPostCurrentId = 1;
     
     // Initialize with some data
     this.initializeData();
@@ -616,6 +618,70 @@ export class MemStorage implements IStorage {
 
   async deleteKnowledgeReference(id: number): Promise<boolean> {
     return this.knowledgeReferences.delete(id);
+  }
+
+  // Blog Posts
+  async getBlogPost(id: number): Promise<BlogPost | undefined> {
+    return this.blogPosts.get(id);
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    return Array.from(this.blogPosts.values()).find(
+      (post) => post.slug === slug,
+    );
+  }
+
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return Array.from(this.blogPosts.values());
+  }
+
+  async getBlogPostsByStatus(status: string): Promise<BlogPost[]> {
+    return Array.from(this.blogPosts.values()).filter(
+      (post) => post.status === status,
+    );
+  }
+
+  async getBlogPostsByCategory(category: string): Promise<BlogPost[]> {
+    return Array.from(this.blogPosts.values()).filter(
+      (post) => post.category === category,
+    );
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const id = this.blogPostCurrentId++;
+    const now = new Date();
+    const blogPost: BlogPost = { 
+      ...post, 
+      id, 
+      createdAt: now, 
+      updatedAt: now,
+      viewCount: 0,
+      publishedAt: post.status === 'published' ? now : null
+    };
+    this.blogPosts.set(id, blogPost);
+    return blogPost;
+  }
+
+  async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const existingPost = this.blogPosts.get(id);
+    if (!existingPost) return undefined;
+    
+    const now = new Date();
+    const wasPublished = existingPost.status !== 'published' && post.status === 'published';
+    
+    const updatedPost: BlogPost = { 
+      ...existingPost, 
+      ...post, 
+      updatedAt: now,
+      publishedAt: wasPublished ? now : existingPost.publishedAt
+    };
+    
+    this.blogPosts.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    return this.blogPosts.delete(id);
   }
 }
 

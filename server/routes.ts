@@ -21,6 +21,7 @@ import { setupFileProcessingRoutes } from "./routes/file-processing";
 import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
 import { setupDocumentRoutes } from './routes/document-routes';
 import { setupDocumentScraperRoutes } from './routes/document-scraper';
+import { blogRouter } from './routes/blog-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
