@@ -519,8 +519,8 @@ export default function KnowledgeReferences() {
     setIsImporting(true);
     
     try {
-      // Slanje zahteva na server za preuzimanje svih PDF-ova sa navedenog URL-a
-      const data = await fetch('/api/scrape-pdfs', {
+      // Slanje zahteva na server za preuzimanje svih dokumenata sa navedenog URL-a
+      const data = await fetch('/api/scrape-documents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -536,12 +536,12 @@ export default function KnowledgeReferences() {
         setFoundFiles(data.files);
         toast({
           title: "Uspešno",
-          description: `Pronađeno ${data.files.length} PDF dokumenata`,
+          description: `Pronađeno ${data.files.length} dokumenata`,
         });
       } else {
         toast({
           title: "Informacija",
-          description: "Nisu pronađeni PDF dokumenti na navedenoj stranici",
+          description: "Nisu pronađeni dokumenti na navedenoj stranici",
         });
       }
     } catch (error: any) {
@@ -567,7 +567,7 @@ export default function KnowledgeReferences() {
         await createMutation.mutateAsync({
           title: file.title,
           url: file.url,
-          description: `PDF dokument: ${file.title}`,
+          description: `Dokument: ${file.title}`,
           category: bulkImportCategory,
           isActive: true
         });
@@ -676,24 +676,24 @@ export default function KnowledgeReferences() {
         </DialogContent>
       </Dialog>
 
-      {/* Dijalog za masovni uvoz PDF dokumenata */}
+      {/* Dijalog za masovni uvoz dokumenata */}
       <Dialog open={bulkImportDialogOpen} onOpenChange={setBulkImportDialogOpen}>
         <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Masovni uvoz PDF dokumenata</DialogTitle>
+            <DialogTitle>Masovni uvoz dokumenata</DialogTitle>
             <DialogDescription>
-              Unesite URL stranice sa koje želite da preuzmete PDF dokumente u bazu znanja.
-              Svi PDF dokumenti sa te stranice biće dodati u bazu.
+              Unesite URL stranice sa koje želite da preuzmete dokumente u bazu znanja.
+              Svi dokumenti (PDF, Word, Excel, itd.) sa te stranice biće pronađeni.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 overflow-y-auto pr-1 flex-1">
             <div className="space-y-2">
               <label htmlFor="import-url" className="text-sm font-medium">
-                URL stranice sa PDF dokumentima
+                URL stranice sa dokumentima
               </label>
               <Input
                 id="import-url"
-                placeholder="https://example.com/page-with-pdfs"
+                placeholder="https://example.com/page-with-documents"
                 value={bulkImportUrl}
                 onChange={(e) => setBulkImportUrl(e.target.value)}
               />
@@ -786,7 +786,7 @@ export default function KnowledgeReferences() {
                   ) : (
                     <>
                       <Link2 className="h-4 w-4" />
-                      <span>Pronađi PDF dokumente</span>
+                      <span>Pronađi dokumente</span>
                     </>
                   )}
                 </Button>
