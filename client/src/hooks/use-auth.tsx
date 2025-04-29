@@ -7,6 +7,8 @@ interface AuthContextProps {
   user: User | null;
   isLoading: boolean;
   signOut: () => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; data: { user: User | null; session: Session | null } }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: AuthError | null; data: { user: User | null; session: Session | null } }>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -34,11 +36,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const signIn = (email: string, password: string) => {
+    return supabase.auth.signInWithPassword({ email, password });
+  };
+
+  const signUp = (email: string, password: string, userData?: any) => {
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+  };
+
   const value: AuthContextProps = {
     session,
     user,
     isLoading,
     signOut: () => supabase.auth.signOut(),
+    signIn,
+    signUp
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

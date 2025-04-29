@@ -2,9 +2,8 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Redirect } from "wouter";
 
 import {
   Form,
@@ -18,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 
 // Validaciona šema za prijavu
 const loginSchema = z.object({
@@ -44,12 +43,20 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("login");
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, signIn, signUp } = useAuth();
 
   // Ako je korisnik već ulogovan, redirektujemo ga na glavnu stranicu
-  if (user && !authLoading) {
-    setLocation("/");
-    return null;
+  if (user) {
+    return <Redirect to="/" />;
+  }
+  
+  // Dok se proverava autentikacija, prikazujemo loader
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   // Login forma
@@ -78,10 +85,7 @@ export default function AuthPage() {
   async function onLoginSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+      const { error } = await signIn(data.email, data.password);
 
       if (error) {
         throw error;
@@ -92,7 +96,7 @@ export default function AuthPage() {
         description: "Uspešno ste se prijavili na sistem.",
       });
       
-      setLocation("/");
+      // Navigacija će se izvršiti automatski zbog useAuth hook-a
     } catch (error: any) {
       toast({
         title: "Greška pri prijavi",
@@ -108,22 +112,18 @@ export default function AuthPage() {
   async function onRegisterSubmit(data: RegisterFormValues) {
     setIsLoading(true);
     try {
-      // Prvo kreiramo korisnika
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            company_name: data.companyName,
-            company_pib: data.companyPib,
-            company_reg_number: data.companyRegNumber,
-          },
-        },
-      });
+      // Kreiramo korisnika pomoću hook-a
+      const userData = {
+        full_name: data.fullName,
+        company_name: data.companyName,
+        company_pib: data.companyPib,
+        company_reg_number: data.companyRegNumber,
+      };
+      
+      const { error, data: authData } = await signUp(data.email, data.password, userData);
 
-      if (authError) {
-        throw authError;
+      if (error) {
+        throw error;
       }
 
       // Ako je verifikacija email-a isključena, možemo odmah kreirati profil
