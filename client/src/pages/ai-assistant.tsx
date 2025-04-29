@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/page-header";
+import { AiToBlog } from "@/components/blog/ai-to-blog";
 
 const AIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -432,6 +433,13 @@ const AIAssistant = () => {
                 <div className="space-y-4">
                   <div className="whitespace-pre-wrap p-4 bg-muted rounded-lg">
                     {response}
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <AiToBlog 
+                      aiResponse={response} 
+                      originalQuestion={question}
+                    />
                   </div>
 
                   {references.length > 0 && (

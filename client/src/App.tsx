@@ -22,6 +22,8 @@ import KnowledgeReferences from "./pages/knowledge-references";
 import Settings from "./pages/settings";
 import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
+import Blog from "./pages/blog";
+import BlogPost from "./pages/blog-post";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
@@ -144,6 +146,18 @@ function Router() {
       <Route path="/users">
         <MainLayout>
           <Users />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/blog">
+        <MainLayout>
+          <Blog />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/blog/:slug">
+        <MainLayout>
+          <BlogPost />
         </MainLayout>
       </Route>
       
