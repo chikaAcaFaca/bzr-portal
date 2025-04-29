@@ -45,7 +45,7 @@ const NavSection = ({ title, children }: NavSectionProps) => {
 };
 
 export default function Sidebar() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
 
   return (
     <div

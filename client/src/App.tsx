@@ -25,21 +25,10 @@ import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/">
-        <ProtectedContent />
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
 // Komponenta koja zahteva autentikaciju
-function ProtectedContent() {
+function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
   const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
   
   // Dok se proverava autentikacija, prikazujemo loader
   if (isLoading) {
@@ -52,35 +41,116 @@ function ProtectedContent() {
   
   // Ako korisnik nije prijavljen, preusmeravamo ga na auth stranicu
   if (!user) {
-    return <Redirect to="/auth" />;
+    navigate("/auth");
+    return null;
   }
   
-  // Ako je korisnik prijavljen, prikazujemo glavni interfejs
+  // Ako je korisnik prijavljen, prikazujemo komponentu
+  return <Component />;
+}
+
+// Komponenta MainLayout za zajednički UI (sidebar, header)
+function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex-1 overflow-y-auto">
         <Header />
         <main className="p-6">
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/job-positions" component={JobPositions} />
-            <Route path="/job-descriptions" component={JobDescriptions} />
-            <Route path="/base-documents" component={BaseDocuments} />
-            <Route path="/risk-categories" component={RiskCategories} />
-            <Route path="/safety-measures" component={SafetyMeasures} />
-            <Route path="/employee-training" component={EmployeeTraining} />
-            <Route path="/reports" component={Reports} />
-            <Route path="/document-processor" component={DocumentProcessor} />
-            <Route path="/ai-assistant" component={AIAssistant} />
-            <Route path="/knowledge-references" component={KnowledgeReferences} />
-            <Route path="/settings" component={Settings} />
-            <Route path="/users" component={Users} />
-            <Route component={NotFound} />
-          </Switch>
+          {children}
         </main>
       </div>
     </div>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      
+      <Route path="/">
+        <MainLayout>
+          <Dashboard />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/job-positions">
+        <MainLayout>
+          <JobPositions />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/job-descriptions">
+        <MainLayout>
+          <JobDescriptions />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/base-documents">
+        <MainLayout>
+          <BaseDocuments />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/risk-categories">
+        <MainLayout>
+          <RiskCategories />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/safety-measures">
+        <MainLayout>
+          <SafetyMeasures />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/employee-training">
+        <MainLayout>
+          <EmployeeTraining />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/reports">
+        <MainLayout>
+          <Reports />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/document-processor">
+        <MainLayout>
+          <DocumentProcessor />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/ai-assistant">
+        <MainLayout>
+          <AIAssistant />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/knowledge-references">
+        <MainLayout>
+          <KnowledgeReferences />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/settings">
+        <MainLayout>
+          <Settings />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/users">
+        <MainLayout>
+          <Users />
+        </MainLayout>
+      </Route>
+      
+      <Route>
+        <NotFound />
+      </Route>
+    </Switch>
   );
 }
 
