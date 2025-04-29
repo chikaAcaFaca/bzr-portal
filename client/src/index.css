@@ -3,55 +3,55 @@
 @tailwind utilities;
 
 :root {
-  /* Svetlija i modernija tema */
-  --background: 210 50% 99%;
-  --foreground: 220 25% 15%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 220 10% 40%;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --muted: 24 33% 97%;
+  --muted-foreground: 0 0% 35%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 25% 15%;
+  --popover-foreground: 0 0% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 220 25% 15%;
-  --border: 220 25% 92%;
-  --input: 220 25% 92%;
-  /* Svetloplava kao glavna boja */
-  --primary: 208 90% 53%;
+  --card-foreground: 0 0% 10%;
+  --border: 198 100% 42%;
+  --input: 198 100% 42%;
+  /* Plava kao glavna boja (#0091D7) */
+  --primary: 198 100% 42%;
   --primary-foreground: 0 0% 100%;
-  /* Nežno plava kao sekundarna */
-  --secondary: 210 25% 95%;
-  --secondary-foreground: 208 80% 38%;
-  /* Akcentna boja - svetlozelena */
-  --accent: 170 85% 40%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84.2% 60.2%;
+  /* Svetla boja kao sekundarna (#FEEFE5) */
+  --secondary: 24 87% 95%;
+  --secondary-foreground: 198 100% 42%;
+  /* Akcentna boja - žuta (#FFE985) */
+  --accent: 49 100% 76%;
+  --accent-foreground: 0 0% 10%;
+  /* Crvena za destructive (#E00038) */
+  --destructive: 347 100% 44%;
   --destructive-foreground: 0 0% 100%;
-  --ring: 208 90% 53%;
+  --ring: 198 100% 42%;
   --radius: 0.75rem;
 }
 
 .dark {
-  /* Tamna tema - takođe modernizovana */
-  --background: 220 25% 12%;
-  --foreground: 0 0% 98%;
-  --muted: 220 25% 20%;
-  --muted-foreground: 220 10% 70%;
-  --popover: 220 25% 12%;
-  --popover-foreground: 0 0% 98%;
-  --card: 220 25% 15%;
-  --card-foreground: 0 0% 98%;
-  --border: 220 25% 25%;
-  --input: 220 25% 25%;
-  /* Malo svetlija plava za tamnu temu */
-  --primary: 208 90% 58%;
+  --background: 198 40% 15%;
+  --foreground: 0 0% 95%;
+  --muted: 198 30% 20%;
+  --muted-foreground: 0 0% 80%;
+  --popover: 198 40% 15%;
+  --popover-foreground: 0 0% 95%;
+  --card: 198 40% 18%;
+  --card-foreground: 0 0% 95%;
+  --border: 198 100% 42%;
+  --input: 198 100% 42%;
+  /* Svetlija plava za tamnu temu */
+  --primary: 198 100% 42%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 25% 25%;
-  --secondary-foreground: 0 0% 98%;
-  /* Svetlija akcentna boja za tamnu temu */
-  --accent: 170 85% 45%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 62.8% 45%;
-  --destructive-foreground: 0 0% 98%;
-  --ring: 208 90% 60%;
+  /* Tamnija sekundarna */
+  --secondary: 198 30% 25%;
+  --secondary-foreground: 0 0% 95%;
+  /* Svetlija akcentna */
+  --accent: 49 100% 76%;
+  --accent-foreground: 198 40% 15%;
+  --destructive: 347 100% 44%;
+  --destructive-foreground: 0 0% 95%;
+  --ring: 198 100% 42%;
   --radius: 0.75rem;
 }
 
