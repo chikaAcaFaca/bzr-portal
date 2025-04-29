@@ -20,18 +20,17 @@ export default function Header() {
 
   return (
     <>
-      {/* Mobile Navbar Toggle - Fixed position */}
-      <div className="lg:hidden fixed z-50 top-4 left-4">
-        <button
-          id="mobile-toggle"
-          className="bg-white p-2 rounded-md shadow-md text-gray-600"
-        >
-          <i className="fas fa-bars"></i>
-        </button>
-      </div>
-      
       {/* Top navigation - Modernizovan */}
       <header className="bg-background border-b border-border/50 sticky top-0 z-30 backdrop-blur-sm bg-background/95">
+        {/* Mobile Navbar Toggle - Inline position */}
+        <div className="lg:hidden absolute left-4 top-1/2 -translate-y-1/2">
+          <button
+            id="mobile-toggle"
+            className="bg-white/80 p-2 rounded-md shadow-sm text-gray-600 hover:bg-white/95 transition-colors"
+          >
+            <i className="fas fa-bars"></i>
+          </button>
+        </div>
         <div className="container-responsive flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
