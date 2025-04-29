@@ -819,6 +819,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Knowledge References
+  app.get('/api/knowledge-references', async (req: Request, res: Response) => {
+    try {
+      const references = await storage.getAllKnowledgeReferences();
+      res.json(references);
+    } catch (error) {
+      console.error('Error fetching knowledge references:', error);
+      res.status(500).json({ message: 'Failed to fetch knowledge references' });
+    }
+  });
+
+  app.get('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const reference = await storage.getKnowledgeReference(id);
+
+      if (!reference) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+
+      res.json(reference);
+    } catch (error) {
+      console.error('Error fetching knowledge reference:', error);
+      res.status(500).json({ message: 'Failed to fetch knowledge reference' });
+    }
+  });
+
+  app.post('/api/knowledge-references', async (req: Request, res: Response) => {
+    try {
+      // Sanitizacija opisa da ukloni sve HTML/XML tagove
+      let data = req.body;
+      
+      if (data.description) {
+        data.description = data.description
+          .replace(/<!DOCTYPE[^>]*>/gi, '')
+          .replace(/<[^>]*>/g, '')
+          .trim();
+      }
+      
+      console.log("Podaci pre validacije:", data);
+      const validatedData = insertKnowledgeReferenceSchema.parse(data);
+      console.log("Validiran podatak:", validatedData);
+      
+      const reference = await storage.createKnowledgeReference(validatedData);
+      res.status(201).json(reference);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("Zod greška:", fromZodError(error).message);
+        return res.status(400).json({ 
+          message: 'Invalid knowledge reference data', 
+          errors: fromZodError(error).message 
+        });
+      }
+      
+      console.error('Error creating knowledge reference:', error);
+      res.status(500).json({ message: `Failed to create knowledge reference: ${error.message}` });
+    }
+  });
+
+  app.put('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Sanitizacija opisa da ukloni sve HTML/XML tagove
+      let data = req.body;
+      
+      if (data.description) {
+        data.description = data.description
+          .replace(/<!DOCTYPE[^>]*>/gi, '')
+          .replace(/<[^>]*>/g, '')
+          .trim();
+      }
+      
+      const validatedData = insertKnowledgeReferenceSchema.partial().parse(data);
+      const reference = await storage.updateKnowledgeReference(id, validatedData);
+
+      if (!reference) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+
+      res.json(reference);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error("Zod greška pri ažuriranju:", fromZodError(error).message);
+        return res.status(400).json({ 
+          message: 'Invalid knowledge reference data', 
+          errors: fromZodError(error).message 
+        });
+      }
+      console.error('Error updating knowledge reference:', error);
+      res.status(500).json({ message: 'Failed to update knowledge reference' });
+    }
+  });
+
+  app.delete('/api/knowledge-references/:id', async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteKnowledgeReference(id);
+
+      if (!success) {
+        return res.status(404).json({ message: 'Knowledge reference not found' });
+      }
+
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting knowledge reference:', error);
+      res.status(500).json({ message: 'Failed to delete knowledge reference' });
+    }
+  });
+
   // Register document processing routes
   await setupDocumentProcessingRoutes(app);
   await setupDocumentRoutes(app);
