@@ -29,50 +29,175 @@ export default function Header() {
         </button>
       </div>
       
-      {/* Top navigation */}
-      <header className="bg-white shadow-sm">
-        <div className="flex items-center justify-between px-6 py-3">
+      {/* Top navigation - Modernizovan */}
+      <header className="bg-background border-b border-border/50 sticky top-0 z-30 backdrop-blur-sm bg-background/95">
+        <div className="container-responsive flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
-              <ol className="flex text-sm">
+              <Link href="/">
+                <a className="mr-4">
+                  <span className="font-bold text-xl gradient-heading">BZR Portal</span>
+                </a>
+              </Link>
+              <ol className="flex text-sm items-center">
                 <li className="flex items-center">
                   <Link href="/">
-                    <a className="text-gray-500 hover:text-primary-600">Početna</a>
+                    <a className="text-muted-foreground hover:text-primary transition-colors">Početna</a>
                   </Link>
-                  <i className="fas fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-muted-foreground/50 mx-2 h-4 w-4"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </li>
-                <li className="text-primary-600 font-medium">Dashboard</li>
+                <li className="text-primary font-medium">Dashboard</li>
               </ol>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
-            <button className="text-gray-500 hover:text-gray-700">
-              <i className="fas fa-bell"></i>
+            <button className="text-muted-foreground p-2 hover:text-primary hover:bg-secondary/80 rounded-full transition-colors">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+              </svg>
             </button>
+            
             <div className="relative">
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center text-sm focus:outline-none">
-                      <Avatar>
+                    <button className="flex items-center text-sm focus:outline-none gap-2 hover:bg-secondary/80 p-1.5 px-2 rounded-lg transition-colors">
+                      <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
                         <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-                        <AvatarFallback>{user.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                          {user.email?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
                       </Avatar>
-                      <span className="ml-2 hidden md:block">{user.email || 'Korisnik'}</span>
-                      <i className="fas fa-chevron-down ml-1 hidden md:block"></i>
+                      <div className="hidden md:flex flex-col items-start">
+                        <span className="font-medium">{user.email || 'Korisnik'}</span>
+                        <span className="text-xs text-muted-foreground">Administrator</span>
+                      </div>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="ml-1 hidden md:block text-muted-foreground h-4 w-4"
+                      >
+                        <path d="m6 9 6 6 6-6"/>
+                      </svg>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => signOut()}>
-                      Odjava
+                  <DropdownMenuContent className="w-56 mt-1.5" align="end">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-2 h-4 w-4"
+                      >
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                      <span>Profil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-2 h-4 w-4"
+                      >
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                        <path d="M19 3v4"></path>
+                        <path d="M23 7h-4"></path>
+                      </svg>
+                      <span>Podešavanja</span>
+                    </DropdownMenuItem>
+                    <div className="border-t border-border my-1"></div>
+                    <DropdownMenuItem 
+                      onClick={() => signOut()}
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-2 h-4 w-4"
+                      >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                      <span>Odjava</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Link href="/auth">
                   <a>
-                    <Button>Prijava</Button>
+                    <Button className="rounded-lg bg-primary hover:bg-primary/90 transition-colors">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-2 h-4 w-4"
+                      >
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                      </svg>
+                      Prijava
+                    </Button>
                   </a>
                 </Link>
               )}

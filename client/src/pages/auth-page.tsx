@@ -151,10 +151,14 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-600 to-blue-800" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
+    <div className="min-h-screen flex-col items-center justify-center grid lg:grid-cols-2 lg:px-0 bg-gradient-to-br from-background to-secondary/40">
+      <div className="relative hidden h-full flex-col lg:flex">
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/90 to-accent/80 rounded-r-3xl overflow-hidden">
+          {/* Dekorativni elementi */}
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-12 right-12 w-80 h-80 bg-white/10 rounded-full blur-xl"></div>
+        </div>
+        <div className="relative z-20 flex items-center text-2xl font-bold text-white p-10">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -163,195 +167,270 @@ export default function AuthPage() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
+            className="mr-3 h-8 w-8"
           >
             <path d="M15 6l-6 6l6 6" />
           </svg>
           BZR Portal
         </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
+        <div className="relative z-20 mt-auto p-10">
+          <blockquote className="space-y-4">
+            <p className="text-xl text-white font-medium">
               Sveobuhvatno rešenje za upravljanje bezbednošću i zdravljem na radu, 
               usklađeno sa najnovijim propisima Republike Srbije.
             </p>
-            <footer className="text-sm">Bezbedno radno okruženje za sve zaposlene</footer>
+            <footer className="text-white/90 pt-2 text-base">Bezbedno radno okruženje za sve zaposlene</footer>
           </blockquote>
         </div>
       </div>
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[450px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
+      <div className="lg:p-8 flex items-center justify-center">
+        <div className="mx-auto w-full max-w-md p-6 sm:p-8 bg-card rounded-2xl shadow-lg border border-border/40">
+          <div className="flex flex-col space-y-3 text-center mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-heading">
               Dobrodošli na BZR Portal
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground">
               Prijavite se na svoj nalog ili se registrujte za novi nalog
             </p>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Prijava</TabsTrigger>
-              <TabsTrigger value="register">Registracija</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 p-1 bg-secondary/70 rounded-lg mb-2">
+              <TabsTrigger 
+                value="login" 
+                className="rounded-md font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              >
+                Prijava
+              </TabsTrigger>
+              <TabsTrigger 
+                value="register" 
+                className="rounded-md font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
+              >
+                Registracija
+              </TabsTrigger>
             </TabsList>
             
             {/* Login forma */}
             <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Prijava na sistem</CardTitle>
-                  <CardDescription>
+              <div className="p-1 mt-4">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-foreground">Prijava na sistem</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Unesite svoje podatke da biste se prijavili
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="vasa.email@kompanija.rs" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lozinka</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="********" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? "Prijava u toku..." : "Prijavi se"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-                <CardFooter className="flex flex-col space-y-2">
-                  <div className="text-sm text-muted-foreground text-center">
-                    <a href="#" className="underline underline-offset-4 hover:text-primary">
-                      Zaboravili ste lozinku?
-                    </a>
-                  </div>
-                </CardFooter>
-              </Card>
+                  </p>
+                </div>
+                
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              placeholder="vasa.email@kompanija.rs" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Lozinka</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              type="password" 
+                              placeholder="••••••••" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full mt-6 bg-primary hover:bg-primary/90 text-white rounded-lg py-2.5" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Prijava u toku...
+                        </span> : 
+                        "Prijavi se"
+                      }
+                    </Button>
+                  </form>
+                </Form>
+                
+                <div className="mt-6 text-center">
+                  <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+                    Zaboravili ste lozinku?
+                  </a>
+                </div>
+              </div>
             </TabsContent>
             
             {/* Register forma */}
             <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Registracija</CardTitle>
-                  <CardDescription>
+              <div className="p-1 mt-4">
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-foreground">Registracija</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Kreirajte svoj nalog i pristupite BZR portalu
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="vasa.email@kompanija.rs" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Lozinka</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="********" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ime i prezime</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Petar Petrović" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="border-t pt-4 my-2">
-                        <h4 className="text-sm font-medium mb-2">Podaci o kompaniji</h4>
+                  </p>
+                </div>
+                
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              placeholder="vasa.email@kompanija.rs" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Lozinka</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              type="password" 
+                              placeholder="••••••••" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Ime i prezime</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              placeholder="Petar Petrović" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="my-4">
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-border"></div>
+                        <span className="flex-shrink mx-3 text-sm text-muted-foreground">Podaci o kompaniji</span>
+                        <div className="flex-grow border-t border-border"></div>
                       </div>
+                    </div>
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-foreground/90">Naziv kompanije</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                              placeholder="Vaša Kompanija DOO" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         control={registerForm.control}
-                        name="companyName"
+                        name="companyPib"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Naziv kompanije</FormLabel>
+                            <FormLabel className="text-foreground/90">PIB</FormLabel>
                             <FormControl>
-                              <Input placeholder="Vaša Kompanija DOO" {...field} />
+                              <Input 
+                                className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                                placeholder="123456789" 
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="companyPib"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>PIB</FormLabel>
-                              <FormControl>
-                                <Input placeholder="123456789" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="companyRegNumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Matični broj</FormLabel>
-                              <FormControl>
-                                <Input placeholder="12345678" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? "Registracija u toku..." : "Registruj se"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
+                      <FormField
+                        control={registerForm.control}
+                        name="companyRegNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-foreground/90">Matični broj</FormLabel>
+                            <FormControl>
+                              <Input 
+                                className="rounded-lg border-border/60 focus:border-primary focus:ring-2 focus:ring-primary/20" 
+                                placeholder="12345678" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full mt-6 bg-primary hover:bg-primary/90 text-white rounded-lg py-2.5" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Registracija u toku...
+                        </span> : 
+                        "Registruj se"
+                      }
+                    </Button>
+                  </form>
+                </Form>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
