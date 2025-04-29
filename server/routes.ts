@@ -20,6 +20,7 @@ import { setupDocumentProcessingRoutes } from "./routes/document-processing";
 import { setupFileProcessingRoutes } from "./routes/file-processing";
 import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
 import { setupDocumentRoutes } from './routes/document-routes';
+import { setupPdfScraperRoutes } from './routes/pdf-scraper';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -934,6 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupDocumentProcessingRoutes(app);
   await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
+  setupPdfScraperRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

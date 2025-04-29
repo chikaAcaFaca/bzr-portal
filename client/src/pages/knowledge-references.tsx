@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { PlusCircle, Edit, Trash, ExternalLink, Check, X } from "lucide-react";
+import { PlusCircle, Edit, Trash, ExternalLink, Check, X, Download, Link2, Upload } from "lucide-react";
 
 import PageHeader from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -498,6 +498,95 @@ export default function KnowledgeReferences() {
     },
   ];
 
+  // Stanje za dijalog za masovni uvoz
+  const [bulkImportDialogOpen, setBulkImportDialogOpen] = useState(false);
+  const [bulkImportUrl, setBulkImportUrl] = useState("");
+  const [bulkImportCategory, setBulkImportCategory] = useState("regulation");
+  const [isImporting, setIsImporting] = useState(false);
+  const [foundFiles, setFoundFiles] = useState<{title: string, url: string}[]>([]);
+
+  // Funkcija za preuzimanje svih PDF-ova sa stranice
+  const handleBulkImport = async () => {
+    if (!bulkImportUrl) {
+      toast({
+        title: "Greška",
+        description: "URL je obavezan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    
+    try {
+      // Slanje zahteva na server za preuzimanje svih PDF-ova sa navedenog URL-a
+      const response = await apiRequest('/api/scrape-pdfs', {
+        method: 'POST',
+        body: JSON.stringify({ url: bulkImportUrl }) as any
+      });
+      
+      const data = await response.json();
+      
+      if (data.files && data.files.length > 0) {
+        setFoundFiles(data.files);
+        toast({
+          title: "Uspešno",
+          description: `Pronađeno ${data.files.length} PDF dokumenata`,
+        });
+      } else {
+        toast({
+          title: "Informacija",
+          description: "Nisu pronađeni PDF dokumenti na navedenoj stranici",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: `Došlo je do greške pri uvozu: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Funkcija za dodavanje svih pronađenih dokumenata u bazu znanja
+  const handleAddAllDocuments = async () => {
+    if (foundFiles.length === 0) return;
+    
+    setIsImporting(true);
+    
+    try {
+      // Dodaj svaki pronađeni dokument u bazu znanja
+      for (const file of foundFiles) {
+        await createMutation.mutateAsync({
+          title: file.title,
+          url: file.url,
+          description: `PDF dokument: ${file.title}`,
+          category: bulkImportCategory,
+          isActive: true
+        });
+      }
+      
+      toast({
+        title: "Uspešno",
+        description: `Dodato ${foundFiles.length} dokumenata u bazu znanja`,
+      });
+      
+      setBulkImportDialogOpen(false);
+      setFoundFiles([]);
+      setBulkImportUrl("");
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: `Došlo je do greške pri dodavanju dokumenata: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <>
       <PageHeader
@@ -505,10 +594,19 @@ export default function KnowledgeReferences() {
         description="Upravljanje bazom znanja za AI asistenta"
       />
 
-      <div className="mb-6">
+      <div className="mb-6 flex gap-2">
         <Button onClick={handleAddReference} className="flex items-center gap-1">
           <PlusCircle className="h-4 w-4" />
           <span>Dodaj novu referencu</span>
+        </Button>
+        
+        <Button 
+          onClick={() => setBulkImportDialogOpen(true)} 
+          variant="outline" 
+          className="flex items-center gap-1"
+        >
+          <Upload className="h-4 w-4" />
+          <span>Masovni uvoz PDF dokumenata</span>
         </Button>
       </div>
 
@@ -569,6 +667,126 @@ export default function KnowledgeReferences() {
             >
               {deleteMutation.isPending ? "Brisanje..." : "Obriši"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dijalog za masovni uvoz PDF dokumenata */}
+      <Dialog open={bulkImportDialogOpen} onOpenChange={setBulkImportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Masovni uvoz PDF dokumenata</DialogTitle>
+            <DialogDescription>
+              Unesite URL stranice sa koje želite da preuzmete PDF dokumente u bazu znanja.
+              Svi PDF dokumenti sa te stranice biće dodati u bazu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="import-url" className="text-sm font-medium">
+                URL stranice sa PDF dokumentima
+              </label>
+              <Input
+                id="import-url"
+                placeholder="https://example.com/page-with-pdfs"
+                value={bulkImportUrl}
+                onChange={(e) => setBulkImportUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Npr. stranica sa listom propisa i pravilnika
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="import-category" className="text-sm font-medium">
+                Kategorija
+              </label>
+              <Select
+                value={bulkImportCategory}
+                onValueChange={setBulkImportCategory}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Izaberite kategoriju" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Opšte informacije</SelectItem>
+                  <SelectItem value="law">Zakoni</SelectItem>
+                  <SelectItem value="regulation">Pravilnici</SelectItem>
+                  <SelectItem value="guideline">Uputstva</SelectItem>
+                  <SelectItem value="standard">Standardi</SelectItem>
+                  <SelectItem value="research">Istraživanja</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {foundFiles.length > 0 && (
+              <div className="space-y-2 border rounded-md p-3">
+                <h4 className="font-medium">Pronađeni dokumenti ({foundFiles.length})</h4>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {foundFiles.map((file, index) => (
+                    <div key={index} className="flex items-center text-sm">
+                      <div className="w-4 h-4 mr-2 flex-shrink-0">
+                        <Download className="w-4 h-4" />
+                      </div>
+                      <span className="truncate">{file.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 flex flex-col sm:flex-row">
+            {foundFiles.length > 0 ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFoundFiles([]);
+                    setBulkImportUrl("");
+                  }}
+                >
+                  Resetuj
+                </Button>
+                <Button
+                  onClick={handleAddAllDocuments}
+                  disabled={isImporting}
+                  className="gap-1"
+                >
+                  {isImporting ? (
+                    "Dodavanje dokumenata..."
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      <span>Dodaj sve u bazu znanja</span>
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setBulkImportDialogOpen(false)}
+                >
+                  Otkaži
+                </Button>
+                <Button
+                  onClick={handleBulkImport}
+                  disabled={isImporting || !bulkImportUrl}
+                  className="gap-1"
+                >
+                  {isImporting ? (
+                    "Pretraživanje..."
+                  ) : (
+                    <>
+                      <Link2 className="h-4 w-4" />
+                      <span>Pronađi PDF dokumente</span>
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
