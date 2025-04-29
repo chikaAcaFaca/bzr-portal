@@ -10,7 +10,8 @@ import {
   trainingTypes, type TrainingType, type InsertTrainingType,
   employeeTrainings, type EmployeeTraining, type InsertEmployeeTraining,
   commonInstructions, type CommonInstruction, type InsertCommonInstruction,
-  knowledgeReferences, type KnowledgeReference, type InsertKnowledgeReference
+  knowledgeReferences, type KnowledgeReference, type InsertKnowledgeReference,
+  blogPosts, type BlogPost, type InsertBlogPost
 } from "@shared/schema";
 
 export interface IStorage {
@@ -105,6 +106,16 @@ export interface IStorage {
   createKnowledgeReference(reference: InsertKnowledgeReference): Promise<KnowledgeReference>;
   updateKnowledgeReference(id: number, reference: Partial<InsertKnowledgeReference>): Promise<KnowledgeReference | undefined>;
   deleteKnowledgeReference(id: number): Promise<boolean>;
+  
+  // Blog Posts
+  getBlogPost(id: number): Promise<BlogPost | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  getAllBlogPosts(): Promise<BlogPost[]>;
+  getBlogPostsByStatus(status: string): Promise<BlogPost[]>;
+  getBlogPostsByCategory(category: string): Promise<BlogPost[]>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -120,6 +131,7 @@ export class MemStorage implements IStorage {
   private employeeTrainings: Map<number, EmployeeTraining>;
   private commonInstructions: Map<number, CommonInstruction>;
   private knowledgeReferences: Map<number, KnowledgeReference>;
+  private blogPosts: Map<number, BlogPost>;
   
   private userCurrentId: number;
   private baseDocumentCurrentId: number;
@@ -133,6 +145,7 @@ export class MemStorage implements IStorage {
   private employeeTrainingCurrentId: number;
   private commonInstructionCurrentId: number;
   private knowledgeReferenceCurrentId: number;
+  private blogPostCurrentId: number;
 
   constructor() {
     this.users = new Map();

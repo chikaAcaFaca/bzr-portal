@@ -1,4 +1,4 @@
-import { pgTable, serial, text, boolean, timestamp, integer, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, boolean, timestamp, integer, pgEnum, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -304,6 +304,39 @@ export const insertKnowledgeReferenceSchema = createInsertSchema(knowledgeRefere
   isActive: true,
 });
 
+// Blog status enum
+export const blogStatusEnum = pgEnum('blog_status', ['draft', 'pending_approval', 'approved', 'published', 'rejected']);
+
+// Blog posts
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: text("image_url"),
+  category: text("category").notNull().default("general"),
+  tags: text("tags").array(),
+  authorId: integer("author_id"), // Can be null for AI-generated content
+  originalQuestion: text("original_question"), // Original question asked to AI
+  callToAction: text("call_to_action"), // CTA text
+  status: blogStatusEnum("status").notNull().default("draft"),
+  adminFeedback: text("admin_feedback"), // Feedback from admin for rejected posts
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  publishedAt: timestamp("published_at"),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts)
+  .omit({ 
+    id: true,
+    viewCount: true, 
+    createdAt: true, 
+    updatedAt: true, 
+    publishedAt: true 
+  });
+
 // Type exports
 export type Company = typeof companies.$inferSelect;
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
@@ -346,3 +379,6 @@ export type InsertCommonInstruction = z.infer<typeof insertCommonInstructionSche
 
 export type KnowledgeReference = typeof knowledgeReferences.$inferSelect;
 export type InsertKnowledgeReference = z.infer<typeof insertKnowledgeReferenceSchema>;
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
