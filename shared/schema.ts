@@ -2,8 +2,44 @@ import { pgTable, serial, text, boolean, timestamp, integer, pgEnum } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Companies
+export const companies = pgTable("companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  pib: text("pib").notNull().unique(),
+  registrationNumber: text("registration_number").notNull().unique(), // Matični broj
+  registrationDocUrl: text("registration_doc_url"), // APR document URL
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertCompanySchema = createInsertSchema(companies).pick({
+  name: true,
+  pib: true,
+  registrationNumber: true,
+  registrationDocUrl: true,
+});
+
+// Systematization History
+export const systematizationHistory = pgTable("systematization_history", {
+  id: serial("id").primaryKey(),
+  companyId: integer("company_id").notNull(),
+  documentUrl: text("document_url"), // URL to stored systematization document
+  effectiveDate: timestamp("effective_date").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSystematizationHistorySchema = createInsertSchema(systematizationHistory).pick({
+  companyId: true,
+  documentUrl: true,
+  effectiveDate: true,
+  isActive: true,
+});
+
 // Users
 export const users = pgTable("users", {
+  companyId: integer("company_id").notNull(),
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -269,6 +305,12 @@ export const insertKnowledgeReferenceSchema = createInsertSchema(knowledgeRefere
 });
 
 // Type exports
+export type Company = typeof companies.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+
+export type SystematizationHistory = typeof systematizationHistory.$inferSelect;
+export type InsertSystematizationHistory = z.infer<typeof insertSystematizationHistorySchema>;
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
