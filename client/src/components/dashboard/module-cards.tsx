@@ -45,25 +45,25 @@ export default function ModuleCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {modules.map((module, index) => (
-        <Card key={index} className="overflow-hidden">
+        <Card key={index} className="overflow-hidden bg-white dark:bg-gray-800 mt-4">
           <CardContent className="p-5">
             <div className="flex items-center">
               <div className={`rounded-full ${module.iconBg} p-3`}>
                 <i className={`${module.icon} ${module.iconColor}`}></i>
               </div>
-              <h3 className="ml-4 text-lg font-semibold text-gray-900">
+              <h3 className="ml-4 text-lg font-semibold text-gray-900 dark:text-white">
                 {module.title}
               </h3>
             </div>
-            <p className="mt-4 text-gray-600 text-sm">
+            <p className="mt-4 text-gray-700 dark:text-gray-300 text-sm">
               {module.description}
             </p>
             <div className="mt-5 flex justify-between items-center">
-              <span className="text-xs font-medium text-gray-500">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 {module.stats}
               </span>
               <Link href={module.href}>
-                <a className="text-sm font-medium text-primary-600 hover:text-primary-700">
+                <a className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
                   Pristupi modulu <i className="fas fa-arrow-right ml-1"></i>
                 </a>
               </Link>
