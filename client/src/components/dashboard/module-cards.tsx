@@ -15,11 +15,11 @@ export default function ModuleCards() {
   const modules: ModuleCard[] = [
     {
       title: "Sistematizacija radnih mesta",
-      description: "Upravljanje sistematizacijom radnih mesta sa i bez imena zaposlenih. Kreiranje strukture radnih mesta i njihovog opisa.",
+      description: "Upravljanje sistematizacijom radnih mesta i opisima poslova. Kreiranje strukture radnih mesta.",
       icon: "fas fa-sitemap",
       iconBg: "bg-blue-100",
       iconColor: "text-primary-500",
-      stats: "2 tabele podataka",
+      stats: "Radna mesta i opisi",
       href: "/job-positions",
     },
     {

@@ -13,14 +13,26 @@ export default function QuickActions() {
     {
       title: "Nova obuka zaposlenog",
       description: "Zakaži novu obuku za zaposlene",
-      icon: "fas fa-plus",
-      href: "/employee-training/new",
+      icon: "fas fa-user-graduate",
+      href: "/employee-training",
     },
     {
       title: "Dodaj novi dokument",
       description: "Otpremi i kategorizuj novo uputstvo",
       icon: "fas fa-file-upload",
-      href: "/base-documents/new",
+      href: "/base-documents",
+    },
+    {
+      title: "AI Asistent",
+      description: "Konsultuj se sa AI asistentom",
+      icon: "fas fa-robot",
+      href: "/ai-assistant",
+    },
+    {
+      title: "Procesiranje dokumenata",
+      description: "Automatska analiza dokumenata",
+      icon: "fas fa-brain",
+      href: "/document-processor",
     },
     {
       title: "Dodaj radno mesto",
