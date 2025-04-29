@@ -107,9 +107,9 @@ export default function RecentTrainings() {
       <CardHeader className="p-4 border-b flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold text-gray-900">Nedavne obuke zaposlenih</CardTitle>
         <Link href="/employee-training">
-          <a className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+          <span className="text-primary-600 hover:text-primary-700 text-sm font-medium cursor-pointer">
             Pogledaj sve <i className="fas fa-arrow-right ml-1"></i>
-          </a>
+          </span>
         </Link>
       </CardHeader>
       <div className="overflow-x-auto">

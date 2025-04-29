@@ -41,7 +41,7 @@ export default function RecentDocuments() {
   }
 
   // Sort documents by upload date, most recent first
-  const recentDocuments = documents 
+  const recentDocuments = documents && Array.isArray(documents)
     ? [...documents]
         .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
         .slice(0, 4)
