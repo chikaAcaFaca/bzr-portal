@@ -10,8 +10,15 @@ interface StatCard {
   bgColor: string;
 }
 
+interface StatsData {
+  employeeCount: number;
+  completedTrainings: number;
+  inProgressTrainings: number;
+  documentCount: number;
+}
+
 export default function StatisticsCards() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['/api/stats'],
   });
   
@@ -20,8 +27,8 @@ export default function StatisticsCards() {
       title: "Ukupan broj zaposlenih",
       value: data?.employeeCount || 0,
       icon: "fas fa-user-shield",
-      color: "text-primary-500",
-      bgColor: "bg-blue-100",
+      color: "text-primary",
+      bgColor: "bg-primary/10",
     },
     {
       title: "Obuke završeno",
@@ -34,8 +41,8 @@ export default function StatisticsCards() {
       title: "Obuke u toku",
       value: data?.inProgressTrainings || 0,
       icon: "fas fa-exclamation-circle",
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-100",
+      color: "text-amber-500",
+      bgColor: "bg-amber-100",
     },
     {
       title: "Dokumenti",
@@ -49,8 +56,8 @@ export default function StatisticsCards() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[...Array(4)].map((_, index) => (
-          <Card className="p-5" key={index}>
+        {[1, 2, 3, 4].map((i) => (
+          <Card className="p-5" key={i}>
             <div className="flex items-center">
               <Skeleton className="h-12 w-12 rounded-full" />
               <div className="ml-4 space-y-2">
@@ -63,18 +70,18 @@ export default function StatisticsCards() {
       </div>
     );
   }
-
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => (
-        <Card className="p-5" key={index}>
+        <Card className="p-5 theme-transition" key={index}>
           <div className="flex items-center">
-            <div className={`rounded-full ${stat.bgColor} p-3`}>
+            <div className={`rounded-full ${stat.bgColor} dark:bg-opacity-20 p-3`}>
               <i className={`${stat.icon} ${stat.color}`}></i>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-              <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
             </div>
           </div>
         </Card>

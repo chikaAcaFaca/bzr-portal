@@ -3,56 +3,96 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 10%;
-  --muted: 24 33% 97%;
-  --muted-foreground: 0 0% 35%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
+  /* Svetla tema - moderan i čist dizajn */
+  --background: 210 40% 99%;
+  --foreground: 224 71% 4%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
-  --border: 198 100% 42%;
-  --input: 198 100% 42%;
+  --card-foreground: 224 71% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71% 4%;
+  
   /* Plava kao glavna boja (#0091D7) */
   --primary: 198 100% 42%;
-  --primary-foreground: 0 0% 100%;
-  /* Svetla boja kao sekundarna (#FEEFE5) */
-  --secondary: 24 87% 95%;
+  --primary-foreground: 210 40% 98%;
+  
+  /* Svetla boja kao sekundarna */
+  --secondary: 210 40% 96%;
   --secondary-foreground: 198 100% 42%;
-  /* Akcentna boja - žuta (#FFE985) */
+  
+  --muted: 210 40% 96%;
+  --muted-foreground: 217 33% 37%;
+  
+  /* Akcentna boja - žuta */
   --accent: 49 100% 76%;
-  --accent-foreground: 0 0% 10%;
-  /* Crvena za destructive (#E00038) */
+  --accent-foreground: 224 71% 4%;
+  
+  /* Crvena za destructive */
   --destructive: 347 100% 44%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
   --ring: 198 100% 42%;
+  
+  /* Blage senke za svetlu temu */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
   --radius: 0.75rem;
+  
+  /* Boje za grafikone */
+  --chart-1: 198 100% 42%;
+  --chart-2: 149 60% 50%;
+  --chart-3: 322 70% 55%;
+  --chart-4: 243 75% 60%;
+  --chart-5: 32 94% 60%;
 }
 
 .dark {
-  --background: 198 40% 15%;
-  --foreground: 0 0% 95%;
-  --muted: 198 30% 20%;
-  --muted-foreground: 0 0% 80%;
-  --popover: 198 40% 15%;
-  --popover-foreground: 0 0% 95%;
-  --card: 198 40% 18%;
-  --card-foreground: 0 0% 95%;
-  --border: 198 100% 42%;
-  --input: 198 100% 42%;
+  /* Tamna tema - elegantna i moderna */
+  --background: 198 40% 13%;
+  --foreground: 210 40% 97%;
+  --card: 198 40% 17%;
+  --card-foreground: 210 40% 97%;
+  --popover: 198 40% 13%;
+  --popover-foreground: 210 40% 97%;
+  
   /* Svetlija plava za tamnu temu */
-  --primary: 198 100% 42%;
+  --primary: 198 90% 50%;
   --primary-foreground: 0 0% 100%;
+  
   /* Tamnija sekundarna */
   --secondary: 198 30% 25%;
-  --secondary-foreground: 0 0% 95%;
+  --secondary-foreground: 210 40% 97%;
+  
+  --muted: 198 30% 20%;
+  --muted-foreground: 210 40% 70%;
+  
   /* Svetlija akcentna */
-  --accent: 49 100% 76%;
-  --accent-foreground: 198 40% 15%;
-  --destructive: 347 100% 44%;
-  --destructive-foreground: 0 0% 95%;
-  --ring: 198 100% 42%;
-  --radius: 0.75rem;
+  --accent: 49 95% 76%;
+  --accent-foreground: 198 40% 13%;
+  
+  --destructive: 347 90% 50%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --border: 198 30% 22%;
+  --input: 198 30% 22%;
+  --ring: 198 90% 50%;
+  
+  /* Senke za tamnu temu */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  
+  /* Boje za grafikone */
+  --chart-1: 198 90% 50%;
+  --chart-2: 149 70% 50%;
+  --chart-3: 322 80% 65%;
+  --chart-4: 243 75% 70%;
+  --chart-5: 32 94% 70%;
 }
 
 @layer base {
@@ -70,7 +110,23 @@
   
   /* Animacije za temu */
   .theme-transition {
-    @apply transition-all duration-300;
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  /* Poboljšani prelaz za temu */
+  .theme-fade-in {
+    animation: themeFadeIn 0.4s ease-in-out;
+  }
+  
+  @keyframes themeFadeIn {
+    0% {
+      opacity: 0.4;
+      transform: scale(0.99);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
