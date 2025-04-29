@@ -90,7 +90,7 @@ const AIAssistant = () => {
     setReferences([]);
 
     try {
-      const response = await apiRequest("/api/agent/ask", {
+      const data = await apiRequest("/api/agent/ask", {
         method: "POST",
         body: JSON.stringify({
           question: question.trim(),
@@ -102,8 +102,6 @@ const AIAssistant = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      const data = await response.json();
 
       if (data.success && data.data) {
         setResponse(data.data.answer);
@@ -152,7 +150,7 @@ const AIAssistant = () => {
         }
       }
 
-      const response = await apiRequest("/api/agent/generate-document", {
+      const responseData = await apiRequest("/api/agent/generate-document", {
         method: "POST",
         body: JSON.stringify({
           baseDocumentText: data.baseDocumentText,
@@ -163,8 +161,6 @@ const AIAssistant = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      const responseData = await response.json();
 
       if (responseData.success && responseData.data) {
         setResponse(responseData.data.answer);
@@ -190,7 +186,7 @@ const AIAssistant = () => {
     setReferences([]);
 
     try {
-      const response = await apiRequest("/api/agent/analyze-compliance", {
+      const responseData = await apiRequest("/api/agent/analyze-compliance", {
         method: "POST",
         body: JSON.stringify({
           documentText: data.documentText
@@ -199,8 +195,6 @@ const AIAssistant = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      const responseData = await response.json();
 
       if (responseData.success && responseData.data) {
         setResponse(responseData.data.answer);
