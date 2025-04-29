@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { PlusCircle, Edit, Trash, ExternalLink, Check, X } from "lucide-react";
 
-import { PageHeader } from "@/components/layout/page-header";
+import PageHeader from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/data-table";
 import {
