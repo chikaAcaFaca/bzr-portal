@@ -340,10 +340,11 @@ export default function Reports() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Svi dokumenti</SelectItem>
-                      <SelectItem value="instructions">Uputstva za rad</SelectItem>
-                      <SelectItem value="procedures">Procedure</SelectItem>
-                      <SelectItem value="regulations">Pravilnici</SelectItem>
-                      <SelectItem value="safetyMeasures">Mere zaštite</SelectItem>
+                      <SelectItem value="riskAssessment">Akt o proceni rizika</SelectItem>
+                      <SelectItem value="form6">Obrazac 6 - Evidencija o zaposlenima osposobljenim za bezbedan i zdrav rad</SelectItem>
+                      <SelectItem value="form3">Obrazac 3 - Evidencija o povredama na radu</SelectItem>
+                      <SelectItem value="form11">Obrazac 11 - Izveštaj o povredi na radu</SelectItem>
+                      <SelectItem value="injuryReport">Prijava povrede inspektoru rada</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
