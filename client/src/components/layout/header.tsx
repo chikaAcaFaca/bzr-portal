@@ -40,15 +40,15 @@ export default function Header() {
         <div className="container-responsive flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center">
-              <Link href="/">
-                <a className="mr-4">
-                  <span className="font-bold text-xl gradient-heading">BZR Portal</span>
-                </a>
-              </Link>
+              <div className="mr-4">
+                <Link href="/">
+                  <span className="font-bold text-xl gradient-heading cursor-pointer">BZR Portal</span>
+                </Link>
+              </div>
               <ol className="flex text-sm items-center">
                 <li className="flex items-center">
                   <Link href="/">
-                    <a className="text-muted-foreground hover:text-primary transition-colors">Početna</a>
+                    <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer">Početna</span>
                   </Link>
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -186,27 +186,25 @@ export default function Header() {
                 </DropdownMenu>
               ) : (
                 <Link href="/auth">
-                  <a>
-                    <Button className="rounded-lg bg-primary hover:bg-primary/90 transition-colors">
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        className="mr-2 h-4 w-4"
-                      >
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                        <polyline points="10 17 15 12 10 7"></polyline>
-                        <line x1="15" y1="12" x2="3" y2="12"></line>
-                      </svg>
-                      Prijava
-                    </Button>
-                  </a>
+                  <Button className="rounded-lg bg-primary hover:bg-primary/90 transition-colors">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="mr-2 h-4 w-4"
+                    >
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                      <polyline points="10 17 15 12 10 7"></polyline>
+                      <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    Prijava
+                  </Button>
                 </Link>
               )}
             </div>

@@ -18,6 +18,8 @@ import Reports from "./pages/reports";
 import DocumentProcessor from "./pages/document-processor";
 import AIAssistant from "./pages/ai-assistant";
 import KnowledgeReferences from "./pages/knowledge-references";
+import Settings from "./pages/settings";
+import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
 import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -72,6 +74,8 @@ function ProtectedContent() {
             <Route path="/document-processor" component={DocumentProcessor} />
             <Route path="/ai-assistant" component={AIAssistant} />
             <Route path="/knowledge-references" component={KnowledgeReferences} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/users" component={Users} />
             <Route component={NotFound} />
           </Switch>
         </main>
