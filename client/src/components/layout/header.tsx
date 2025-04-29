@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface BreadcrumbItem {
   label: string;
@@ -64,7 +65,7 @@ export default function Header() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
             <button className="text-muted-foreground p-2 hover:text-primary hover:bg-secondary/80 rounded-full transition-colors">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -81,6 +82,8 @@ export default function Header() {
                 <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
               </svg>
             </button>
+            
+            <ThemeToggle />
             
             <div className="relative">
               {user ? (
