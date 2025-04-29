@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
-import { useSidebar } from "@/hooks/use-sidebar";
+import { useEffect, useRef, useState } from "react";
 
 type NavItemProps = {
   href: string;
@@ -50,7 +49,7 @@ const NavSection = ({ title, children }: NavSectionProps) => {
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { isMobile, setIsOpen } = useSidebar();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Funkcija za zatvaranje sidebara kada pointer izađe
@@ -59,7 +58,6 @@ export default function Sidebar() {
       const sidebar = sidebarRef.current;
       sidebar.classList.add('hidden');
       sidebar.classList.remove('fixed', 'inset-0', 'z-40');
-      setIsOpen(false);
       
       // Ažuriramo toggle dugme
       const mobileToggle = document.getElementById('mobile-toggle');
@@ -68,6 +66,50 @@ export default function Sidebar() {
       }
     }
   };
+  
+  // Dodajemo event handler za klik izvan sidebar-a
+  useEffect(() => {
+    const closeSidebarOnClickOutside = (event: MouseEvent) => {
+      if (
+        isMobile && 
+        sidebarRef.current && 
+        !sidebarRef.current.contains(event.target as Node) &&
+        !sidebarRef.current.classList.contains('hidden')
+      ) {
+        const mobileToggle = document.getElementById('mobile-toggle');
+        if (mobileToggle && !mobileToggle.contains(event.target as Node)) {
+          sidebarRef.current.classList.add('hidden');
+          sidebarRef.current.classList.remove('fixed', 'inset-0', 'z-40');
+          
+          if (mobileToggle) {
+            mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+          }
+        }
+      }
+    };
+    
+    // Dodajemo listener za resize da pratimo kada je mobilna verzija
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth < 1024;
+      setIsMobile(newIsMobile);
+      
+      if (!newIsMobile && sidebarRef.current) {
+        sidebarRef.current.classList.remove('hidden', 'fixed', 'inset-0', 'z-40');
+      } else if (newIsMobile && sidebarRef.current) {
+        sidebarRef.current.classList.add('hidden');
+      }
+    };
+    
+    // Dodajemo event listenere
+    document.addEventListener('mousedown', closeSidebarOnClickOutside);
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup kada se komponenta unmount-uje
+    return () => {
+      document.removeEventListener('mousedown', closeSidebarOnClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isMobile]);
 
   return (
     <div

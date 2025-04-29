@@ -23,7 +23,6 @@ import Settings from "./pages/settings";
 import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 
 
 // Komponenta koja zahteva autentikaciju
@@ -156,7 +155,6 @@ function Router() {
 }
 
 function App() {
-  const mobileSidebar = useMobileSidebar();
 
   return (
     <QueryClientProvider client={queryClient}>
