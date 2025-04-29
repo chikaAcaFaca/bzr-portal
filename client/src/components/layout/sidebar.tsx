@@ -6,9 +6,10 @@ type NavItemProps = {
   icon: string;
   label: string;
   active?: boolean;
+  "data-tour"?: string;
 };
 
-const NavItem = ({ href, icon, label, active }: NavItemProps) => {
+const NavItem = ({ href, icon, label, active, ...rest }: NavItemProps) => {
   return (
     <div>
       <Link href={href}>
@@ -19,6 +20,7 @@ const NavItem = ({ href, icon, label, active }: NavItemProps) => {
               ? "bg-primary-600 text-white"
               : "hover:bg-gray-700 text-gray-300"
           )}
+          {...rest}
         >
           <i className={`${icon} w-5`}></i>
           <span>{label}</span>

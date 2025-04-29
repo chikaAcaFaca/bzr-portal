@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import NotFound from "@/pages/not-found";
 import Sidebar from "./components/layout/sidebar";
 import Header from "./components/layout/header";
+import { OnboardingTourProvider } from "./components/onboarding/onboarding-tour";
 import Dashboard from "./pages/dashboard";
 import JobPositions from "./pages/job-positions";
 import JobDescriptions from "./pages/job-descriptions";
@@ -163,7 +164,9 @@ function App() {
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            <OnboardingTourProvider>
+              <Router />
+            </OnboardingTourProvider>
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>

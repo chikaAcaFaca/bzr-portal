@@ -8,8 +8,7 @@ export const tourSteps: StepType[] = [
   {
     selector: '#sidebar',
     content: 'Dobrodošli u BZR Sistem. Ovde možete pristupiti svim funkcionalnostima aplikacije.',
-    position: 'right' as const,
-    actionBefore: () => {}
+    position: 'right' as const
   },
   {
     selector: '[data-tour="dashboard"]',
@@ -24,8 +23,7 @@ export const tourSteps: StepType[] = [
   {
     selector: '[data-tour="document-processor"]',
     content: 'AI procesor automatski analizira sistematizaciju i druge dokumente, i popunjava bazu podataka.',
-    position: 'bottom' as const,
-    actionBefore: () => {}
+    position: 'bottom' as const
   },
   {
     selector: '[data-tour="ai-assistant"]',
@@ -138,7 +136,7 @@ export function OnboardingTourProvider({ children }: { children: React.ReactNode
   return (
     <TourProvider 
       steps={tourSteps}
-      CustomControls={TourControls}
+      components={{ Controls: TourControls }}
       {...tourOptions}
     >
       {children}

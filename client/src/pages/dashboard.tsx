@@ -16,17 +16,25 @@ export default function Dashboard() {
       <StatisticsCards />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <RecentTrainings />
+        <div className="recent-trainings">
+          <RecentTrainings />
+        </div>
         
         <div className="space-y-6">
-          <QuickActions />
-          <RecentDocuments />
+          <div className="quick-actions">
+            <QuickActions />
+          </div>
+          <div className="recent-documents">
+            <RecentDocuments />
+          </div>
         </div>
       </div>
       
       <div className="mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6">Moduli sistema</h2>
-        <ModuleCards />
+        <div className="module-cards">
+          <ModuleCards />
+        </div>
       </div>
     </>
   );
