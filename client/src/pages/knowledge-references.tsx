@@ -520,12 +520,10 @@ export default function KnowledgeReferences() {
     
     try {
       // Slanje zahteva na server za preuzimanje svih PDF-ova sa navedenog URL-a
-      const response = await apiRequest('/api/scrape-pdfs', {
+      const data = await apiRequest('/api/scrape-pdfs', {
         method: 'POST',
-        body: JSON.stringify({ url: bulkImportUrl }) as any
+        body: { url: bulkImportUrl }
       });
-      
-      const data = await response.json();
       
       if (data.files && data.files.length > 0) {
         setFoundFiles(data.files);

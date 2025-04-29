@@ -7,6 +7,7 @@ export function setupPdfScraperRoutes(app: Express) {
   // Ruta za pretraživanje PDF dokumenata na nekom URL-u
   app.post('/api/scrape-pdfs', async (req: Request, res: Response) => {
     try {
+      console.log('Request body:', req.body);
       const { url } = req.body;
       
       if (!url) {
