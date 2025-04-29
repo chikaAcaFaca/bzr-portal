@@ -137,13 +137,13 @@ export default function Sidebar() {
                 href="/reports"
                 icon="fas fa-chart-bar"
                 label="Statistika"
-                active={location === "/reports"}
+                active={location === "/reports" || (location.startsWith("/reports") && !location.includes("type=documents"))}
               />
               <NavItem
                 href="/reports?type=documents"
                 icon="fas fa-file-pdf"
                 label="Generisanje dokumenata"
-                active={location === "/reports?type=documents"}
+                active={location.startsWith("/reports") && location.includes("type=documents")}
               />
             </NavSection>
 
