@@ -1,5 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react";
+import { useSidebar } from "@/hooks/use-sidebar";
 
 type NavItemProps = {
   href: string;
@@ -47,11 +49,31 @@ const NavSection = ({ title, children }: NavSectionProps) => {
 };
 
 export default function Sidebar() {
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
+  const { isMobile, setIsOpen } = useSidebar();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Funkcija za zatvaranje sidebara kada pointer izađe
+  const handleMouseLeave = () => {
+    if (isMobile && sidebarRef.current) {
+      const sidebar = sidebarRef.current;
+      sidebar.classList.add('hidden');
+      sidebar.classList.remove('fixed', 'inset-0', 'z-40');
+      setIsOpen(false);
+      
+      // Ažuriramo toggle dugme
+      const mobileToggle = document.getElementById('mobile-toggle');
+      if (mobileToggle) {
+        mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+      }
+    }
+  };
 
   return (
     <div
       id="sidebar"
+      ref={sidebarRef}
+      onMouseLeave={handleMouseLeave}
       className="bg-gray-800 text-white w-64 flex-shrink-0 hidden lg:block overflow-y-auto transition-all duration-300 z-40 fixed h-full lg:relative"
     >
       <div className="p-4">

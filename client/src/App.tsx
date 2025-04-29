@@ -22,8 +22,8 @@ import KnowledgeReferences from "./pages/knowledge-references";
 import Settings from "./pages/settings";
 import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
-import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
 
 
 // Komponenta koja zahteva autentikaciju
@@ -156,7 +156,7 @@ function Router() {
 }
 
 function App() {
-  useMobileSidebar();
+  const mobileSidebar = useMobileSidebar();
 
   return (
     <QueryClientProvider client={queryClient}>
