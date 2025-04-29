@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { insertBlogPostSchema } from "@shared/schema";
 import { generateSlug } from "../utils/slug-generator";
@@ -6,7 +6,7 @@ import { generateSlug } from "../utils/slug-generator";
 export const blogRouter = Router();
 
 // Get all blog posts
-blogRouter.get("/", async (req, res) => {
+blogRouter.get("/", async (req: Request, res: Response) => {
   try {
     const status = req.query.status as string;
     const category = req.query.category as string;
@@ -29,7 +29,7 @@ blogRouter.get("/", async (req, res) => {
 });
 
 // Get published blog posts for public view
-blogRouter.get("/published", async (req, res) => {
+blogRouter.get("/published", async (req: Request, res: Response) => {
   try {
     const publishedPosts = await storage.getBlogPostsByStatus('published');
     res.json(publishedPosts);
@@ -40,7 +40,7 @@ blogRouter.get("/published", async (req, res) => {
 });
 
 // Get a specific blog post by ID
-blogRouter.get("/:id", async (req, res) => {
+blogRouter.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -60,7 +60,7 @@ blogRouter.get("/:id", async (req, res) => {
 });
 
 // Get a blog post by slug (for SEO-friendly URLs)
-blogRouter.get("/slug/:slug", async (req, res) => {
+blogRouter.get("/slug/:slug", async (req: Request, res: Response) => {
   try {
     const slug = req.params.slug;
     const post = await storage.getBlogPostBySlug(slug);
@@ -72,7 +72,7 @@ blogRouter.get("/slug/:slug", async (req, res) => {
     // Increment view count if the post is published
     if (post.status === 'published') {
       await storage.updateBlogPost(post.id, { 
-        viewCount: post.viewCount + 1 
+        viewCount: (post.viewCount || 0) + 1 
       });
     }
     
@@ -84,9 +84,11 @@ blogRouter.get("/slug/:slug", async (req, res) => {
 });
 
 // Create a new blog post
-blogRouter.post("/", async (req, res) => {
+blogRouter.post("/", async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    // Check if user is authenticated
+    // @ts-ignore - Express session types are not included by default
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
       return res.status(403).json({ error: "Unauthorized access" });
     }
     
@@ -106,7 +108,9 @@ blogRouter.post("/", async (req, res) => {
     }
     
     // Set author from authenticated user
+    // @ts-ignore - Express session types are not included by default
     if (!postData.authorId && req.user) {
+      // @ts-ignore - Express session types are not included by default
       postData.authorId = req.user.id;
     }
     
@@ -119,9 +123,10 @@ blogRouter.post("/", async (req, res) => {
 });
 
 // Convert AI response to a draft blog post
-blogRouter.post("/from-ai-response", async (req, res) => {
+blogRouter.post("/from-ai-response", async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated()) {
+    // @ts-ignore - Express session types are not included by default
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(403).json({ error: "Unauthorized access" });
     }
     
@@ -162,8 +167,9 @@ blogRouter.post("/from-ai-response", async (req, res) => {
       excerpt: answer.substring(0, 150) + '...',
       category: category || 'general',
       status: 'draft',
-      authorId: req.user.id,
-      imageUrls: imageUrls || [],
+      // @ts-ignore - Express session types are not included by default
+      authorId: req.user?.id,
+      imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : null,
       tags: [],
       seoTitle: title,
       seoDescription: answer.substring(0, 160),
@@ -178,9 +184,10 @@ blogRouter.post("/from-ai-response", async (req, res) => {
 });
 
 // Update a blog post status (approve or reject)
-blogRouter.patch("/:id/status", async (req, res) => {
+blogRouter.patch("/:id/status", async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    // @ts-ignore - Express session types are not included by default
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
       return res.status(403).json({ error: "Unauthorized access" });
     }
     
@@ -189,7 +196,7 @@ blogRouter.patch("/:id/status", async (req, res) => {
       return res.status(400).json({ error: "Invalid ID format" });
     }
     
-    const { status, adminComments } = req.body;
+    const { status, adminFeedback } = req.body;
     if (!status || !['draft', 'pending_approval', 'approved', 'published', 'rejected'].includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
@@ -201,7 +208,7 @@ blogRouter.patch("/:id/status", async (req, res) => {
     
     const updatedPost = await storage.updateBlogPost(id, { 
       status, 
-      adminComments: adminComments || post.adminComments
+      adminFeedback: adminFeedback || post.adminFeedback
     });
     
     res.json(updatedPost);
@@ -212,9 +219,12 @@ blogRouter.patch("/:id/status", async (req, res) => {
 });
 
 // Update a blog post
-blogRouter.put("/:id", async (req, res) => {
+blogRouter.put("/:id", async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated() || (req.user.role !== 'admin' && req.user.id !== req.body.authorId)) {
+    // @ts-ignore - Express session types are not included by default
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || 
+        // @ts-ignore - Express session types are not included by default
+        (req.user.role !== 'admin' && req.user.id !== req.body.authorId)) {
       return res.status(403).json({ error: "Unauthorized access" });
     }
     
@@ -245,9 +255,10 @@ blogRouter.put("/:id", async (req, res) => {
 });
 
 // Delete a blog post
-blogRouter.delete("/:id", async (req, res) => {
+blogRouter.delete("/:id", async (req: Request, res: Response) => {
   try {
-    if (!req.isAuthenticated() || req.user.role !== 'admin') {
+    // @ts-ignore - Express session types are not included by default
+    if (!req.isAuthenticated || !req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
       return res.status(403).json({ error: "Unauthorized access" });
     }
     

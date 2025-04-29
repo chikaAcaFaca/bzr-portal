@@ -937,6 +937,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
   setupDocumentScraperRoutes(app);
+  
+  // Register blog routes
+  app.use('/api/blog', blogRouter);
 
   const httpServer = createServer(app);
   return httpServer;
