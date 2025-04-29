@@ -18,53 +18,9 @@ import Reports from "./pages/reports";
 import DocumentProcessor from "./pages/document-processor";
 import AIAssistant from "./pages/ai-assistant";
 import KnowledgeReferences from "./pages/knowledge-references";
+import AuthPage from "./pages/auth-page";
 import { useMobileSidebar } from "@/hooks/use-mobile-sidebar";
-import { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js'
-
-
-// Import Supabase client from our lib
-import { supabase } from './lib/supabase';
-
-const AuthContext = createContext();
-
-const AuthProvider = ({ children }) => {
-  const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    const session = supabase.auth.session();
-    setSession(session);
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      authListener.unsubscribe();
-    }
-  }, []);
-
-  const signIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google' // Or another provider
-    });
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  return (
-    <AuthContext.Provider value={{ session, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-
-const useAuth = () => {
-  return useContext(AuthContext);
-};
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
 function Router() {
