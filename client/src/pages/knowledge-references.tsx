@@ -395,15 +395,14 @@ export default function KnowledgeReferences() {
   const columns = [
     {
       header: "Naslov",
-      accessorKey: "title",
-      cell: ({ row }: any) => {
-        const reference = row.original;
+      accessorKey: "title" as keyof KnowledgeReference,
+      cell: (item: KnowledgeReference) => {
         return (
           <div className="flex flex-col">
-            <div className="font-medium">{reference.title}</div>
-            {reference.description && (
+            <div className="font-medium">{item.title}</div>
+            {item.description && (
               <div className="text-muted-foreground text-sm line-clamp-1">
-                {reference.description}
+                {item.description}
               </div>
             )}
           </div>
@@ -412,9 +411,9 @@ export default function KnowledgeReferences() {
     },
     {
       header: "Kategorija",
-      accessorKey: "category",
-      cell: ({ row }: any) => {
-        const category = row.original.category;
+      accessorKey: "category" as keyof KnowledgeReference,
+      cell: (item: KnowledgeReference) => {
+        const category = item.category;
         return (
           <Badge variant={getCategoryBadgeVariant(category) as any}>
             {categoryLabels[category] || category}
@@ -424,9 +423,9 @@ export default function KnowledgeReferences() {
     },
     {
       header: "Status",
-      accessorKey: "isActive",
-      cell: ({ row }: any) => {
-        const isActive = row.original.isActive;
+      accessorKey: "isActive" as keyof KnowledgeReference,
+      cell: (item: KnowledgeReference) => {
+        const isActive = item.isActive;
         return (
           <div className="flex items-center">
             {isActive ? (
@@ -446,14 +445,14 @@ export default function KnowledgeReferences() {
     },
     {
       header: "Link",
-      cell: ({ row }: any) => {
-        const reference = row.original;
+      accessorKey: "url" as keyof KnowledgeReference,
+      cell: (item: KnowledgeReference) => {
         return (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <a 
-                  href={reference.url} 
+                  href={item.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-blue-600 hover:text-blue-800"
@@ -473,14 +472,14 @@ export default function KnowledgeReferences() {
     },
     {
       header: "Akcije",
-      cell: ({ row }: any) => {
-        const reference = row.original;
+      accessorKey: "id" as keyof KnowledgeReference,
+      cell: (item: KnowledgeReference) => {
         return (
-          <div className="flex space-x-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex space-x-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => handleEditClick(reference)}
+              onClick={() => handleEditClick(item)}
             >
               <Edit className="h-4 w-4" />
               <span className="sr-only">Izmeni</span>
@@ -488,7 +487,7 @@ export default function KnowledgeReferences() {
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => handleDeleteClick(reference)}
+              onClick={() => handleDeleteClick(item)}
             >
               <Trash className="h-4 w-4" />
               <span className="sr-only">Obriši</span>
@@ -513,9 +512,10 @@ export default function KnowledgeReferences() {
         </Button>
       </div>
 
+      {/* Definišemo DataTable za KnowledgeReference tipizaciju */}
       <DataTable
         data={references}
-        columns={columns}
+        columns={columns as any}
         isLoading={isLoading}
         searchPlaceholder="Pretraži reference znanja..."
         emptyMessage="Nema definisanih referenci znanja"

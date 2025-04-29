@@ -874,7 +874,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.error('Error creating knowledge reference:', error);
-      res.status(500).json({ message: `Failed to create knowledge reference: ${error.message}` });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: `Failed to create knowledge reference: ${errorMessage}` });
     }
   });
 
