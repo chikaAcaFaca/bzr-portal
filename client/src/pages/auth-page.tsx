@@ -45,6 +45,28 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading, signIn, signUp } = useAuth();
 
+  // Login forma - definisati pre uslovnih izjava
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Register forma - definisati pre uslovnih izjava
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      fullName: "",
+      companyName: "",
+      companyPib: "",
+      companyRegNumber: "",
+    },
+  });
+
   // Ako je korisnik već ulogovan, redirektujemo ga na glavnu stranicu
   if (user) {
     return <Redirect to="/" />;
@@ -58,28 +80,6 @@ export default function AuthPage() {
       </div>
     );
   }
-
-  // Login forma
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  // Register forma
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      fullName: "",
-      companyName: "",
-      companyPib: "",
-      companyRegNumber: "",
-    },
-  });
 
   // Funkcija za prijavu
   async function onLoginSubmit(data: LoginFormValues) {
