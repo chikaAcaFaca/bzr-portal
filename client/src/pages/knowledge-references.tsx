@@ -611,7 +611,7 @@ export default function KnowledgeReferences() {
           className="flex items-center gap-1"
         >
           <Upload className="h-4 w-4" />
-          <span>Masovni uvoz PDF dokumenata</span>
+          <span>Masovni uvoz dokumenata</span>
         </Button>
       </div>
 
