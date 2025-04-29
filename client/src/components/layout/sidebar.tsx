@@ -70,20 +70,23 @@ export default function Sidebar() {
               icon="fas fa-tachometer-alt"
               label="Dashboard"
               active={location === "/"}
+              data-tour="dashboard"
             />
 
-            <NavSection title="Dokumentacija">
+            <NavSection title="Dokumentacija" data-tour="document-section">
               <NavItem
                 href="/document-processor"
                 icon="fas fa-brain"
                 label="AI Procesor"
                 active={location === "/document-processor"}
+                data-tour="document-processor"
               />
               <NavItem
                 href="/ai-assistant"
                 icon="fas fa-robot"
                 label="AI Asistent za BZR"
                 active={location === "/ai-assistant"}
+                data-tour="ai-assistant"
               />
               <NavItem
                 href="/knowledge-references"
@@ -111,7 +114,7 @@ export default function Sidebar() {
               />
             </NavSection>
 
-            <NavSection title="Bezbednost">
+            <NavSection title="Bezbednost" data-tour="employee-section">
               <NavItem
                 href="/risk-categories"
                 icon="fas fa-exclamation-triangle"
@@ -132,7 +135,7 @@ export default function Sidebar() {
               />
             </NavSection>
 
-            <NavSection title="Izveštaji">
+            <NavSection title="Izveštaji" data-tour="report-section">
               <NavItem
                 href="/reports"
                 icon="fas fa-chart-bar"
@@ -147,7 +150,7 @@ export default function Sidebar() {
               />
             </NavSection>
 
-            <NavSection title="Sistemske postavke">
+            <NavSection title="Sistemske postavke" data-tour="settings-section">
               <NavItem
                 href="/settings"
                 icon="fas fa-cog"
