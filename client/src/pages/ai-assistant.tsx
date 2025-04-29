@@ -231,8 +231,10 @@ const AIAssistant = () => {
                   <TabsTrigger value="faq" className="py-2">Često postavljana pitanja</TabsTrigger>
                 </TabsList>
 
-                <div className="mt-4">
-                  <Label>Stil odgovora</Label>
+                <div className="mt-4 space-y-2">
+                  <Label>
+                    Stil odgovora
+                  </Label>
                   <Select 
                     onValueChange={(value) => setResponseStyle(value)}
                     defaultValue="professional"
