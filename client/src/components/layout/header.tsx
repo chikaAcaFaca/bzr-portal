@@ -1,4 +1,13 @@
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface BreadcrumbItem {
   label: string;
@@ -6,11 +15,7 @@ interface BreadcrumbItem {
 }
 
 export default function Header() {
-  // This would be dynamic in a full implementation
-  const userProfile = {
-    name: "Korisnik Petrović",
-    imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  };
+  const { user, signOut, signIn } = useAuth();
 
   return (
     <>
@@ -51,10 +56,10 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center text-sm focus:outline-none">
                       <Avatar>
-                        <AvatarImage src={user.user_metadata.avatar_url} />
-                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        <AvatarImage src={user.user_metadata?.avatar_url || ''} />
+                        <AvatarFallback>{user.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                       </Avatar>
-                      <span className="ml-2 hidden md:block">{user.email}</span>
+                      <span className="ml-2 hidden md:block">{user.email || 'Korisnik'}</span>
                       <i className="fas fa-chevron-down ml-1 hidden md:block"></i>
                     </button>
                   </DropdownMenuTrigger>
@@ -65,7 +70,11 @@ export default function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button onClick={() => signIn()}>Prijava</Button>
+                <Link href="/auth">
+                  <a>
+                    <Button>Prijava</Button>
+                  </a>
+                </Link>
               )}
             </div>
           </div>
