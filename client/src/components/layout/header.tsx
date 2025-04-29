@@ -27,6 +27,12 @@ export default function Header() {
           <button
             id="mobile-toggle"
             className="bg-white/80 p-2 rounded-md shadow-sm text-gray-600 hover:bg-white/95 transition-colors"
+            onClick={() => {
+              const sidebar = document.getElementById('sidebar');
+              if (sidebar) {
+                sidebar.classList.toggle('hidden');
+              }
+            }}
           >
             <i className="fas fa-bars"></i>
           </button>
