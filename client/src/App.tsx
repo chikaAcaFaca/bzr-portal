@@ -23,8 +23,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js'
 
 
-// Supabase client (replace with your actual config)
-const supabase = createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+// Import Supabase client from our lib
+import { supabase } from './lib/supabase';
 
 const AuthContext = createContext();
 
