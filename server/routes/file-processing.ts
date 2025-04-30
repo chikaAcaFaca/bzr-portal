@@ -11,6 +11,7 @@ declare global {
 import * as fs from 'fs';
 import * as path from 'path';
 import { openRouterService } from '../services/openrouter-service';
+import { documentProcessingService } from '../services/document-processing-service';
 import { db } from '../db';
 import { 
   jobPositions,
@@ -23,27 +24,27 @@ import {
 import { eq } from 'drizzle-orm';
 import multer from 'multer';
 
-// Funkcija za čitanje sadržaja fajla - podržava samo text/plain fajlove trenutno
-async function readFileContent(filePath: string): Promise<{ success: boolean; content: string; error?: string }> {
+// Funkcija za obradu sadržaja fajla - podržava različite tipove fajlova
+async function processFileContent(filePath: string, mimeType: string): Promise<{ success: boolean; content: string; error?: string }> {
   try {
-    // Za sada podržavamo samo .txt fajlove
     const stats = fs.statSync(filePath);
-    if (stats.size > 10 * 1024 * 1024) { // 10MB limit
+    if (stats.size > 20 * 1024 * 1024) { // 20MB limit
       return {
         success: false,
         content: '',
-        error: 'Fajl je prevelik. Maksimalna dozvoljena veličina je 10MB.'
+        error: 'Fajl je prevelik. Maksimalna dozvoljena veličina je 20MB.'
       };
     }
     
-    const content = fs.readFileSync(filePath, 'utf8');
+    // Koristi servis za obradu dokumenata različitih formata
+    const content = await documentProcessingService.processDocument(filePath, mimeType);
     return { success: true, content };
   } catch (error) {
-    console.error('Greška pri čitanju fajla:', error);
+    console.error('Greška pri obradi fajla:', error);
     return {
       success: false, 
       content: '',
-      error: 'Nije moguće pročitati fajl. Podržani format je samo TXT dokument. Za DOC, DOCX, PDF i druge formate, potrebno je konvertovati sadržaj u TXT format pre slanja.'
+      error: `Nije moguće obraditi fajl: ${error.message}`
     };
   }
 }
@@ -52,20 +53,27 @@ async function readFileContent(filePath: string): Promise<{ success: boolean; co
 const upload = multer({ 
   dest: 'uploads/',
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB limit
+    fileSize: 20 * 1024 * 1024, // 20 MB limit
   },
   fileFilter: (req, file, callback) => {
-    // Za sada podržavamo samo .txt fajlove direktno
-    // Za ostale formate korisnik prvo treba da konvertuje u tekst
+    // Podržavamo različite tipove dokumenata
     const allowedTypes = [
-      'text/plain'
+      'text/plain',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'image/jpeg',
+      'image/png',
+      'image/jpg'
     ];
     
     if (allowedTypes.includes(file.mimetype)) {
       callback(null, true);
     } else {
       callback(null, false);
-      req.fileValidationError = 'Nepodržan tip fajla. Podržani format je samo .txt dokument. Za DOC, DOCX, PDF i druge formate, potrebno je konvertovati sadržaj u TXT format pre slanja.';
+      req.fileValidationError = `Nepodržan tip fajla: ${file.mimetype}. Podržani formati su: TXT, PDF, DOC, DOCX, XLS, XLSX, JPG, PNG.`;
     }
   }
 });
@@ -96,7 +104,7 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const fileResult = await readFileContent(filePath);
+      const fileResult = await processFileContent(filePath, req.file.mimetype);
       
       // Obriši privremeni fajl nakon čitanja
       try {
@@ -170,10 +178,23 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const documentText = fs.readFileSync(filePath, 'utf8');
+      const fileResult = await processFileContent(filePath, req.file.mimetype);
       
       // Obriši privremeni fajl nakon čitanja
-      fs.unlinkSync(filePath);
+      try {
+        fs.unlinkSync(filePath);
+      } catch (e) {
+        console.error('Greška pri brisanju privremenog fajla:', e);
+      }
+      
+      if (!fileResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: fileResult.error || 'Greška pri čitanju fajla'
+        });
+      }
+      
+      const documentText = fileResult.content;
 
       // Koristimo OpenRouter za parsiranje sadržaja
       const result = await openRouterService.parseEmployeeDocument(documentText);
@@ -254,10 +275,23 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const documentText = fs.readFileSync(filePath, 'utf8');
+      const fileResult = await processFileContent(filePath, req.file.mimetype);
       
       // Obriši privremeni fajl nakon čitanja
-      fs.unlinkSync(filePath);
+      try {
+        fs.unlinkSync(filePath);
+      } catch (e) {
+        console.error('Greška pri brisanju privremenog fajla:', e);
+      }
+      
+      if (!fileResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: fileResult.error || 'Greška pri čitanju fajla'
+        });
+      }
+      
+      const documentText = fileResult.content;
 
       // Koristimo OpenRouter za parsiranje sadržaja
       const result = await openRouterService.parseJobDescriptionDocument(documentText);
