@@ -1,4 +1,13 @@
 import { Request, Response } from 'express';
+
+// Proširenje Request tipa za fileValidationError
+declare global {
+  namespace Express {
+    interface Request {
+      fileValidationError?: string;
+    }
+  }
+}
 import * as fs from 'fs';
 import * as path from 'path';
 import { openRouterService } from '../services/openrouter-service';
@@ -14,6 +23,31 @@ import {
 import { eq } from 'drizzle-orm';
 import multer from 'multer';
 
+// Funkcija za čitanje sadržaja fajla - podržava samo text/plain fajlove trenutno
+async function readFileContent(filePath: string): Promise<{ success: boolean; content: string; error?: string }> {
+  try {
+    // Za sada podržavamo samo .txt fajlove
+    const stats = fs.statSync(filePath);
+    if (stats.size > 10 * 1024 * 1024) { // 10MB limit
+      return {
+        success: false,
+        content: '',
+        error: 'Fajl je prevelik. Maksimalna dozvoljena veličina je 10MB.'
+      };
+    }
+    
+    const content = fs.readFileSync(filePath, 'utf8');
+    return { success: true, content };
+  } catch (error) {
+    console.error('Greška pri čitanju fajla:', error);
+    return {
+      success: false, 
+      content: '',
+      error: 'Nije moguće pročitati fajl. Podržani format je samo TXT dokument. Za DOC, DOCX, PDF i druge formate, potrebno je konvertovati sadržaj u TXT format pre slanja.'
+    };
+  }
+}
+
 // Konfiguracija za multer - privremeno čuvanje fajlova
 const upload = multer({ 
   dest: 'uploads/',
@@ -21,21 +55,17 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10 MB limit
   },
   fileFilter: (req, file, callback) => {
+    // Za sada podržavamo samo .txt fajlove direktno
+    // Za ostale formate korisnik prvo treba da konvertuje u tekst
     const allowedTypes = [
-      'application/pdf', 
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       'text/plain'
     ];
     
     if (allowedTypes.includes(file.mimetype)) {
       callback(null, true);
     } else {
-      callback(new Error('Nepodržan tip fajla'));
+      callback(null, false);
+      req.fileValidationError = 'Nepodržan tip fajla. Podržani format je samo .txt dokument. Za DOC, DOCX, PDF i druge formate, potrebno je konvertovati sadržaj u TXT format pre slanja.';
     }
   }
 });
@@ -50,6 +80,13 @@ export async function setupFileProcessingRoutes(app: any) {
   // Endpoint za obradu uploada sistematizacije radnih mesta
   app.post('/api/process/job-positions-file', upload.single('file'), async (req: Request, res: Response) => {
     try {
+      if (req.fileValidationError) {
+        return res.status(400).json({
+          success: false,
+          error: req.fileValidationError
+        });
+      }
+      
       if (!req.file) {
         return res.status(400).json({
           success: false,
@@ -59,10 +96,23 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const documentText = fs.readFileSync(filePath, 'utf8');
+      const fileResult = await readFileContent(filePath);
       
       // Obriši privremeni fajl nakon čitanja
-      fs.unlinkSync(filePath);
+      try {
+        fs.unlinkSync(filePath);
+      } catch (e) {
+        console.error('Greška pri brisanju privremenog fajla:', e);
+      }
+      
+      if (!fileResult.success) {
+        return res.status(400).json({
+          success: false,
+          error: fileResult.error || 'Greška pri čitanju fajla'
+        });
+      }
+      
+      const documentText = fileResult.content;
 
       // Koristimo OpenRouter za parsiranje sadržaja
       const result = await openRouterService.parseJobPositionDocument(documentText);

@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -53,6 +54,8 @@ export function DocumentProcessorUploadForm() {
   const [activeTab, setActiveTab] = useState<DocumentType>('job-positions');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [textInputMode, setTextInputMode] = useState(false);
+  const [documentText, setDocumentText] = useState('');
   const [processingResults, setProcessingResults] = useState<{
     success: boolean;
     message?: string;
@@ -65,6 +68,8 @@ export function DocumentProcessorUploadForm() {
   const handleTabChange = (value: string) => {
     setActiveTab(value as DocumentType);
     setFile(null);
+    setDocumentText('');
+    setTextInputMode(false);
     setProcessingResults(null);
   };
 
@@ -236,6 +241,81 @@ export function DocumentProcessorUploadForm() {
     }
   });
 
+  // Nova mutacija za slanje tekstualnog sadržaja
+  const uploadTextMutation = useMutation({
+    mutationFn: async (text: string) => {
+      try {
+        const response = await fetch(`/api/process/${activeTab}-text`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+        
+        if (!response.ok) {
+          let errorText = '';
+          const contentType = response.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            try {
+              const errorData = await response.json();
+              errorText = errorData.error || 'Greška pri obradi teksta';
+            } catch (e) {
+              errorText = await response.text();
+            }
+          } else {
+            errorText = await response.text();
+            console.error('Server vratio nevalidan odgovor:', errorText);
+          }
+          
+          throw new Error(errorText || `HTTP greška: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Greška pri slanju zahteva:', error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      setProcessingResults({
+        success: true,
+        message: data.message,
+        data: data.data,
+      });
+      
+      // Osvježi podatke u skladu sa tipom dokumenta
+      if (activeTab === 'job-positions') {
+        queryClient.invalidateQueries({ queryKey: ['/api/job-positions'] });
+      } else if (activeTab === 'employees') {
+        queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
+      } else if (activeTab === 'job-descriptions') {
+        queryClient.invalidateQueries({ queryKey: ['/api/job-descriptions'] });
+      }
+      
+      toast({
+        title: "Uspešno",
+        description: data.message || "Sadržaj je uspešno obrađen",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Greška",
+        description: error.message || "Došlo je do greške pri obradi sadržaja",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      setLoading(false);
+    }
+  });
+
   const handleSubmit = async () => {
     setLoading(true);
     
@@ -244,10 +324,27 @@ export function DocumentProcessorUploadForm() {
       return;
     }
     
+    // Ako je uključen tekstualni režim, koristimo upisani tekst
+    if (textInputMode) {
+      if (!documentText.trim()) {
+        toast({
+          title: "Greška",
+          description: "Molimo unesite tekst za obradu",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      uploadTextMutation.mutate(documentText);
+      return;
+    }
+    
+    // Inače, koristimo odabrani fajl
     if (!file) {
       toast({
         title: "Greška",
-        description: "Molimo izaberite fajl za obradu",
+        description: "Molimo izaberite fajl za obradu ili pređite na unos teksta",
         variant: "destructive",
       });
       setLoading(false);
@@ -311,62 +408,114 @@ export function DocumentProcessorUploadForm() {
 
         <CardContent>
           {activeTab !== 'risk-categories' && (
-            <div
-              className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-              onDrop={handleFileDrop}
-              onDragOver={handleDragOver}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-                accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.csv"
-              />
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <div className="p-3 bg-primary/10 rounded-full">
-                  {getTabIcon()}
+            <>
+              <div className="mb-4 flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">Način unosa</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Izaberite način unosa {getTabTitle().toLowerCase()} dokumenta
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium">
-                  Izaberite ili prevucite {getTabTitle().toLowerCase()} dokument
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Podržani formati: TXT, DOC, DOCX, PDF, XLS, XLSX, CSV
-                </p>
-                <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium 
-                  ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 
-                  focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none 
-                  disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2
-                  cursor-pointer">
-                  Izaberi fajl
-                </label>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant={textInputMode ? "outline" : "default"} 
+                    size="sm"
+                    onClick={() => {
+                      setTextInputMode(false);
+                      setDocumentText('');
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Učitaj fajl
+                  </Button>
+                  <Button 
+                    variant={textInputMode ? "default" : "outline"} 
+                    size="sm"
+                    onClick={() => {
+                      setTextInputMode(true);
+                      setFile(null);
+                    }}
+                  >
+                    <span className="h-4 w-4 mr-2">T</span>
+                    Unesi tekst
+                  </Button>
+                </div>
               </div>
               
-              {file && (
-                <div className="border rounded-md p-4 bg-primary/5">
-                  <FileText className="h-4 w-4" />
-                  <AlertTitle>Izabrani dokument</AlertTitle>
-                  <AlertDescription>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">{file.name}</span>
-                        <p className="text-sm text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB | Prepoznat kao: {getTabTitle()}
-                        </p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setFile(null)}
-                      >
-                        Ukloni
-                      </Button>
+              {textInputMode ? (
+                <div className="border rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-2">
+                    Unesite sadržaj {getTabTitle().toLowerCase()} dokumenta
+                  </h3>
+                  <Textarea
+                    placeholder={`Unesite tekst ${getTabTitle().toLowerCase()} dokumenta ovde...`}
+                    className="min-h-[200px]"
+                    value={documentText}
+                    onChange={(e) => setDocumentText(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={handleFileDrop}
+                  onDragOver={handleDragOver}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                    accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.csv"
+                  />
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="p-3 bg-primary/10 rounded-full">
+                      {getTabIcon()}
                     </div>
-                  </AlertDescription>
+                    <h3 className="text-lg font-medium">
+                      Izaberite ili prevucite {getTabTitle().toLowerCase()} dokument
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Podržani formati: TXT (preporučeno), DOC, DOCX, PDF, XLS, XLSX, CSV
+                    </p>
+                    <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium 
+                      ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 
+                      focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none 
+                      disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2
+                      cursor-pointer">
+                      Izaberi fajl
+                    </label>
+                  </div>
+                  
+                  {file && (
+                    <div className="border rounded-md p-4 bg-primary/5 mt-4">
+                      <FileText className="h-4 w-4" />
+                      <AlertTitle>Izabrani dokument</AlertTitle>
+                      <AlertDescription>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-medium">{file.name}</span>
+                            <p className="text-sm text-muted-foreground">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB | Prepoznat kao: {getTabTitle()}
+                            </p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFile(null);
+                            }}
+                          >
+                            Ukloni
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
 
           <div className="mt-4">
