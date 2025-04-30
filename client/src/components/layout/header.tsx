@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ interface BreadcrumbItem {
 }
 
 export default function Header() {
-  const { user, signOut, signIn } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -96,14 +96,13 @@ export default function Header() {
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center text-sm focus:outline-none gap-2 hover:bg-secondary/80 p-1.5 px-2 rounded-lg transition-colors">
                       <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
-                        <AvatarImage src={user.user_metadata?.avatar_url || ''} />
                         <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                          {user.email?.[0]?.toUpperCase() || 'U'}
+                          {user.username[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="hidden md:flex flex-col items-start">
-                        <span className="font-medium">{user.email || 'Korisnik'}</span>
-                        <span className="text-xs text-muted-foreground">Administrator</span>
+                        <span className="font-medium">{user.username || 'Korisnik'}</span>
+                        <span className="text-xs text-muted-foreground">{user.roles.includes('admin') ? 'Administrator' : 'Korisnik'}</span>
                       </div>
                       <svg 
                         xmlns="http://www.w3.org/2000/svg" 
@@ -161,7 +160,7 @@ export default function Header() {
                     </DropdownMenuItem>
                     <div className="border-t border-border my-1"></div>
                     <DropdownMenuItem 
-                      onClick={() => signOut()}
+                      onClick={() => logout()}
                       className="cursor-pointer text-destructive focus:text-destructive"
                     >
                       <svg 
