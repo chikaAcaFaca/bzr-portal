@@ -53,7 +53,7 @@ async function processFileContent(filePath: string, mimeType: string): Promise<{
 const upload = multer({ 
   dest: 'uploads/',
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20 MB limit
+    fileSize: 50 * 1024 * 1024, // 50 MB limit
   },
   fileFilter: (req, file, callback) => {
     // Podržavamo različite tipove dokumenata
