@@ -101,19 +101,41 @@ export function DocumentProcessorUploadForm() {
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await apiRequest(
-        `/api/process/${activeTab}-file`,
-        {
+      try {
+        const response = await fetch(`/api/process/${activeTab}-file`, {
           method: 'POST',
           body: formData,
         });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Greška pri obradi dokumenta');
+        
+        if (!response.ok) {
+          let errorText = '';
+          const contentType = response.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            try {
+              const errorData = await response.json();
+              errorText = errorData.error || 'Greška pri obradi dokumenta';
+            } catch (e) {
+              errorText = await response.text();
+            }
+          } else {
+            errorText = await response.text();
+            console.error('Server vratio nevalidan odgovor:', errorText);
+          }
+          
+          throw new Error(errorText || `HTTP greška: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Greška pri slanju zahteva:', error);
+        throw error;
       }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
       setProcessingResults({
@@ -150,18 +172,43 @@ export function DocumentProcessorUploadForm() {
 
   const generateRiskCategoriesMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(
-        '/api/process/generate-risk-categories',
-        {
-          method: 'POST'
+      try {
+        const response = await fetch('/api/process/generate-risk-categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Greška pri generisanju kategorija rizika');
+        
+        if (!response.ok) {
+          let errorText = '';
+          const contentType = response.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            try {
+              const errorData = await response.json();
+              errorText = errorData.error || 'Greška pri generisanju kategorija rizika';
+            } catch (e) {
+              errorText = await response.text();
+            }
+          } else {
+            errorText = await response.text();
+            console.error('Server vratio nevalidan odgovor:', errorText);
+          }
+          
+          throw new Error(errorText || `HTTP greška: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Greška pri slanju zahteva:', error);
+        throw error;
       }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
       setProcessingResults({
