@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/page-header";
-import { AiToBlog } from "@/components/blog/ai-to-blog";
+
 
 const AIAssistant = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +75,62 @@ const AIAssistant = () => {
     }
   });
 
+  // Funkcija za automatsku konverziju AI odgovora u blog post
+  const convertToBlogPost = async (aiResponse: string, originalQuestion: string) => {
+    try {
+      // Određivanje kategorije na osnovu pitanja ili odgovora
+      const questionLower = originalQuestion.toLowerCase();
+      let category = 'general';
+      
+      if (questionLower.includes('zakon') || questionLower.includes('propis')) {
+        category = 'regulative';
+      } else if (questionLower.includes('rizik') || questionLower.includes('opasnost')) {
+        category = 'procena-rizika';
+      } else if (questionLower.includes('obuka') || questionLower.includes('trening')) {
+        category = 'obuke-zaposlenih';
+      } else if (questionLower.includes('zdravlje') || questionLower.includes('medicina')) {
+        category = 'zaštita-zdravlja';
+      } else if (questionLower.includes('procedur') || questionLower.includes('postupak')) {
+        category = 'procedure';
+      } else {
+        category = 'bezbednost-na-radu';
+      }
+      
+      // Generisanje tagova na osnovu pitanja
+      const potentialTags = questionLower.split(' ')
+        .filter((word: string) => word.length > 3)
+        .map((word: string) => word.toLowerCase());
+      
+      const uniqueTags = Array.from(new Set(potentialTags)).slice(0, 5);
+      
+      // Slanje zahteva za konverziju u blog post
+      await apiRequest("/api/blog/ai-to-blog", {
+        method: "POST",
+        body: JSON.stringify({
+          originalQuestion,
+          aiResponse,
+          category,
+          tags: uniqueTags
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      // Obaveštavanje korisnika
+      toast({
+        title: "Blog post kreiran",
+        description: "AI odgovor je uspešno konvertovan u blog post koji čeka odobrenje.",
+      });
+    } catch (error: any) {
+      console.error('Greška pri konverziji u blog post:', error);
+      toast({
+        title: "Napomena",
+        description: "Odgovor nije automatski konvertovan u blog post. Pokušajte ponovo kasnije.",
+      });
+    }
+  };
+
   // Funkcija za rad sa AI agentom
   const handleAskQuestion = async () => {
     if (!question.trim()) {
@@ -105,8 +161,12 @@ const AIAssistant = () => {
       });
 
       if (data.success && data.data) {
-        setResponse(data.data.answer);
+        const aiResponse = data.data.answer;
+        setResponse(aiResponse);
         setReferences(data.data.references || []);
+        
+        // Automatski konvertuj odgovor u blog post
+        await convertToBlogPost(aiResponse, question);
       } else {
         throw new Error(data.error || "Greška pri komunikaciji sa AI agentom");
       }
@@ -164,8 +224,12 @@ const AIAssistant = () => {
       });
 
       if (responseData.success && responseData.data) {
-        setResponse(responseData.data.answer);
+        const aiResponse = responseData.data.answer;
+        setResponse(aiResponse);
         setReferences(responseData.data.references || []);
+        
+        // Automatski konvertuj odgovor u blog post
+        await convertToBlogPost(aiResponse, "Generisanje dokumenta: " + data.documentType);
       } else {
         throw new Error(responseData.error || "Greška pri generisanju dokumenta");
       }
@@ -198,8 +262,12 @@ const AIAssistant = () => {
       });
 
       if (responseData.success && responseData.data) {
-        setResponse(responseData.data.answer);
+        const aiResponse = responseData.data.answer;
+        setResponse(aiResponse);
         setReferences(responseData.data.references || []);
+        
+        // Automatski konvertuj odgovor u blog post
+        await convertToBlogPost(aiResponse, "Analiza usklađenosti dokumenta");
       } else {
         throw new Error(responseData.error || "Greška pri analizi usklađenosti");
       }

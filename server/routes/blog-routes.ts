@@ -263,7 +263,7 @@ blogRouter.post("/ai-to-blog", async (req: Request, res: Response) => {
     if (wordsInQuestion.length > 8) {
       // Izdvajamo ključne reči i transformišemo ih u atraktivan naslov
       const keyWords = wordsInQuestion
-        .filter(word => word.length > 3)
+        .filter((word: string) => word.length > 3)
         .slice(0, 5)
         .join(' ');
       
@@ -313,7 +313,7 @@ blogRouter.post("/ai-to-blog", async (req: Request, res: Response) => {
     // U pravoj implementaciji, ovde bi se koristio AI za generisanje relevantne slike
     // ili bi se izabrala relevantna slika iz predefinisane galerije
     const imageKeywords = originalQuestion.split(' ')
-      .filter(word => word.length > 4)
+      .filter((word: string) => word.length > 4)
       .slice(0, 3)
       .join('-')
       .toLowerCase();
