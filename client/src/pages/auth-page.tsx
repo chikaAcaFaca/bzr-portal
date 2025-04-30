@@ -86,14 +86,17 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       // Koristimo Supabase za prijavu korisnika
-      await signIn({ email: data.email, password: data.password });
+      const { error } = await signIn({ email: data.email, password: data.password });
+      
+      if (error) throw error;
       
       toast({
         title: "Uspešna prijava",
         description: "Uspešno ste se prijavili na sistem.",
       });
       
-      // Navigacija će se izvršiti automatski zbog useAuth hook-a
+      // Ručno preusmeravamo na glavnu stranicu
+      setLocation('/');
     } catch (error: any) {
       toast({
         title: "Greška pri prijavi",
@@ -110,7 +113,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       // Koristeći Supabase za registraciju korisnika
-      await signUp({
+      const { error } = await signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -122,6 +125,8 @@ export default function AuthPage() {
           }
         }
       });
+      
+      if (error) throw error;
       
       toast({
         title: "Uspešna registracija",

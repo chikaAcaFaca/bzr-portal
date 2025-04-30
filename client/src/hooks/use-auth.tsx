@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Session, User, AuthError } from "@supabase/supabase-js";
+import { Session, User, AuthError, AuthResponse, AuthTokenResponsePassword } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 interface AuthContextProps {
@@ -7,8 +7,8 @@ interface AuthContextProps {
   user: User | null;
   isLoading: boolean;
   signOut: () => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null; data: { user: User | null; session: Session | null } }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ error: AuthError | null; data: { user: User | null; session: Session | null } }>;
+  signIn: (credentials: { email: string; password: string }) => Promise<AuthTokenResponsePassword>;
+  signUp: (credentials: { email: string; password: string; options?: { data: any } }) => Promise<AuthResponse>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -36,18 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+  const signIn = (credentials: { email: string; password: string }) => {
+    return supabase.auth.signInWithPassword(credentials);
   };
 
-  const signUp = (email: string, password: string, userData?: any) => {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
-    });
+  const signUp = (credentials: { email: string; password: string; options?: { data: any } }) => {
+    return supabase.auth.signUp(credentials);
   };
 
   const value: AuthContextProps = {
