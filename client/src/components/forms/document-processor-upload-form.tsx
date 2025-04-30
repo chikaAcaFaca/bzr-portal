@@ -417,28 +417,32 @@ export function DocumentProcessorUploadForm() {
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant={textInputMode ? "outline" : "default"} 
-                    size="sm"
-                    onClick={() => {
-                      setTextInputMode(false);
-                      setDocumentText('');
-                    }}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Učitaj fajl
-                  </Button>
-                  <Button 
-                    variant={textInputMode ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => {
-                      setTextInputMode(true);
-                      setFile(null);
-                    }}
-                  >
-                    <span className="h-4 w-4 mr-2">T</span>
-                    Unesi tekst
-                  </Button>
+                  <div className="border rounded-full bg-muted p-1 flex">
+                    <Button 
+                      variant={textInputMode ? "outline" : "default"} 
+                      size="sm"
+                      className="rounded-full flex-1"
+                      onClick={() => {
+                        setTextInputMode(false);
+                        setDocumentText('');
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Učitaj fajl
+                    </Button>
+                    <Button 
+                      variant={textInputMode ? "default" : "outline"} 
+                      size="sm"
+                      className="rounded-full flex-1"
+                      onClick={() => {
+                        setTextInputMode(true);
+                        setFile(null);
+                      }}
+                    >
+                      <span className="mr-2">Aa</span>
+                      Unesi tekst
+                    </Button>
+                  </div>
                 </div>
               </div>
               
@@ -466,7 +470,7 @@ export function DocumentProcessorUploadForm() {
                     ref={fileInputRef}
                     className="hidden"
                     onChange={handleFileChange}
-                    accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.csv"
+                    accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.jpg,.jpeg,.png"
                   />
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <div className="p-3 bg-primary/10 rounded-full">
@@ -476,7 +480,10 @@ export function DocumentProcessorUploadForm() {
                       Izaberite ili prevucite {getTabTitle().toLowerCase()} dokument
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Podržani formati: TXT (preporučeno), DOC, DOCX, PDF, XLS, XLSX, CSV
+                      Podržani formati: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Sistem automatski obrađuje tabele i slike iz dokumenata
                     </p>
                     <label className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium 
                       ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 
@@ -525,17 +532,17 @@ export function DocumentProcessorUploadForm() {
                 {processingResults
                   ? `${processingResults.message || "Obrada uspešna"}`
                   : textInputMode
-                  ? "Saveti za direktan unos teksta"
+                  ? "Napomena o unosu teksta"
                   : "Važno upozorenje"}
               </AlertTitle>
               <AlertDescription>
                 {processingResults
                   ? `AI je uspešno obradio dokument i ekstrahovao podatke.`
                   : textInputMode
-                  ? "Ako dokument sadrži tabele ili slike, možete ih opisati rečima. Na primer: 'Tabela sa zaposlenima: Ime, Prezime, JMBG...', 'Slika sadrži dijagram radnih mesta...'. AI će analizirati sadržaj i izvući relevantne podatke."
+                  ? "Alternativno možete direktno uneti tekst umesto da učitate dokument. Sistem je sada sposoban da automatski obrađuje tabele i slike iz različitih formata dokumenata."
                   : activeTab === "risk-categories"
                   ? "Ova operacija će automatski generisati kategorije rizika na osnovu postojećih radnih mesta. Obavezno prvo unesite radna mesta!"
-                  : "Za dokumente koji sadrže tabele i slike, preporučujemo da koristite opciju 'Unesi tekst' gde možete kopirati sadržaj i opisati tabele svojim rečima."}
+                  : "Sistem sada podržava automatsku obradu različitih formata dokumenata uključujući PDF, Word, Excel i slike. Tabele i slike se automatski ekstrahuju i analiziraju."}
               </AlertDescription>
             </Alert>
           </div>
