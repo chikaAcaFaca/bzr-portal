@@ -24,6 +24,7 @@ import { setupDocumentScraperRoutes } from './routes/document-scraper';
 import { blogRouter } from './routes/blog-routes';
 import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
+import ocrRouter from './routes/ocr-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -939,6 +940,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
   setupDocumentScraperRoutes(app);
+  
+  // Register OCR service router
+  app.use('/api/process', ocrRouter);
   
   // Register blog routes
   app.use('/api/blog', blogRouter);

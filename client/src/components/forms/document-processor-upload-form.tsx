@@ -362,6 +362,41 @@ export function DocumentProcessorUploadForm() {
           .replace(/\s+/g, ' ')
           .trim();
           
+        // Ako i dalje ima problema sa tekstom, pokušaj pomoću Gemini OCR
+        // Provera da li tekst izgleda problematično (npr. sadrži nepravilne kodne znakove)
+        const hasWeirdCharacters = /[\uFFFD\uFFF0-\uFFFF]/.test(cleanedText) || 
+                                  cleanedText.includes('�') || 
+                                  (cleanedText.length > 10 && cleanedText.replace(/[a-zA-Z0-9čćžšđČĆŽŠĐ\s.,;:!?\-\"\']/g, '').length > cleanedText.length * 0.2);
+                                  
+        if (hasWeirdCharacters || cleanedText.length > 10 && cleanedText.length < text.length * 0.5) {
+          // Koristi Gemini OCR za obradu problematičnog teksta
+          try {
+            console.log('Tekst sadrži problematične znakove, koristim Gemini OCR...');
+            const ocrResponse = await fetch('/api/process/ocr-text', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ 
+                text: text.substring(0, 15000), // Ograniči na 15000 znakova
+                format: 'PDF/DOC'
+              })
+            });
+            
+            if (ocrResponse.ok) {
+              const ocrResult = await ocrResponse.json();
+              if (ocrResult.success && ocrResult.text && ocrResult.text.length > 10) {
+                console.log('Gemini OCR uspešno ekstraktovao tekst');
+                cleanedText = ocrResult.text;
+              } else {
+                console.log('Gemini OCR nije uspeo da poboljša tekst:', ocrResult.message);
+              }
+            }
+          } catch (ocrError) {
+            console.error('Greška pri korišćenju Gemini OCR:', ocrError);
+          }
+        }
+          
         // Ako je tekst prazan nakon čišćenja, vratimo grešku
         if (!cleanedText.trim()) {
           return {
