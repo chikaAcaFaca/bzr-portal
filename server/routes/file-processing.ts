@@ -56,8 +56,34 @@ async function processFileContent(filePath: string, mimeType: string, originalFi
         // Posebna obrada za ove formate da izbegnemo greške
         console.log(`Procesiranje dokumenta sa ekstenzijom ${fileExtension}`);
         
-        // Koristi servis za obradu dokumenata različitih formata
-        const content = await documentProcessingService.processDocument(filePath, mimeType);
+        // Koristi servis za obradu dokumenata različitih formata, prosleđujemo originalno ime
+        const content = await documentProcessingService.processDocument(filePath, mimeType, originalFilename);
+        
+        // Ako je odgovor JSON string, parsiramo ga
+        let parsedContent: any = content;
+        try {
+          if (typeof content === 'string' && content.trim().startsWith('{')) {
+            const jsonContent = JSON.parse(content);
+            parsedContent = jsonContent;
+            
+            // Ako je detektovana greška ili upozorenje o formatu
+            if (jsonContent && 
+                (jsonContent.success === false || 
+                 jsonContent.status === 'format_warning')) {
+              return {
+                success: false,
+                content: '',
+                error: jsonContent.message || jsonContent.error || 'Format dokumenta nije podržan',
+                errorCode: 'UNSUPPORTED_FORMAT',
+                fileType: jsonContent.formatName || fileExtension.substring(1).toUpperCase(),
+                fileExtension
+              };
+            }
+          }
+        } catch (e) {
+          // Ako parsiranje nije uspelo, nastavljamo sa originalnim odgovorom
+          console.log('Upozorenje: odgovor servisa nije JSON, nastavljamo obradu...', e);
+        }
         
         // Čak i ako dobijemo sadržaj, za problematične formate nudimo opciju ručnog unosa
         return { 

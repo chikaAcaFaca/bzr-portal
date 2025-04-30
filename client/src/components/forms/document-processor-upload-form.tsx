@@ -151,17 +151,50 @@ export function DocumentProcessorUploadForm() {
           }
         }
         
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
-        }
+        // Dobavi tekstualni sadržaj odgovora umesto direktnog parsiranja JSON-a
+        const responseText = await response.text();
         
         // Pokušaj parsiranja JSON odgovora
         try {
-          return await response.json();
+          // Proveri da li tekst izgleda kao JSON
+          if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+            return JSON.parse(responseText);
+          } else {
+            // Ako nije JSON, kreiraj objekat koji označava grešku
+            console.warn('Server vratio tekst umesto JSON-a, prilagođavamo format:', responseText);
+            // Izvuci informacije o formatu iz imena fajla
+            const fileName = fileField?.name || '';
+            const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+            
+            // Kreiraj objekat sa greškom za prikaz korisniku
+            return {
+              success: false,
+              error: 'Format fajla nije automatski podržan. Molimo koristite ručni unos teksta.',
+              errorCode: 'FORMAT_NOT_SUPPORTED',
+              fileType: fileExtension.toUpperCase(),
+              fileExtension: `.${fileExtension}`,
+              message: `Nije moguće automatski obraditi format ${fileExtension.toUpperCase()}. Koristite ručni unos.`
+            };
+          }
         } catch (jsonError) {
-          console.error('Greška pri parsiranju JSON odgovora:', jsonError);
-          throw new Error('Greška pri parsiranju odgovora servera. Odgovor nije u validnom JSON formatu.');
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError, 'Odgovor:', responseText);
+          
+          // Proveri da li je fajl ODT/ODS/DOC/XLS format
+          const fileName = fileField?.name || '';
+          const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+          
+          if (['odt', 'ods', 'doc', 'xls', 'pdf'].includes(fileExtension)) {
+            return {
+              success: false,
+              error: `Format ${fileExtension.toUpperCase()} nije automatski podržan. Koristite ručni unos.`,
+              errorCode: 'UNSUPPORTED_FORMAT',
+              fileType: fileExtension.toUpperCase(),
+              fileExtension: `.${fileExtension}`,
+              message: `Nije moguće automatski obraditi ${fileExtension.toUpperCase()} dokument. Koristite ručni unos teksta.`
+            };
+          }
+          
+          throw new Error('Odgovor servera nije u očekivanom formatu. Molimo pokušajte sa drugim fajlom ili koristite ručni unos teksta.');
         }
       } catch (error) {
         console.error('Detaljna greška pri slanju zahteva:', error);
