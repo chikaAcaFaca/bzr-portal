@@ -8,7 +8,7 @@ import * as Tesseract from 'tesseract.js';
 import sharp from 'sharp';
 
 /**
- * Servis za obradu dokumenata različitih formata (PDF, DOC, DOCX, XLS, XLSX, JPG, PNG)
+ * Servis za obradu dokumenata različitih formata (PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, JPG, PNG)
  * Sa podrškom za prepoznavanje tabela i ekstrakciju teksta iz slika
  */
 export class DocumentProcessingService {
@@ -122,15 +122,30 @@ export class DocumentProcessingService {
       
       if (mimeType === 'application/pdf') {
         return await this.extractTextFromPDF(filePath);
-      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                 mimeType === 'application/msword') {
+      } 
+      // Word Processing dokumenti (Microsoft Word i OpenOffice/LibreOffice Writer)
+      else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+               mimeType === 'application/msword' ||
+               mimeType === 'application/vnd.oasis.opendocument.text') { // ODT format
         return await this.extractTextFromDOCX(filePath);
-      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
-                 mimeType === 'application/vnd.ms-excel') {
+      } 
+      // Spreadsheet dokumenti (Microsoft Excel i OpenOffice/LibreOffice Calc)
+      else if (mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+               mimeType === 'application/vnd.ms-excel' ||
+               mimeType === 'application/vnd.oasis.opendocument.spreadsheet') { // ODS format
         return await this.extractTextFromExcel(filePath);
-      } else if (mimeType.startsWith('image/')) {
+      } 
+      // Presentation dokumenti (OpenOffice/LibreOffice Impress)
+      else if (mimeType === 'application/vnd.oasis.opendocument.presentation') { // ODP format
+        // Za prezentacije možemo koristiti isti pristup kao za tekstualne dokumente
+        return await this.extractTextFromDOCX(filePath);
+      }
+      // Slike 
+      else if (mimeType.startsWith('image/')) {
         return await this.extractTextFromImage(filePath);
-      } else if (mimeType === 'text/plain') {
+      } 
+      // Obični tekstualni dokumenti
+      else if (mimeType === 'text/plain') {
         return fs.readFileSync(filePath, 'utf8');
       } else {
         throw new Error(`Nepodržan tip dokumenta: ${mimeType}`);

@@ -470,7 +470,7 @@ export function DocumentProcessorUploadForm() {
                     ref={fileInputRef}
                     className="hidden"
                     onChange={handleFileChange}
-                    accept=".txt,.doc,.docx,.pdf,.xls,.xlsx,.jpg,.jpeg,.png"
+                    accept=".txt,.doc,.docx,.odt,.pdf,.xls,.xlsx,.ods,.jpg,.jpeg,.png"
                   />
                   <div className="flex flex-col items-center justify-center space-y-2">
                     <div className="p-3 bg-primary/10 rounded-full">
@@ -480,7 +480,7 @@ export function DocumentProcessorUploadForm() {
                       Izaberite ili prevucite {getTabTitle().toLowerCase()} dokument
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Podržani formati: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT
+                      Podržani formati: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, JPG, PNG, TXT
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Sistem automatski obrađuje tabele i slike iz dokumenata
@@ -542,7 +542,7 @@ export function DocumentProcessorUploadForm() {
                   ? "Alternativno možete direktno uneti tekst umesto da učitate dokument. Sistem je sada sposoban da automatski obrađuje tabele i slike iz različitih formata dokumenata."
                   : activeTab === "risk-categories"
                   ? "Ova operacija će automatski generisati kategorije rizika na osnovu postojećih radnih mesta. Obavezno prvo unesite radna mesta!"
-                  : "Sistem sada podržava automatsku obradu različitih formata dokumenata uključujući PDF, Word, Excel i slike. Tabele i slike se automatski ekstrahuju i analiziraju."}
+                  : "Sistem sada podržava automatsku obradu različitih formata dokumenata uključujući PDF, Word, Excel, OpenOffice/LibreOffice (ODT, ODS) i slike. Tabele i slike se automatski ekstrahuju i analiziraju."}
               </AlertDescription>
             </Alert>
           </div>

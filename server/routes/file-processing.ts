@@ -60,10 +60,16 @@ const upload = multer({
     const allowedTypes = [
       'text/plain',
       'application/pdf',
+      // Microsoft Office
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      // OpenOffice/LibreOffice
+      'application/vnd.oasis.opendocument.text',     // .odt
+      'application/vnd.oasis.opendocument.spreadsheet', // .ods
+      'application/vnd.oasis.opendocument.presentation', // .odp
+      // Slike
       'image/jpeg',
       'image/png',
       'image/jpg'
@@ -73,7 +79,7 @@ const upload = multer({
       callback(null, true);
     } else {
       callback(null, false);
-      req.fileValidationError = `Nepodržan tip fajla: ${file.mimetype}. Podržani formati su: TXT, PDF, DOC, DOCX, XLS, XLSX, JPG, PNG.`;
+      req.fileValidationError = `Nepodržan tip fajla: ${file.mimetype}. Podržani formati su: TXT, PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, JPG, PNG.`;
     }
   }
 });
