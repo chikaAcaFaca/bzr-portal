@@ -27,7 +27,7 @@ import BlogPost from "./pages/blog-post";
 import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
-import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
 // Komponenta koja zahteva autentikaciju
