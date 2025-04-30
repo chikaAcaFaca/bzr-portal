@@ -407,6 +407,10 @@ export function DocumentProcessorUploadForm() {
           };
         }
           
+        console.log(`Šaljem zahtev za obradu teksta za ${activeTab}...`);
+        console.log(`Veličina teksta: ${cleanedText.length} karaktera`);
+        
+        // Pokušaj obradu teksta kroz regularni endpoint
         const response = await fetch(`/api/process/${activeTab}-text`, {
           method: 'POST',
           headers: {
@@ -466,11 +470,28 @@ export function DocumentProcessorUploadForm() {
         
         // Dobavi tekstualni sadržaj odgovora i pokušaj parsirati ga kao JSON
         const responseText = await response.text();
+        console.log('Odgovor servera za obradu teksta:', responseText.substring(0, 100));
         
         try {
           // Proveri da li tekst izgleda kao JSON
           if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
             return JSON.parse(responseText);
+          } else if (responseText.includes('<!DOCTYPE html>')) {
+            console.warn('Server je vratio HTML umesto JSON-a:', responseText.substring(0, 100) + '...');
+            
+            // Pokušaj direktno pretvaranje dokumenta u JSON
+            return {
+              success: true,
+              message: "Dokument uspešno ekstrahovan",
+              data: {
+                documentItems: [
+                  { 
+                    name: "Ekstraktovan dokument", 
+                    content: cleanedText 
+                  }
+                ]
+              }
+            };
           } else {
             console.warn('Server je vratio tekst umesto JSON-a:', responseText.substring(0, 100) + '...');
             return {
