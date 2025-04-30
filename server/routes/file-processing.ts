@@ -24,27 +24,91 @@ import {
 import { eq } from 'drizzle-orm';
 import multer from 'multer';
 
+// Tipovi grešaka pri obradi dokumenata
+type ErrorCode = 'FILE_TOO_LARGE' | 'UNSUPPORTED_FORMAT' | 'OCR_REQUIRED' | 'PROCESSING_ERROR' | 'FORMAT_CONVERSION_REQUIRED';
+
 // Funkcija za obradu sadržaja fajla - podržava različite tipove fajlova
-async function processFileContent(filePath: string, mimeType: string): Promise<{ success: boolean; content: string; error?: string }> {
+async function processFileContent(filePath: string, mimeType: string, originalFilename: string): Promise<{ 
+  success: boolean; 
+  content: string; 
+  error?: string;
+  errorCode?: ErrorCode;
+  fileType?: string;
+  fileExtension?: string;
+}> {
   try {
     const stats = fs.statSync(filePath);
-    if (stats.size > 20 * 1024 * 1024) { // 20MB limit
+    const fileExtension = path.extname(originalFilename).toLowerCase();
+    
+    if (stats.size > 50 * 1024 * 1024) { // 50MB limit (povećano sa 20MB)
       return {
         success: false,
         content: '',
-        error: 'Fajl je prevelik. Maksimalna dozvoljena veličina je 20MB.'
+        error: 'Fajl je prevelik. Maksimalna dozvoljena veličina je 50MB.',
+        errorCode: 'FILE_TOO_LARGE',
+        fileExtension
       };
     }
     
-    // Koristi servis za obradu dokumenata različitih formata
+    // Provera problematičnih formata unapred
+    if (['.odt', '.ods', '.doc', '.xls'].includes(fileExtension)) {
+      try {
+        // Posebna obrada za ove formate da izbegnemo greške
+        console.log(`Procesiranje dokumenta sa ekstenzijom ${fileExtension}`);
+        
+        // Koristi servis za obradu dokumenata različitih formata
+        const content = await documentProcessingService.processDocument(filePath, mimeType);
+        
+        // Čak i ako dobijemo sadržaj, za problematične formate nudimo opciju ručnog unosa
+        return { 
+          success: true, 
+          content,
+          fileType: fileExtension.substring(1).toUpperCase(), // bez tačke
+          fileExtension
+        };
+      } catch (formatError) {
+        return {
+          success: false,
+          content: '',
+          error: `Format ${fileExtension} zahteva ručni unos teksta. Dokument nije moguće automatski obraditi.`,
+          errorCode: 'UNSUPPORTED_FORMAT',
+          fileType: fileExtension.substring(1).toUpperCase(),
+          fileExtension
+        };
+      }
+    } else if (fileExtension === '.pdf') {
+      try {
+        // Koristi servis za obradu dokumenata različitih formata
+        const content = await documentProcessingService.processDocument(filePath, mimeType);
+        return { success: true, content, fileType: 'PDF', fileExtension };
+      } catch (pdfError) {
+        return {
+          success: false,
+          content: '',
+          error: 'PDF dokument sadrži slike ili je skeniran. Molimo koristite opciju za ručni unos teksta.',
+          errorCode: 'OCR_REQUIRED',
+          fileType: 'PDF',
+          fileExtension
+        };
+      }
+    }
+    
+    // Standardna obrada za ostale formate
     const content = await documentProcessingService.processDocument(filePath, mimeType);
-    return { success: true, content };
+    return { 
+      success: true, 
+      content,
+      fileType: fileExtension.substring(1).toUpperCase(),
+      fileExtension
+    };
   } catch (error) {
     console.error('Greška pri obradi fajla:', error);
     return {
       success: false, 
       content: '',
-      error: `Nije moguće obraditi fajl: ${error.message}`
+      error: `Nije moguće obraditi fajl: ${error.message}`,
+      errorCode: 'PROCESSING_ERROR',
+      fileExtension: path.extname(originalFilename).toLowerCase()
     };
   }
 }
@@ -110,7 +174,7 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const fileResult = await processFileContent(filePath, req.file.mimetype);
+      const fileResult = await processFileContent(filePath, req.file.mimetype, req.file.originalname);
       
       // Obriši privremeni fajl nakon čitanja
       try {
@@ -122,7 +186,10 @@ export async function setupFileProcessingRoutes(app: any) {
       if (!fileResult.success) {
         return res.status(400).json({
           success: false,
-          error: fileResult.error || 'Greška pri čitanju fajla'
+          error: fileResult.error || 'Greška pri čitanju fajla',
+          errorCode: fileResult.errorCode || 'PROCESSING_ERROR',
+          fileType: fileResult.fileType,
+          fileExtension: fileResult.fileExtension
         });
       }
       
@@ -184,7 +251,7 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const fileResult = await processFileContent(filePath, req.file.mimetype);
+      const fileResult = await processFileContent(filePath, req.file.mimetype, req.file.originalname);
       
       // Obriši privremeni fajl nakon čitanja
       try {
@@ -196,7 +263,10 @@ export async function setupFileProcessingRoutes(app: any) {
       if (!fileResult.success) {
         return res.status(400).json({
           success: false,
-          error: fileResult.error || 'Greška pri čitanju fajla'
+          error: fileResult.error || 'Greška pri čitanju fajla',
+          errorCode: fileResult.errorCode || 'PROCESSING_ERROR',
+          fileType: fileResult.fileType,
+          fileExtension: fileResult.fileExtension
         });
       }
       
@@ -281,7 +351,7 @@ export async function setupFileProcessingRoutes(app: any) {
 
       // Pročitaj sadržaj fajla
       const filePath = path.join(process.cwd(), req.file.path);
-      const fileResult = await processFileContent(filePath, req.file.mimetype);
+      const fileResult = await processFileContent(filePath, req.file.mimetype, req.file.originalname);
       
       // Obriši privremeni fajl nakon čitanja
       try {
@@ -293,7 +363,10 @@ export async function setupFileProcessingRoutes(app: any) {
       if (!fileResult.success) {
         return res.status(400).json({
           success: false,
-          error: fileResult.error || 'Greška pri čitanju fajla'
+          error: fileResult.error || 'Greška pri čitanju fajla',
+          errorCode: fileResult.errorCode || 'PROCESSING_ERROR',
+          fileType: fileResult.fileType,
+          fileExtension: fileResult.fileExtension
         });
       }
       
