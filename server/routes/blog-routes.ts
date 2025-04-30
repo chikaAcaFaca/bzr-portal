@@ -242,7 +242,7 @@ blogRouter.delete("/:id", isAdmin, async (req: Request, res: Response) => {
 });
 
 // Pretvaranje AI agenta odgovora u blog post
-blogRouter.post("/ai-to-blog", isAdmin, async (req: Request, res: Response) => {
+blogRouter.post("/ai-to-blog", async (req: Request, res: Response) => {
   try {
     const { originalQuestion, aiResponse, category, tags } = req.body;
     
@@ -254,20 +254,47 @@ blogRouter.post("/ai-to-blog", isAdmin, async (req: Request, res: Response) => {
     // Prvih 150 karaktera za excerpt
     const excerpt = aiResponse.substring(0, 150) + "...";
     
-    // Generisanje naslova iz originalnog pitanja
-    const title = originalQuestion.length > 5 
-      ? originalQuestion.charAt(0).toUpperCase() + originalQuestion.slice(1)
-      : "Odgovor na pitanje o bezbednosti na radu";
+    // Generisanje atraktivnog naslova pomoću AI (simulacija)
+    // U pravoj implementaciji, ovde bi se koristio API poziv ka AI servisu
+    const wordsInQuestion = originalQuestion.split(' ');
+    let title = originalQuestion;
     
-    // Pokušavamo izvući seoTitle iz odgovora, ako nije prosleđen
-    let seoTitle = title;
-    if (aiResponse.length > title.length) {
-      // Uzimamo malo duži, SEO prilagođen naslov
-      seoTitle = aiResponse.substring(0, Math.min(60, aiResponse.length));
-      const lastSpaceIndex = seoTitle.lastIndexOf(' ');
-      if (lastSpaceIndex > 30) {
-        seoTitle = seoTitle.substring(0, lastSpaceIndex);
+    // Ako je pitanje predugačko, generišemo kraći naslov
+    if (wordsInQuestion.length > 8) {
+      // Izdvajamo ključne reči i transformišemo ih u atraktivan naslov
+      const keyWords = wordsInQuestion
+        .filter(word => word.length > 3)
+        .slice(0, 5)
+        .join(' ');
+      
+      title = keyWords.charAt(0).toUpperCase() + keyWords.slice(1);
+      
+      // Dodajemo upečatljiv prefiks ako naslov deluje previše generički
+      if (title.length < 20) {
+        const prefixes = [
+          "Važno: ", 
+          "Vodič: ", 
+          "Ključno za znati: ", 
+          "Stručni savet: ", 
+          "Neophodno za bezbednost: "
+        ];
+        const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+        title = randomPrefix + title;
       }
+    } else {
+      // Ako je pitanje kratko, samo ga ulepšavamo
+      title = title.charAt(0).toUpperCase() + title.slice(1);
+      
+      // Dodajemo odgovarajući sufiks da bude atraktivnije
+      const suffixes = [
+        " - Sve što treba da znate",
+        " - Kompletan vodič",
+        " - Praktični saveti",
+        " - Zakonska regulativa",
+        " - Odgovor stručnjaka"
+      ];
+      const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+      title += randomSuffix;
     }
     
     // Generisanje sluga
@@ -276,8 +303,37 @@ blogRouter.post("/ai-to-blog", isAdmin, async (req: Request, res: Response) => {
     const baseSlug = generateSlug(title);
     const uniqueSlug = generateUniqueSlug(baseSlug, existingSlugs);
     
-    // Postavljanje autora na trenutnog korisnika
-    const authorId = (req.user as any).id;
+    // Postavljanje autora na trenutnog korisnika ako je autentifikovan
+    let authorId = null;
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      authorId = (req.user as any).id;
+    }
+    
+    // Generisanje URL-a do odgovarajuće slike
+    // U pravoj implementaciji, ovde bi se koristio AI za generisanje relevantne slike
+    // ili bi se izabrala relevantna slika iz predefinisane galerije
+    const imageKeywords = originalQuestion.split(' ')
+      .filter(word => word.length > 4)
+      .slice(0, 3)
+      .join('-')
+      .toLowerCase();
+    
+    // Mapa kategorija i odgovarajućih defaultnih slika
+    const categoryImages: Record<string, string> = {
+      'bezbednost-na-radu': 'https://placehold.co/600x400/orange/white?text=Bezbednost',
+      'regulative': 'https://placehold.co/600x400/blue/white?text=Regulative',
+      'zaštita-zdravlja': 'https://placehold.co/600x400/green/white?text=Zdravlje',
+      'procedure': 'https://placehold.co/600x400/gray/white?text=Procedure',
+      'procena-rizika': 'https://placehold.co/600x400/red/white?text=Rizici',
+      'obuke-zaposlenih': 'https://placehold.co/600x400/purple/white?text=Obuke',
+      'novosti': 'https://placehold.co/600x400/teal/white?text=Novosti',
+      'saveti': 'https://placehold.co/600x400/brown/white?text=Saveti',
+      'propisi': 'https://placehold.co/600x400/navy/white?text=Propisi',
+      'general': 'https://placehold.co/600x400/black/white?text=BZR'
+    };
+    
+    const selectedCategory = category || 'general';
+    const imageUrl = categoryImages[selectedCategory] || categoryImages['general'];
     
     // Priprema podataka za kreiranje blog posta
     const blogData = {
@@ -285,8 +341,9 @@ blogRouter.post("/ai-to-blog", isAdmin, async (req: Request, res: Response) => {
       slug: uniqueSlug,
       content: aiResponse,
       excerpt,
-      category: category || "general",
-      tags: tags || [],
+      imageUrl, // Dodajemo URL do slike
+      category: selectedCategory,
+      tags: tags || ['bezbednost', 'informacije', 'zaštita'],
       authorId,
       originalQuestion,
       status: "pending_approval" as const, // Zahteva ručno odobrenje pre objavljivanja

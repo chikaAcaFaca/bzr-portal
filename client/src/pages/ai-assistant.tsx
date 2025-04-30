@@ -435,12 +435,7 @@ const AIAssistant = () => {
                     {response}
                   </div>
                   
-                  <div className="flex justify-end">
-                    <AiToBlog 
-                      aiResponse={response} 
-                      originalQuestion={question}
-                    />
-                  </div>
+                  {/* Automatski se kreira blog post bez potrebe za klikom */}
 
                   {references.length > 0 && (
                     <div className="mt-4">
