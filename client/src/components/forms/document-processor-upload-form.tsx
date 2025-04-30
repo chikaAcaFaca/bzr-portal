@@ -479,7 +479,36 @@ export function DocumentProcessorUploadForm() {
           } else if (responseText.includes('<!DOCTYPE html>')) {
             console.warn('Server je vratio HTML umesto JSON-a:', responseText.substring(0, 100) + '...');
             
-            // Pokušaj direktno pretvaranje dokumenta u JSON
+            // Pokušaj direktno procesiranje teksta koristeći OpenRouter API
+            console.log('Pokušaj direktnog procesiranja teksta putem AI...');
+            try {
+              // Pokreni dodatni AI zahtev za obradu ekstrahovanog teksta
+              const aiProcessResponse = await fetch('/api/process/extract-job-positions', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: cleanedText })
+              });
+              
+              if (aiProcessResponse.ok) {
+                const aiResult = await aiProcessResponse.json();
+                if (aiResult.success) {
+                  console.log('AI uspešno obradio tekst:', aiResult.data.length, 'radnih mesta pronađeno');
+                  return {
+                    success: true,
+                    message: "Dokument uspešno ekstrahovan i procesiran putem AI",
+                    data: aiResult.data
+                  };
+                }
+              }
+              
+              console.warn('AI procesiranje nije uspelo, vraćamo samo ekstrakciju teksta');
+            } catch (aiError) {
+              console.error('Greška pri AI procesiranju:', aiError);
+            }
+            
+            // Fallback ako AI procesiranje nije uspelo
             return {
               success: true,
               message: "Dokument uspešno ekstrahovan",

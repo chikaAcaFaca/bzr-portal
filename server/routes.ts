@@ -25,6 +25,7 @@ import { blogRouter } from './routes/blog-routes';
 import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
+import textExtractionRouter from './routes/text-extraction';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -943,6 +944,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register OCR service router
   app.use('/api/process', ocrRouter);
+  
+  // Register text extraction router
+  app.use('/api/process', textExtractionRouter);
   
   // Register blog routes
   app.use('/api/blog', blogRouter);
