@@ -814,7 +814,7 @@ const UserManagementTab = () => {
                   <SelectValue placeholder="Svi planovi" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Svi planovi</SelectItem>
+                  <SelectItem value="all">Svi planovi</SelectItem>
                   <SelectItem value="free">Free</SelectItem>
                   <SelectItem value="basic">Basic</SelectItem>
                   <SelectItem value="pro">Pro</SelectItem>
