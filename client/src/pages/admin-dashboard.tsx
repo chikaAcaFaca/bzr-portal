@@ -737,16 +737,16 @@ const PendingBlogPostsCard = () => {
 const UserManagementTab = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [planFilter, setPlanFilter] = useState('');
+  const [planFilter, setPlanFilter] = useState('all');
   
   const { data, isLoading } = useQuery({
     queryKey: ['/api/admin/users', { page, limit: 10, search, plan: planFilter }],
     queryFn: async ({ queryKey }) => {
-      const [url, params] = queryKey[1];
+      const [url, params] = queryKey;
       try {
         let queryUrl = `${url}?page=${params.page}&limit=${params.limit}`;
         if (params.search) queryUrl += `&search=${params.search}`;
-        if (params.plan) queryUrl += `&plan=${params.plan}`;
+        if (params.plan && params.plan !== 'all') queryUrl += `&plan=${params.plan}`;
         
         const response = await fetch(queryUrl);
         if (!response.ok) throw new Error('Network response was not ok');
