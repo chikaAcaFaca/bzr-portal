@@ -229,6 +229,18 @@ export default function Sidebar() {
                 label="Korisnici"
                 active={location === "/users"}
               />
+              <NavItem
+                href="/user-profile"
+                icon="fas fa-user"
+                label="Profil korisnika"
+                active={location === "/user-profile"}
+              />
+              <NavItem
+                href="/admin-dashboard"
+                icon="fas fa-crown"
+                label="Admin panel"
+                active={location === "/admin-dashboard"}
+              />
             </NavSection>
           </div>
         </nav>

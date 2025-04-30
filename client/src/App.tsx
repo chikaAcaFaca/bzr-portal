@@ -24,6 +24,8 @@ import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
 import Blog from "./pages/blog";
 import BlogPost from "./pages/blog-post";
+import UserProfile from "./pages/user-profile";
+import AdminDashboard from "./pages/admin-dashboard";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
@@ -158,6 +160,18 @@ function Router() {
       <Route path="/blog/:slug">
         <MainLayout>
           <BlogPost />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/user-profile">
+        <MainLayout>
+          <UserProfile />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/admin-dashboard">
+        <MainLayout>
+          <AdminDashboard />
         </MainLayout>
       </Route>
       

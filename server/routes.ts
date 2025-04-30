@@ -942,6 +942,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register blog routes
   app.use('/api/blog', blogRouter);
+  
+  // Registracija admin ruta
+  app.use('/api/admin', adminRouter);
+  
+  // Registracija korisničkih ruta
+  app.use('/api/user', userRouter);
 
   const httpServer = createServer(app);
   return httpServer;
