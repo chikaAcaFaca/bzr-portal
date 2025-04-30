@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { Textarea } from "@/components/ui/textarea";
+import { DocumentProcessorResponse } from "@/components/ui/document-processor-response";
 import {
   Select,
   SelectContent,
@@ -644,21 +645,12 @@ export function DocumentProcessorUploadForm() {
         </CardFooter>
       </Tabs>
 
-      {processingResults && processingResults.data && (
+      {processingResults && (
         <CardContent className="pt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rezultati obrade</CardTitle>
-              <CardDescription>
-                AI je uspešno obradio vaš dokument i ekstrahovao sledeće podatke
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <pre className="bg-muted p-4 rounded-md overflow-auto max-h-[300px] text-xs">
-                {JSON.stringify(processingResults.data, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
+          <DocumentProcessorResponse 
+            results={processingResults} 
+            documentType={activeTab} 
+          />
         </CardContent>
       )}
     </Card>
