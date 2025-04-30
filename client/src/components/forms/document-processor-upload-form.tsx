@@ -519,19 +519,23 @@ export function DocumentProcessorUploadForm() {
           )}
 
           <div className="mt-4">
-            <Alert variant={processingResults ? "default" : "destructive"} className={processingResults ? "bg-primary/10" : ""}>
+            <Alert variant={processingResults ? "default" : textInputMode ? "default" : "destructive"} className={processingResults || textInputMode ? "bg-primary/10" : ""}>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>
                 {processingResults
                   ? `${processingResults.message || "Obrada uspešna"}`
+                  : textInputMode
+                  ? "Saveti za direktan unos teksta"
                   : "Važno upozorenje"}
               </AlertTitle>
               <AlertDescription>
                 {processingResults
                   ? `AI je uspešno obradio dokument i ekstrahovao podatke.`
+                  : textInputMode
+                  ? "Ako dokument sadrži tabele ili slike, možete ih opisati rečima. Na primer: 'Tabela sa zaposlenima: Ime, Prezime, JMBG...', 'Slika sadrži dijagram radnih mesta...'. AI će analizirati sadržaj i izvući relevantne podatke."
                   : activeTab === "risk-categories"
                   ? "Ova operacija će automatski generisati kategorije rizika na osnovu postojećih radnih mesta. Obavezno prvo unesite radna mesta!"
-                  : "Obrada dokumenata može potrajati nekoliko sekundi. Molimo vas za strpljenje tokom obrade."}
+                  : "Za dokumente koji sadrže tabele i slike, preporučujemo da koristite opciju 'Unesi tekst' gde možete kopirati sadržaj i opisati tabele svojim rečima."}
               </AlertDescription>
             </Alert>
           </div>
@@ -540,14 +544,18 @@ export function DocumentProcessorUploadForm() {
         <CardFooter className="flex justify-between">
           <Button 
             variant="outline" 
-            onClick={() => setFile(null)}
-            disabled={!file && activeTab !== "risk-categories"}
+            onClick={() => {
+              setFile(null);
+              setDocumentText('');
+              setProcessingResults(null);
+            }}
+            disabled={((!file && !documentText.trim()) && activeTab !== "risk-categories")}
           >
             Očisti
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={loading || (activeTab !== "risk-categories" && !file)}
+            disabled={loading || (activeTab !== "risk-categories" && !textInputMode && !file) || (textInputMode && !documentText.trim())}
             className="flex items-center gap-2"
           >
             {getTabIcon()}
