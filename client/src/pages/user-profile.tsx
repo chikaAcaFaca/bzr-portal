@@ -390,31 +390,31 @@ const UserProfile = () => {
             <CardHeader>
               <div className="flex flex-col items-center">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={userData.avatarUrl || undefined} />
+                  <AvatarImage src={userData?.avatarUrl || undefined} />
                   <AvatarFallback className="text-2xl">
-                    {userData.name.split(' ').map(n => n[0]).join('')}
+                    {userData?.name ? userData.name.split(' ').map((n: string) => n[0]).join('') : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="mt-4 text-center">
-                  <h2 className="text-xl font-bold">{userData.name}</h2>
-                  <p className="text-muted-foreground">{userData.email}</p>
+                  <h2 className="text-xl font-bold">{userData?.name || "Korisnik"}</h2>
+                  <p className="text-muted-foreground">{userData?.email || "korisnik@example.com"}</p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center">
                 <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{userData.company}</span>
+                <span>{userData?.company || "Nije definisano"}</span>
               </div>
               <div className="flex items-center">
                 <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{userData.position}</span>
+                <span>{userData?.position || "Nije definisano"}</span>
               </div>
               <div className="flex items-center">
                 <Shield className="h-4 w-4 mr-2 text-muted-foreground" />
                 <span>
                   <Badge variant="outline" className="font-normal">
-                    {plans.find(p => p.id === userData.plan)?.name} Plan
+                    {plans.find(p => p.id === userData?.plan)?.name || "Free"} Plan
                   </Badge>
                 </span>
               </div>
@@ -457,10 +457,10 @@ const UserProfile = () => {
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold">
                       Trenutno koristite: <Badge variant="outline" className="ml-2 font-normal">
-                        {plans.find(p => p.id === userData.plan)?.name} Plan
+                        {plans.find(p => p.id === userData?.plan)?.name || "Free"} Plan
                       </Badge>
                     </h3>
-                    {userData.plan === "free" && (
+                    {(!userData?.plan || userData?.plan === "free") && (
                       <p className="mt-2 text-muted-foreground">
                         Nadogradite se na plaćeni plan da biste dobili pristup dodatnim funkcionalnostima, 
                         personalizovanim dokumentima i naprednoj AI asistenciji.
@@ -470,7 +470,7 @@ const UserProfile = () => {
                   
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {plans
-                      .filter(plan => plan.id !== userData.plan) // Prikaži samo planove koji nisu trenutno aktivni
+                      .filter(plan => plan.id !== userData?.plan) // Prikaži samo planove koji nisu trenutno aktivni
                       .map(plan => (
                         <div key={plan.id} className="flex flex-col">
                           <div className="flex-1">
