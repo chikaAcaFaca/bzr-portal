@@ -16,6 +16,8 @@ type ProcessingResultsType = {
   message?: string;
   data?: any;
   errorCode?: string;
+  suggestion?: string;
+  details?: string;
 };
 
 interface DocumentProcessorResponseProps {

@@ -334,12 +334,17 @@ export function DocumentProcessorUploadForm() {
           });
         }
         
+        // Prečišćavanje teksta pre slanja - uklanjanje problematičnih znakova
+        const cleanedText = text
+          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '') // Uklanjanje kontrolnih znakova
+          .replace(/[\uD800-\uDFFF]/g, ''); // Uklanjanje nepotpunih UTF-16 surrogate parova
+          
         const response = await fetch(`/api/process/${activeTab}-text`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ text: cleanedText })
         });
         
         if (!response.ok) {
@@ -371,17 +376,32 @@ export function DocumentProcessorUploadForm() {
           }
         }
         
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
-        }
+        // Dobavi tekstualni sadržaj odgovora i pokušaj parsirati ga kao JSON
+        const responseText = await response.text();
         
-        // Pokušaj parsiranja JSON odgovora
         try {
-          return await response.json();
+          // Proveri da li tekst izgleda kao JSON
+          if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+            return JSON.parse(responseText);
+          } else {
+            console.warn('Server je vratio tekst umesto JSON-a:', responseText.substring(0, 100) + '...');
+            return {
+              success: false,
+              error: 'Greška pri obradi teksta. Molimo pokušajte sa drugim formatom ili manjim delom teksta.',
+              suggestion: 'Unesite manji deo teksta ili probajte drugačiju formulaciju.',
+              details: 'Problem je u direktnom unosu teksta koji sadrži specijalne znakove ili pogrešan format.'
+            };
+          }
         } catch (jsonError) {
-          console.error('Greška pri parsiranju JSON odgovora:', jsonError);
-          throw new Error('Greška pri parsiranju odgovora servera. Odgovor nije u validnom JSON formatu.');
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError, 'Odgovor:', responseText);
+          
+          // Ako parsiranje ne uspe, vratimo posebno formatiran objekat greške
+          return {
+            success: false,
+            error: 'Greška pri parsiranju odgovora. Molimo pokušajte sa drugačijim tekstom.',
+            suggestion: 'Proverite da li uneti tekst sadrži specijalne znakove ili probajte sa manjim delom teksta.',
+            details: 'Server je vratio odgovor koji nije u očekivanom formatu.'
+          };
         }
       } catch (error) {
         console.error('Detaljna greška pri slanju zahteva:', error);
@@ -389,6 +409,26 @@ export function DocumentProcessorUploadForm() {
       }
     },
     onSuccess: (data) => {
+      // Proveri da li data ima success polje i da li je false
+      if (data && data.success === false) {
+        // Ako uspeh nije true, prikazujemo grešku a ne uspeh
+        toast({
+          title: "Obrada nije uspela",
+          description: data.error || "Došlo je do greške pri obradi teksta",
+          variant: "destructive",
+        });
+        
+        setProcessingResults({
+          success: false,
+          message: data.error || "Došlo je do greške pri obradi teksta",
+          data: [],
+          suggestion: data.suggestion || "Pokušajte sa drugačijim formatom ili manjim delom teksta"
+        });
+        
+        return;
+      }
+      
+      // Nastavi normalno ako je uspešno
       setProcessingResults({
         success: true,
         message: data.message,
