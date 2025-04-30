@@ -26,6 +26,7 @@ import Blog from "./pages/blog";
 import BlogPost from "./pages/blog-post";
 import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
+import RegulatoryUpdates from "./pages/regulatory-updates";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
@@ -172,6 +173,12 @@ function Router() {
       <Route path="/admin-dashboard">
         <MainLayout>
           <AdminDashboard />
+        </MainLayout>
+      </Route>
+
+      <Route path="/regulatory-updates">
+        <MainLayout>
+          <RegulatoryUpdates />
         </MainLayout>
       </Route>
       

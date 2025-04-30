@@ -199,6 +199,12 @@ export default function Sidebar() {
                 label="Obuke zaposlenih"
                 active={location === "/employee-training"}
               />
+              <NavItem
+                href="/regulatory-updates"
+                icon="fas fa-bell"
+                label="Regulatorna ažuriranja"
+                active={location === "/regulatory-updates"}
+              />
             </NavSection>
 
             <NavSection title="Izveštaji" data-tour="report-section">

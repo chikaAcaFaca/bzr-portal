@@ -1,55 +1,117 @@
+import { createContext, useState, useEffect, useContext, ReactNode } from "react";
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from './supabase'
-
-type AuthContextType = {
-  user: User | null
-  loading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signOut: () => Promise<void>
+// Osnovni tip korisnika
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+// Context tip
+interface AuthContextProps {
+  user: User | null;
+  isLoading: boolean;
+  error: Error | null;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+// Mock podaci za autentikaciju
+const mockUsers = [
+  {
+    id: 1,
+    username: "admin",
+    email: "admin@example.com",
+    password: "admin123", // U stvarnoj primeni, lozinke bi bile heširane
+    roles: ["admin", "user"]
+  },
+  {
+    id: 2,
+    username: "user",
+    email: "user@example.com",
+    password: "user123",
+    roles: ["user"]
+  }
+];
 
+// Kreiranje konteksta
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Inicijalno učitavanje korisnika iz local storage
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (err) {
+      console.error("Error loading user from localStorage:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+  // Funkcija za prijavu
+  const login = async (username: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
 
-    return () => subscription.unsubscribe()
-  }, [])
+    try {
+      // Simulacija mrežnog zahteva
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
-  }
+      // Proveri kredencijale
+      const foundUser = mockUsers.find(
+        (u) => u.username === username && u.password === password
+      );
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-  }
+      if (!foundUser) {
+        throw new Error("Invalid username or password");
+      }
 
-  return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  )
+      // Izdvoj lozinku iz objekta korisnika
+      const { password: _, ...userWithoutPassword } = foundUser;
+      
+      // Postavi korisnika u state i localStorage
+      setUser(userWithoutPassword);
+      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("Unknown error during login"));
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Funkcija za odjavu
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
+
+  // Kontekst vrednosti
+  const value: AuthContextProps = {
+    user,
+    isLoading,
+    error,
+    login,
+    logout
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
+// Hook za korišćenje auth konteksta
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
