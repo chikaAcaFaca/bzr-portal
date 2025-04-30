@@ -22,6 +22,8 @@ import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
 import { setupDocumentRoutes } from './routes/document-routes';
 import { setupDocumentScraperRoutes } from './routes/document-scraper';
 import { blogRouter } from './routes/blog-routes';
+import { adminRouter } from './routes/admin-routes';
+import { userRouter } from './routes/user-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
