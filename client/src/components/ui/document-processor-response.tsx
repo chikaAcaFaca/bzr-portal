@@ -140,28 +140,57 @@ export function DocumentProcessorResponse({ results, documentType }: DocumentPro
               <AlertDescription className="text-sm space-y-2">
                 <p>{results.message || "Došlo je do problema pri obradi dokumenta"}</p>
                 
-                {errorIsFormatRelated && (
+                {results.suggestion && (
                   <div className="pt-2">
                     <p className="font-medium">Preporuke:</p>
                     <ul className="list-disc pl-5 space-y-1 mt-1">
-                      <li>Koristite opciju za ručni unos teksta (dugme "Ručni unos")</li>
-                      <li>Pokušajte sačuvati dokument u drugom formatu (npr. DOCX ili TXT)</li>
-                      <li>Za OpenOffice dokumente, probajte izvoz u MS Office format</li>
-                      <li>Za PDF, probajte kopirajte sadržaj direktno iz PDF čitača</li>
+                      <li>{results.suggestion}</li>
+                      {errorIsFormatRelated && (
+                        <>
+                          <li>Koristite opciju za ručni unos teksta (dugme "Unesi tekst")</li>
+                          <li>Pokušajte sačuvati dokument u drugom formatu (npr. DOCX ili TXT)</li>
+                          <li>Za OpenOffice dokumente, probajte izvoz u MS Office format</li>
+                          <li>Za PDF, kopirajte sadržaj direktno iz PDF čitača u polje za unos teksta</li>
+                        </>
+                      )}
+                      {errorIsServerRelated && (
+                        <>
+                          <li>Proverite da li je fajl ispravno učitan</li>
+                          <li>Pokušajte ponovo nakon nekoliko trenutaka</li>
+                          <li>Možda je dokument prevelik - koristite manji dokument</li>
+                          <li>Koristite opciju za ručni unos teksta</li>
+                        </>
+                      )}
                     </ul>
                   </div>
                 )}
                 
-                {errorIsServerRelated && (
-                  <div className="pt-2">
-                    <p className="font-medium">Preporuke:</p>
-                    <ul className="list-disc pl-5 space-y-1 mt-1">
-                      <li>Proverite da li je fajl ispravno učitan</li>
-                      <li>Pokušajte ponovo nakon nekoliko trenutaka</li>
-                      <li>Možda je dokument prevelik - koristite manji dokument</li>
-                      <li>Koristite opciju za ručni unos teksta</li>
-                    </ul>
-                  </div>
+                {!results.suggestion && (
+                  <>
+                    {errorIsFormatRelated && (
+                      <div className="pt-2">
+                        <p className="font-medium">Preporuke:</p>
+                        <ul className="list-disc pl-5 space-y-1 mt-1">
+                          <li>Koristite opciju za ručni unos teksta (dugme "Unesi tekst")</li>
+                          <li>Pokušajte sačuvati dokument u drugom formatu (npr. DOCX ili TXT)</li>
+                          <li>Za OpenOffice dokumente, probajte izvoz u MS Office format</li>
+                          <li>Za PDF, kopirajte sadržaj direktno iz PDF čitača u polje za unos teksta</li>
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {errorIsServerRelated && (
+                      <div className="pt-2">
+                        <p className="font-medium">Preporuke:</p>
+                        <ul className="list-disc pl-5 space-y-1 mt-1">
+                          <li>Proverite da li je fajl ispravno učitan</li>
+                          <li>Pokušajte ponovo nakon nekoliko trenutaka</li>
+                          <li>Možda je dokument prevelik - koristite manji dokument</li>
+                          <li>Koristite opciju za ručni unos teksta</li>
+                        </ul>
+                      </div>
+                    )}
+                  </>
                 )}
               </AlertDescription>
             </Alert>

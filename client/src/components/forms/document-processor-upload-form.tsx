@@ -3,6 +3,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
+
+// Tip za rezultate obrade dokumenata
+type ProcessingResultsType = {
+  success: boolean;
+  message?: string;
+  data?: any;
+  errorCode?: string;
+  suggestion?: string;
+  details?: string;
+};
 import { Textarea } from "@/components/ui/textarea";
 import { DocumentProcessorResponse } from "@/components/ui/document-processor-response";
 import {
@@ -57,11 +67,7 @@ export function DocumentProcessorUploadForm() {
   const [loading, setLoading] = useState(false);
   const [textInputMode, setTextInputMode] = useState(false);
   const [documentText, setDocumentText] = useState('');
-  const [processingResults, setProcessingResults] = useState<{
-    success: boolean;
-    message?: string;
-    data?: any;
-  } | null>(null);
+  const [processingResults, setProcessingResults] = useState<ProcessingResultsType | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -334,10 +340,37 @@ export function DocumentProcessorUploadForm() {
           });
         }
         
-        // Prečišćavanje teksta pre slanja - uklanjanje problematičnih znakova
-        const cleanedText = text
-          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '') // Uklanjanje kontrolnih znakova
-          .replace(/[\uD800-\uDFFF]/g, ''); // Uklanjanje nepotpunih UTF-16 surrogate parova
+        // Dodatno rešenje za probleme sa tekstom kopiranim iz PDF i DOC
+        // Pretprocesiranje teksta za uklanjanje svih problematičnih znakova
+        let cleanedText = text
+          // Uklanjanje kontrolnih znakova
+          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '') 
+          // Uklanjanje nepotpunih UTF-16 surrogate parova
+          .replace(/[\uD800-\uDFFF]/g, '')
+          // Zamena nestandardnih razmaka
+          .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+          // Zamena nabrojanih crtica i specifičnih znakova iz PDF/DOC
+          .replace(/[\u2013\u2014\u2015\u2017\u2043]/g, '-')
+          // Uklanjanje zaostalih kontrolnih/specijalnih znakova
+          .replace(/[^\x20-\x7E\xA0-\xFF\u0100-\u017F\u0180-\u024F\u0400-\u04FF]/g, '')
+          // Normalizacija apostrofa i navodnika
+          .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+          .replace(/[\u201C\u201D\u201E\u201F\u2033\u2034\u2036\u2037]/g, '"');
+        
+        // Dodatno uklanjanje nevidljivih znakova i zamena višestrukih razmaka
+        cleanedText = cleanedText
+          .replace(/\s+/g, ' ')
+          .trim();
+          
+        // Ako je tekst prazan nakon čišćenja, vratimo grešku
+        if (!cleanedText.trim()) {
+          return {
+            success: false,
+            error: 'Tekst sadrži samo specijalne znakove i nije moguće obraditi ga.',
+            suggestion: 'Pokušajte sa drugačijim tekstom ili formatom dokumenta.',
+            details: 'Problem sa tekstom kopiranim iz PDF ili DOC dokumenta.'
+          };
+        }
           
         const response = await fetch(`/api/process/${activeTab}-text`, {
           method: 'POST',
@@ -366,13 +399,33 @@ export function DocumentProcessorUploadForm() {
           
           // Prilagođene poruke o greškama za određene HTTP kodove
           if (statusCode === 413) {
-            throw new Error('Tekst je prevelik. Molimo podelite ga na manje delove ili smanjite njegovu veličinu.');
+            return {
+              success: false,
+              error: 'Tekst je prevelik. Molimo podelite ga na manje delove ili smanjite njegovu veličinu.',
+              suggestion: 'Skratite tekst na trećinu trenutne veličine.',
+              details: 'Prekoračeno ograničenje veličine teksta.'
+            };
           } else if (statusCode === 429) {
-            throw new Error('Previše zahteva. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.');
+            return {
+              success: false,
+              error: 'Previše zahteva. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.',
+              suggestion: 'Sačekajte 2-3 minute pre ponovnog pokušaja.',
+              details: 'Prekoračeno ograničenje broja zahteva.'
+            };
           } else if (statusCode >= 500) {
-            throw new Error(`Serverska greška (${statusCode}): ${errorText || 'Došlo je do interne greške servera. Molimo pokušajte kasnije.'}`);
+            return {
+              success: false,
+              error: `Serverska greška: ${errorText || 'Došlo je do interne greške servera. Molimo pokušajte kasnije.'}`,
+              suggestion: 'Pokušajte sa drugim formatom dokumenta ili manjim delom teksta.',
+              details: `HTTP status: ${statusCode}`
+            };
           } else {
-            throw new Error(errorText || `HTTP greška: ${statusCode}`);
+            return {
+              success: false,
+              error: errorText || `HTTP greška: ${statusCode}`,
+              suggestion: 'Proverite tekst koji unosite i pokušajte ponovo.',
+              details: 'Greška pri obradi zahteva.'
+            };
           }
         }
         
@@ -387,19 +440,19 @@ export function DocumentProcessorUploadForm() {
             console.warn('Server je vratio tekst umesto JSON-a:', responseText.substring(0, 100) + '...');
             return {
               success: false,
-              error: 'Greška pri obradi teksta. Molimo pokušajte sa drugim formatom ili manjim delom teksta.',
-              suggestion: 'Unesite manji deo teksta ili probajte drugačiju formulaciju.',
-              details: 'Problem je u direktnom unosu teksta koji sadrži specijalne znakove ili pogrešan format.'
+              error: 'Greška pri obradi teksta. Pokušajte sa drugačijim sadržajem.',
+              suggestion: 'Unesite manji deo teksta ili koristite samo osnovni tekst bez formatiranja.',
+              details: 'Server nije vratio JSON odgovor. Problem može biti u formatu teksta.'
             };
           }
         } catch (jsonError) {
-          console.error('Greška pri parsiranju JSON odgovora:', jsonError, 'Odgovor:', responseText);
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError, 'Odgovor:', responseText.substring(0, 200));
           
           // Ako parsiranje ne uspe, vratimo posebno formatiran objekat greške
           return {
             success: false,
             error: 'Greška pri parsiranju odgovora. Molimo pokušajte sa drugačijim tekstom.',
-            suggestion: 'Proverite da li uneti tekst sadrži specijalne znakove ili probajte sa manjim delom teksta.',
+            suggestion: 'Pokušajte sa običnim tekstom bez specijalnih znakova ili formata.',
             details: 'Server je vratio odgovor koji nije u očekivanom formatu.'
           };
         }
@@ -422,7 +475,8 @@ export function DocumentProcessorUploadForm() {
           success: false,
           message: data.error || "Došlo je do greške pri obradi teksta",
           data: [],
-          suggestion: data.suggestion || "Pokušajte sa drugačijim formatom ili manjim delom teksta"
+          suggestion: data.suggestion || "Pokušajte sa drugačijim formatom ili manjim delom teksta",
+          details: data.details || "Problem pri obradi teksta"
         });
         
         return;
