@@ -118,58 +118,193 @@ class OpenRouterService {
       };
     }
 
+    // Dodatna provera dužine prompta
+    if (prompt.length > 100000) {
+      console.warn('Prompt je veoma dugačak (preko 100000 karaktera). Ovo može uticati na performanse ili uzrokovati greške.');
+    }
+
     try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://replit.com'
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-3-opus-20240229',
-          messages: [
-            {
-              role: 'system',
-              content: 'Ti si AI asistent specijalizovan za obradu dokumenata u vezi sa bezbednošću i zdravljem na radu. Tvoj zadatak je da analiziraš dokumente i ekstraktuješ ključne podatke u strukturiranom formatu. Odgovaraj isključivo u JSON formatu bez dodatnih objašnjenja.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          response_format: { type: 'json_object' }
-        })
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('OpenRouter API error:', errorBody);
-        return {
-          success: false,
-          error: `API greška: ${response.status} ${response.statusText}`
-        };
-      }
-
-      const data = await response.json() as any;
-      const content = data.choices[0].message.content;
+      // Dodato timeout od 120 sekundi (2 minute)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
       
-      let parsedData;
       try {
-        parsedData = JSON.parse(content);
-      } catch (e) {
-        console.error('Greška pri parsiranju JSON odgovora:', e);
+        const response = await fetch(this.apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.apiKey}`,
+            'HTTP-Referer': 'https://replit.com'
+          },
+          body: JSON.stringify({
+            model: 'anthropic/claude-3-opus-20240229',
+            messages: [
+              {
+                role: 'system',
+                content: 'Ti si AI asistent specijalizovan za obradu dokumenata u vezi sa bezbednošću i zdravljem na radu. Tvoj zadatak je da analiziraš dokumente i ekstraktuješ ključne podatke u strukturiranom formatu. Odgovaraj isključivo u JSON formatu bez dodatnih objašnjenja i uvek koristi format sa "items" nizom.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.1, // Niža temperatura za preciznije odgovore
+            max_tokens: 4000  // Povećan limit za veće dokumente
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error('OpenRouter API error:', errorBody);
+          
+          // Provjeri specifične greške
+          if (response.status === 429) {
+            return {
+              success: false,
+              error: 'Rate limit prekoračen. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.'
+            };
+          } else if (response.status === 413) {
+            return {
+              success: false,
+              error: 'Dokument je prevelik za obradu. Molimo smanjite veličinu dokumenta.'
+            };
+          } else if (response.status >= 500) {
+            return {
+              success: false,
+              error: `Greška na AI servisu. Pokušaćemo da koristimo Gemini kao backup. Detalji: ${response.status} ${response.statusText}`
+            };
+          }
+          
+          return {
+            success: false,
+            error: `API greška: ${response.status} ${response.statusText}`
+          };
+        }
+
+        const data = await response.json() as any;
+        console.log('OpenRouter API response status:', data?.object || 'unknown', 'model:', data?.model || 'unknown');
+        
+        // Uzmi sadržaj odgovora
+        const content = data.choices && data.choices[0]?.message?.content;
+        
+        if (!content) {
+          console.error('Nema sadržaja u odgovoru: ', data);
+          return {
+            success: false,
+            error: 'Nema sadržaja u odgovoru od AI servisa.'
+          };
+        }
+        
+        let parsedData;
+        try {
+          // Pokušaj da direktno parsiraj ako već nije JSON
+          if (typeof content === 'string') {
+            parsedData = JSON.parse(content);
+          } else {
+            parsedData = content;
+          }
+          
+          // Verifikuj strukturu podataka
+          if (!parsedData || typeof parsedData !== 'object') {
+            throw new Error('Odgovor nije validan JSON objekat');
+          }
+          
+          // Normalizuj različite strukture odgovora
+          if (!parsedData.items) {
+            // Ako imamo niz na najvišem nivou
+            if (Array.isArray(parsedData)) {
+              parsedData = { items: parsedData };
+            } 
+            // Ako imamo objekat sa različitim ključevima koji su nizovi
+            else if (typeof parsedData === 'object') {
+              const arrayKeys = Object.keys(parsedData).filter(key => 
+                Array.isArray(parsedData[key]) && 
+                parsedData[key].length > 0 && 
+                typeof parsedData[key][0] === 'object'
+              );
+              
+              if (arrayKeys.length > 0) {
+                parsedData = { items: parsedData[arrayKeys[0]] };
+              } else {
+                // Ako nemamo niz, ali imamo pojedinačan objekat, stavimo ga u niz
+                const objKeys = Object.keys(parsedData).filter(key => 
+                  typeof parsedData[key] === 'object' && !Array.isArray(parsedData[key])
+                );
+                
+                if (objKeys.length > 0) {
+                  parsedData = { items: [parsedData] };
+                } else {
+                  parsedData = { items: [] };
+                }
+              }
+            } else {
+              parsedData = { items: [] };
+            }
+          }
+          
+          // Proveri da li je items zaista niz
+          if (!Array.isArray(parsedData.items)) {
+            parsedData.items = [parsedData.items];
+          }
+          
+          // Filtriraj null i undefined vrednosti iz niza
+          parsedData.items = parsedData.items.filter(item => item !== null && item !== undefined);
+          
+          // Log za bolji debug
+          console.log(`Processed ${parsedData.items.length} items from AI response`);
+          
+        } catch (e) {
+          console.error('Greška pri parsiranju JSON odgovora:', e, 'Raw content:', content);
+          // Pokušaj da direktno koristimo odgovor kao string ako nije ispravan JSON
+          if (typeof content === 'string' && content.length > 0) {
+            // Pokušaj da nađemo bilo kakve JSON podatke u odgovoru
+            try {
+              const jsonMatch = content.match(/\{.*\}/s);
+              if (jsonMatch) {
+                const extractedJson = jsonMatch[0];
+                parsedData = JSON.parse(extractedJson);
+                
+                if (!parsedData.items && typeof parsedData === 'object') {
+                  parsedData = { items: [parsedData] };
+                }
+              } else {
+                throw new Error('Nije pronađen JSON u odgovoru');
+              }
+            } catch (nestedError) {
+              return {
+                success: false,
+                error: 'Greška pri parsiranju odgovora od AI servisa: ' + (e as Error).message
+              };
+            }
+          } else {
+            return {
+              success: false,
+              error: 'Greška pri parsiranju odgovora od AI servisa: ' + (e as Error).message
+            };
+          }
+        }
+
+        return {
+          success: true,
+          data: parsedData.items || []
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    } catch (error: any) {
+      // Posebna obrada za timeout
+      if (error.name === 'AbortError') {
+        console.error('Timeout prilikom čekanja na odgovor od AI servisa');
         return {
           success: false,
-          error: 'Greška pri parsiranju odgovora od AI servisa.'
+          error: 'Isteklo je vreme za odgovor od AI servisa. Pokušajte sa manjim dokumentom ili kasnije.'
         };
       }
-
-      return {
-        success: true,
-        data: parsedData.items || []
-      };
-    } catch (error: any) {
+      
       console.error('Greška pri obradi dokumenta sa AI:', error);
       return {
         success: false,

@@ -107,6 +107,13 @@ export function DocumentProcessorUploadForm() {
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       try {
+        // Provera veličine fajla pre slanja
+        const fileField = formData.get('file') as File;
+        if (fileField && fileField.size > 50 * 1024 * 1024) { // 50MB
+          throw new Error('Fajl je prevelik. Maksimalna veličina je 50MB.');
+        }
+        
+        // Kreiraj kopiju FormData sa pravilnim Content-Type
         const response = await fetch(`/api/process/${activeTab}-file`, {
           method: 'POST',
           body: formData,
@@ -115,6 +122,7 @@ export function DocumentProcessorUploadForm() {
         if (!response.ok) {
           let errorText = '';
           const contentType = response.headers.get('content-type');
+          const statusCode = response.status;
           
           if (contentType && contentType.includes('application/json')) {
             try {
@@ -128,7 +136,18 @@ export function DocumentProcessorUploadForm() {
             console.error('Server vratio nevalidan odgovor:', errorText);
           }
           
-          throw new Error(errorText || `HTTP greška: ${response.status}`);
+          // Prilagođene poruke o greškama za određene HTTP kodove
+          if (statusCode === 413) {
+            throw new Error('Fajl je prevelik. Molimo smanjite veličinu fajla ili koristite direktan unos teksta.');
+          } else if (statusCode === 415) {
+            throw new Error('Nepodržani tip fajla. Koristite podržane formate: PDF, DOC, DOCX, ODT, XLS, XLSX, ODS, JPG, PNG, TXT.');
+          } else if (statusCode === 429) {
+            throw new Error('Previše zahteva. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.');
+          } else if (statusCode >= 500) {
+            throw new Error(`Serverska greška (${statusCode}): ${errorText || 'Došlo je do interne greške servera. Molimo pokušajte kasnije.'}`);
+          } else {
+            throw new Error(errorText || `HTTP greška: ${statusCode}`);
+          }
         }
         
         const contentType = response.headers.get('content-type');
@@ -136,9 +155,15 @@ export function DocumentProcessorUploadForm() {
           throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
         }
         
-        return await response.json();
+        // Pokušaj parsiranja JSON odgovora
+        try {
+          return await response.json();
+        } catch (jsonError) {
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError);
+          throw new Error('Greška pri parsiranju odgovora servera. Odgovor nije u validnom JSON formatu.');
+        }
       } catch (error) {
-        console.error('Greška pri slanju zahteva:', error);
+        console.error('Detaljna greška pri slanju zahteva:', error);
         throw error;
       }
     },
@@ -178,6 +203,14 @@ export function DocumentProcessorUploadForm() {
   const generateRiskCategoriesMutation = useMutation({
     mutationFn: async () => {
       try {
+        // Provjera postojanja radnih mesta pre generisanja kategorija
+        const jobPositionsResponse = await fetch('/api/job-positions');
+        const jobPositions = await jobPositionsResponse.json();
+        
+        if (!jobPositions || jobPositions.length === 0) {
+          throw new Error('Nema definisanih radnih mesta. Prvo unesite radna mesta da biste generisali kategorije rizika.');
+        }
+        
         const response = await fetch('/api/process/generate-risk-categories', {
           method: 'POST',
           headers: {
@@ -188,6 +221,7 @@ export function DocumentProcessorUploadForm() {
         if (!response.ok) {
           let errorText = '';
           const contentType = response.headers.get('content-type');
+          const statusCode = response.status;
           
           if (contentType && contentType.includes('application/json')) {
             try {
@@ -201,7 +235,14 @@ export function DocumentProcessorUploadForm() {
             console.error('Server vratio nevalidan odgovor:', errorText);
           }
           
-          throw new Error(errorText || `HTTP greška: ${response.status}`);
+          // Prilagođene poruke o greškama za određene HTTP kodove
+          if (statusCode === 429) {
+            throw new Error('Previše zahteva. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.');
+          } else if (statusCode >= 500) {
+            throw new Error(`Serverska greška (${statusCode}): ${errorText || 'Došlo je do interne greške servera. Molimo pokušajte kasnije.'}`);
+          } else {
+            throw new Error(errorText || `HTTP greška: ${statusCode}`);
+          }
         }
         
         const contentType = response.headers.get('content-type');
@@ -209,9 +250,15 @@ export function DocumentProcessorUploadForm() {
           throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
         }
         
-        return await response.json();
+        // Pokušaj parsiranja JSON odgovora
+        try {
+          return await response.json();
+        } catch (jsonError) {
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError);
+          throw new Error('Greška pri parsiranju odgovora servera. Odgovor nije u validnom JSON formatu.');
+        }
       } catch (error) {
-        console.error('Greška pri slanju zahteva:', error);
+        console.error('Detaljna greška pri generisanju kategorija rizika:', error);
         throw error;
       }
     },
@@ -245,6 +292,14 @@ export function DocumentProcessorUploadForm() {
   const uploadTextMutation = useMutation({
     mutationFn: async (text: string) => {
       try {
+        // Provera dužine teksta pre slanja
+        if (text.length > 100000) {
+          toast({
+            title: "Upozorenje",
+            description: "Tekst je veoma dugačak, moguće je da će obrada trajati duže.",
+          });
+        }
+        
         const response = await fetch(`/api/process/${activeTab}-text`, {
           method: 'POST',
           headers: {
@@ -256,6 +311,7 @@ export function DocumentProcessorUploadForm() {
         if (!response.ok) {
           let errorText = '';
           const contentType = response.headers.get('content-type');
+          const statusCode = response.status;
           
           if (contentType && contentType.includes('application/json')) {
             try {
@@ -269,7 +325,16 @@ export function DocumentProcessorUploadForm() {
             console.error('Server vratio nevalidan odgovor:', errorText);
           }
           
-          throw new Error(errorText || `HTTP greška: ${response.status}`);
+          // Prilagođene poruke o greškama za određene HTTP kodove
+          if (statusCode === 413) {
+            throw new Error('Tekst je prevelik. Molimo podelite ga na manje delove ili smanjite njegovu veličinu.');
+          } else if (statusCode === 429) {
+            throw new Error('Previše zahteva. Molimo sačekajte nekoliko minuta pre nego što pokušate ponovo.');
+          } else if (statusCode >= 500) {
+            throw new Error(`Serverska greška (${statusCode}): ${errorText || 'Došlo je do interne greške servera. Molimo pokušajte kasnije.'}`);
+          } else {
+            throw new Error(errorText || `HTTP greška: ${statusCode}`);
+          }
         }
         
         const contentType = response.headers.get('content-type');
@@ -277,9 +342,15 @@ export function DocumentProcessorUploadForm() {
           throw new Error('Server nije vratio JSON odgovor. Proverite podešavanja servera.');
         }
         
-        return await response.json();
+        // Pokušaj parsiranja JSON odgovora
+        try {
+          return await response.json();
+        } catch (jsonError) {
+          console.error('Greška pri parsiranju JSON odgovora:', jsonError);
+          throw new Error('Greška pri parsiranju odgovora servera. Odgovor nije u validnom JSON formatu.');
+        }
       } catch (error) {
-        console.error('Greška pri slanju zahteva:', error);
+        console.error('Detaljna greška pri slanju zahteva:', error);
         throw error;
       }
     },
