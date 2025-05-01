@@ -14,11 +14,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger 
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 export default function DocumentStoragePage() {
   const [activeTab, setActiveTab] = useState("files");
+  const [newFolderName, setNewFolderName] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   // Ispravna provera korisničke uloge i tipa pretplate
@@ -35,6 +49,55 @@ export default function DocumentStoragePage() {
     // Invalidira keš za dokumente kako bi primorao ponovno učitavanje
     queryClient.invalidateQueries({queryKey: ['/api/user-documents']});
     queryClient.invalidateQueries({queryKey: ['/api/user-storage-info']});
+  };
+  
+  // Funkcija za kreiranje novog foldera
+  const handleCreateFolder = async () => {
+    try {
+      if (!newFolderName.trim()) {
+        toast({
+          title: "Greška",
+          description: "Naziv foldera ne može biti prazan",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const response = await fetch('/api/storage/create-folder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ folderName: newFolderName }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Greška pri kreiranju foldera');
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: "Uspešno",
+        description: `Folder "${newFolderName}" je uspešno kreiran`,
+      });
+      
+      // Invalidira keš za dokumente kako bi primorao ponovno učitavanje
+      queryClient.invalidateQueries({queryKey: ['/api/user-documents']});
+      
+      // Resetuj ime foldera
+      setNewFolderName("");
+      
+    } catch (error: any) {
+      console.error('Greška pri kreiranju foldera:', error);
+      toast({
+        title: "Greška",
+        description: error.message || 'Došlo je do greške pri kreiranju foldera',
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -61,10 +124,37 @@ export default function DocumentStoragePage() {
             <TabsTrigger value="upload">Otpremanje</TabsTrigger>
           </TabsList>
           
-          <Button size="sm" className="flex-1 sm:flex-auto">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Novi folder
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button size="sm" className="flex-1 sm:flex-auto">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Novi folder
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Kreiraj novi folder</DialogTitle>
+                <DialogDescription>
+                  Unesite ime novog foldera u kojem ćete čuvati dokumente.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="folderName">Naziv foldera</Label>
+                  <Input
+                    id="folderName"
+                    placeholder="Unesite naziv foldera..."
+                    className="col-span-3"
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    value={newFolderName}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleCreateFolder}>Kreiraj folder</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

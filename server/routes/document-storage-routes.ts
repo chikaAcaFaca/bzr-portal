@@ -63,8 +63,15 @@ export function registerDocumentStorageRoutes(app: Express) {
           const folderPath = parts.slice(0, -1).join('/');
           const folderName = folderPath || 'Opšti dokumenti';
           
-          // Ime fajla je poslednji deo puta
-          const fileName = parts[parts.length - 1];
+          // Ime fajla je poslednji deo puta - dekodiraj URL karaktere za ispravno prikazivanje ćirilice
+          let fileName = parts[parts.length - 1];
+          try {
+            // Pokušavamo da dekodiramo URL encoding za podršku ćirilici
+            fileName = decodeURIComponent(fileName);
+          } catch (e) {
+            // Ako decodiranje ne uspe, koristimo originalni naziv
+            console.log('Nije moguće dekodirati ime fajla:', fileName);
+          }
           
           // Generisanje potpisanog URL-a za preuzimanje koji će trajati 1 sat
           // Koristićemo Promise.all za paralelno procesiranje kasnije
@@ -203,6 +210,58 @@ export function registerDocumentStorageRoutes(app: Express) {
       res.status(500).json({
         success: false,
         message: 'Došlo je do greške pri otpremanju fajla',
+        error: error.message
+      });
+    }
+  });
+
+  // Endpoint za kreiranje novog foldera
+  app.post('/api/storage/create-folder', async (req: Request, res: Response) => {
+    try {
+      // Provera autentikacije
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Niste prijavljeni' });
+      }
+
+      const userId = req.user.id;
+      const { folderName } = req.body;
+      
+      if (!folderName || typeof folderName !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Nedostaje naziv foldera ili nije ispravan' 
+        });
+      }
+      
+      // Uklanjanje specijalnih karaktera iz imena foldera
+      const sanitizedFolderName = folderName.trim().replace(/[/\\?%*:|"<>]/g, '_');
+      
+      // Kreiranje foldera u Wasabi bucket-u (prazan objekat koji se završava sa '/')
+      const key = `user_${userId}/${sanitizedFolderName}/`;
+      
+      // S3 nema koncept foldera, ali možemo dodati prazan objekat koji se završava sa '/'
+      const command = {
+        Bucket: process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-portal-user-documents',
+        Key: key,
+        Body: ''
+      };
+      
+      await wasabiStorageService.uploadFile(key, Buffer.from(''), 'application/x-directory');
+      
+      res.json({
+        success: true,
+        message: 'Folder je uspešno kreiran',
+        folder: {
+          name: sanitizedFolderName,
+          path: key
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Greška pri kreiranju foldera:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Došlo je do greške pri kreiranju foldera',
         error: error.message
       });
     }
