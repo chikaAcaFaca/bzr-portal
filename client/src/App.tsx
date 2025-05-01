@@ -28,6 +28,7 @@ import BlogPost from "./pages/blog-post";
 import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
+import ReferralProgram from "./pages/referral-program";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 
 
@@ -186,6 +187,12 @@ function Router() {
       <Route path="/regulatory-updates">
         <MainLayout>
           <RegulatoryUpdates />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/referral-program">
+        <MainLayout>
+          <ReferralProgram />
         </MainLayout>
       </Route>
       

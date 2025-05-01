@@ -248,6 +248,12 @@ export default function Sidebar() {
                 active={location === "/user-profile"}
               />
               <NavItem
+                href="/referral-program"
+                icon="fas fa-share-alt"
+                label="Referalni program"
+                active={location === "/referral-program"}
+              />
+              <NavItem
                 href="/admin-dashboard"
                 icon="fas fa-crown"
                 label="Admin panel"
