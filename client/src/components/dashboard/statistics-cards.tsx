@@ -21,6 +21,12 @@ export default function StatisticsCards() {
   const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['/api/stats'],
   });
+
+  // Dodaj RegulatoryUpdatesWidget na vrh
+  return (
+    <>
+      <RegulatoryUpdatesWidget />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
   
   const stats: StatCard[] = [
     {
