@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2, Send, FileText, AlertCircle, UploadCloud } from "lucide-react";
+import { Loader2, Send, FileText, AlertCircle, UploadCloud, ArrowUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -366,118 +366,160 @@ const AIAssistant = () => {
                 </TabsContent>
 
                 <TabsContent value="generate" className="space-y-4 pt-4">
-                  <Form {...generateDocumentForm}>
-                    <form onSubmit={generateDocumentForm.handleSubmit(onGenerateDocument)} className="space-y-4">
-                      <FormField
-                        control={generateDocumentForm.control}
-                        name="documentType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tip dokumenta</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
+                  {/* Generisanje dokumenata je PRO funkcionalnost */}
+                  <RequirePro
+                    fallback={
+                      <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-50">
+                        <FileText className="w-12 h-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">PRO funkcionalnost</h3>
+                        <p className="text-center text-muted-foreground mb-4">
+                          Generisanje dokumenata je dostupno samo PRO korisnicima.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.location.href = "/settings"}
+                          className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
+                        >
+                          <ArrowUp className="mr-2 h-4 w-4" />
+                          Nadogradi na PRO
+                        </Button>
+                      </div>
+                    }
+                  >
+                    <Form {...generateDocumentForm}>
+                      <form onSubmit={generateDocumentForm.handleSubmit(onGenerateDocument)} className="space-y-4">
+                        <FormField
+                          control={generateDocumentForm.control}
+                          name="documentType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tip dokumenta</FormLabel>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Izaberite tip dokumenta" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="akt_o_proceni_rizika">Akt o proceni rizika</SelectItem>
+                                  <SelectItem value="uputstvo_za_bezbedan_rad">Uputstvo za bezbedan rad</SelectItem>
+                                  <SelectItem value="program_osposobljavanja">Program osposobljavanja</SelectItem>
+                                  <SelectItem value="zapisnik_o_povredi">Zapisnik o povredi na radu</SelectItem>
+                                  <SelectItem value="evidencija_opreme">Evidencija opreme za rad</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={generateDocumentForm.control}
+                          name="baseDocumentText"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bazni dokument</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Izaberite tip dokumenta" />
-                                </SelectTrigger>
+                                <Textarea 
+                                  placeholder="Unesite tekst baznog dokumenta..." 
+                                  className="min-h-32"
+                                  {...field}
+                                />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="akt_o_proceni_rizika">Akt o proceni rizika</SelectItem>
-                                <SelectItem value="uputstvo_za_bezbedan_rad">Uputstvo za bezbedan rad</SelectItem>
-                                <SelectItem value="program_osposobljavanja">Program osposobljavanja</SelectItem>
-                                <SelectItem value="zapisnik_o_povredi">Zapisnik o povredi na radu</SelectItem>
-                                <SelectItem value="evidencija_opreme">Evidencija opreme za rad</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={generateDocumentForm.control}
-                        name="baseDocumentText"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Bazni dokument</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Unesite tekst baznog dokumenta..." 
-                                className="min-h-32"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={generateDocumentForm.control}
+                          name="additionalParams"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Dodatni parametri (opciono)</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Unesite dodatne parametre u formatu ključ: vrednost, jedan par po liniji..."
+                                  className="min-h-24"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Unesite dodatne parametre poput naziva kompanije, datuma, itd. u formatu ključ: vrednost
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={generateDocumentForm.control}
-                        name="additionalParams"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Dodatni parametri (opciono)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Unesite dodatne parametre u formatu ključ: vrednost, jedan par po liniji..."
-                                className="min-h-24"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Unesite dodatne parametre poput naziva kompanije, datuma, itd. u formatu ključ: vrednost
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button 
-                        type="submit" 
-                        disabled={isLoading} 
-                        className="w-full"
-                      >
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                        Generiši dokument
-                      </Button>
-                    </form>
-                  </Form>
+                        <Button 
+                          type="submit" 
+                          disabled={isLoading} 
+                          className="w-full"
+                        >
+                          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                          Generiši dokument
+                        </Button>
+                      </form>
+                    </Form>
+                  </RequirePro>
                 </TabsContent>
 
                 <TabsContent value="analyze" className="space-y-4 pt-4">
-                  <Form {...complianceForm}>
-                    <form onSubmit={complianceForm.handleSubmit(onAnalyzeCompliance)} className="space-y-4">
-                      <FormField
-                        control={complianceForm.control}
-                        name="documentText"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Dokument za analizu</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Unesite tekst dokumenta za analizu usklađenosti sa zakonskom regulativom..." 
-                                className="min-h-48"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  {/* Analiza usklađenosti je PRO funkcionalnost */}
+                  <RequirePro
+                    fallback={
+                      <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg bg-gray-50">
+                        <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">PRO funkcionalnost</h3>
+                        <p className="text-center text-muted-foreground mb-4">
+                          Analiza usklađenosti dokumenata sa zakonskom regulativom je dostupna samo PRO korisnicima.
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.location.href = "/settings"}
+                          className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
+                        >
+                          <ArrowUp className="mr-2 h-4 w-4" />
+                          Nadogradi na PRO
+                        </Button>
+                      </div>
+                    }
+                  >
+                    <Form {...complianceForm}>
+                      <form onSubmit={complianceForm.handleSubmit(onAnalyzeCompliance)} className="space-y-4">
+                        <FormField
+                          control={complianceForm.control}
+                          name="documentText"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Dokument za analizu</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Unesite tekst dokumenta za analizu usklađenosti sa zakonskom regulativom..." 
+                                  className="min-h-48"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <Button 
-                        type="submit" 
-                        disabled={isLoading} 
-                        className="w-full"
-                      >
-                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
-                        Analiziraj usklađenost
-                      </Button>
-                    </form>
-                  </Form>
+                        <Button 
+                          type="submit" 
+                          disabled={isLoading} 
+                          className="w-full"
+                        >
+                          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
+                          Analiziraj usklađenost
+                        </Button>
+                      </form>
+                    </Form>
+                  </RequirePro>
                 </TabsContent>
                 <TabsContent value="faq" className="space-y-4 pt-4">
                   <div className="space-y-4">

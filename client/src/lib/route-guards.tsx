@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
@@ -137,7 +137,7 @@ export function LimitedAIAssistant({ children }: { children: ReactNode }) {
     return (
       <div className="p-4 border border-red-200 bg-red-50 rounded-md text-red-700">
         Morate biti prijavljeni da biste koristili AI asistenta. 
-        <a href="/auth" className="ml-2 underline font-semibold">Prijavite se</a>
+        <Link href="/auth" className="ml-2 underline font-semibold">Prijavite se</Link>
       </div>
     );
   }
