@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, File, X, Info, Loader } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/lib/supabase';
 
 interface FileUploadProps {
   onUploadComplete?: () => void;
@@ -14,6 +16,7 @@ interface FileUploadProps {
 
 export function FileUpload({ onUploadComplete }: FileUploadProps) {
   const { toast } = useToast();
+  const { session, user } = useAuth();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -71,11 +74,18 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           formData.append('file', file);
           formData.append('category', selectedCategory);
           
-          // Slanje zahteva za otpremanje
+          // Provera da li korisnik ima token sesije
+          if (!session || !session.access_token) {
+            throw new Error('Niste prijavljeni. Prijavite se ponovo.');
+          }
+          
+          // Slanje zahteva za otpremanje sa tokenom
           const response = await fetch('/api/storage/upload', {
             method: 'POST',
-            body: formData,
-            credentials: 'include'
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: formData
           });
           
           // Ažuriranje progresa za ovaj fajl
@@ -83,7 +93,18 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           setProgress((uploadedFiles / totalFiles) * 100);
           
           if (!response.ok) {
-            throw new Error(`Greška (${response.status}): ${response.statusText}`);
+            // Pokušaj da dobiješ tekst greške
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            
+            try {
+              // Pokušaj da parsiraš JSON odgovor
+              const errorData = JSON.parse(errorText);
+              throw new Error(errorData.message || `Greška (${response.status}): ${response.statusText}`);
+            } catch (jsonError) {
+              // Ako nije JSON, koristi originalni tekst greške
+              throw new Error(`Greška (${response.status}): ${errorText || response.statusText}`);
+            }
           }
           
           // Sve je prošlo u redu za ovaj fajl
