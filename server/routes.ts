@@ -27,6 +27,7 @@ import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
 import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
+import referralRoutes from './routes/referral-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -954,6 +955,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register blog routes
   app.use('/api/blog', blogRouter);
+  
+  // Register referral routes
+  app.use('/api/referrals', referralRoutes);
   
   // Registracija admin ruta
   app.use('/api/admin', adminRouter);

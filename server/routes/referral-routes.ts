@@ -8,7 +8,7 @@ const router = Router();
  * GET /api/referrals/code
  */
 router.get('/code', (req: Request, res: Response) => {
-  const userId = req.user?.id?.toString() || req.session?.userId?.toString();
+  const userId = req.user?.id?.toString();
   
   // Provera da li je korisnik ulogovan
   if (!userId) {
@@ -46,7 +46,7 @@ router.get('/code', (req: Request, res: Response) => {
  * GET /api/referrals/info
  */
 router.get('/info', (req: Request, res: Response) => {
-  const userId = req.user?.id?.toString() || req.session?.userId?.toString();
+  const userId = req.user?.id?.toString();
   
   // Provera da li je korisnik ulogovan
   if (!userId) {
@@ -142,7 +142,7 @@ router.put('/update-pro-status', (req: Request, res: Response) => {
   }
   
   // Dodatna provera da li je zahtev poslao administrator
-  const requesterId = req.user?.id?.toString() || req.session?.userId?.toString();
+  const requesterId = req.user?.id?.toString();
   const isAdmin = req.user?.role === 'admin'; // Pretpostavljamo da postoji polje role
   
   if (!requesterId || (!isAdmin && requesterId !== userId)) {
