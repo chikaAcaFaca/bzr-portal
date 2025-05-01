@@ -29,6 +29,7 @@ import textExtractionRouter from './routes/text-extraction';
 import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
+import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -960,6 +961,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register referral routes
   app.use('/api/referrals', referralRoutes);
   app.use('/api/ai/usage', aiUsageRoutes);
+  
+  // Register document storage routes
+  registerDocumentStorageRoutes(app);
   
   // Registracija admin ruta
   app.use('/api/admin', adminRouter);
