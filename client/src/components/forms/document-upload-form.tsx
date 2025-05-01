@@ -80,9 +80,31 @@ export function DocumentUploadForm({
 
   // Simulated file upload handling
   // In a real app, we would upload the file to a server
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (1GB limit)
+      if (file.size > 1024 * 1024 * 1024) {
+        toast({
+          title: "Greška",
+          description: "Veličina fajla ne može biti veća od 1GB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check file type
+      const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+      const allowedExtensions = ['.xls', '.doc', '.odt', '.ods', '.pdf', '.jpg', '.png', '.csv', '.bmp'];
+      if (!allowedExtensions.includes(ext)) {
+        toast({
+          title: "Greška",
+          description: "Nepodržan tip fajla",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setFileName(file.name);
       setFileSize(file.size);
       setFileType(file.type);
