@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input';
 export default function DocumentStoragePage() {
   const [activeTab, setActiveTab] = useState("files");
   const [newFolderName, setNewFolderName] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -124,9 +125,9 @@ export default function DocumentStoragePage() {
             <TabsTrigger value="upload">Otpremanje</TabsTrigger>
           </TabsList>
           
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="flex-1 sm:flex-auto">
+              <Button size="sm" className="flex-1 sm:flex-auto" onClick={() => setIsDialogOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Novi folder
               </Button>
@@ -151,7 +152,12 @@ export default function DocumentStoragePage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreateFolder}>Kreiraj folder</Button>
+                <Button onClick={() => {
+                  handleCreateFolder();
+                  setIsDialogOpen(false);
+                }}>
+                  Kreiraj folder
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
