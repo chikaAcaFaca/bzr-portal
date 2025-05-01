@@ -132,19 +132,9 @@ export function registerDocumentStorageRoutes(app: Express) {
   // Endpoint za otpremanje fajlova
   app.post('/api/storage/upload', upload.single('file'), async (req: Request, res: Response) => {
     try {
-      // Provera autentikacije iz Authorization header-a (Bearer token)
-      const authHeader = req.headers.authorization;
-      
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, message: 'Nedostaje token autentikacije' });
-      }
-      
-      const token = authHeader.split(' ')[1];
-      
-      // Verifikacija tokena kroz Supabase koristeći Express middleware
-      // Pretpostavljamo da middleware već postavlja req.user ako je token validan
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ success: false, message: 'Niste autentifikovani' });
+      // Provera autentikacije - koristimo session cookie
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Niste prijavljeni' });
       }
       
       const userId = req.user.id.toString();

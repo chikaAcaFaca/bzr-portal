@@ -69,15 +69,6 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       return;
     }
     
-    if (!session?.access_token) {
-      toast({
-        title: 'Nevalidna sesija',
-        description: 'Molimo vas da se odjavite i ponovo prijavite',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
     setIsUploading(true);
     setProgress(0);
     
@@ -93,11 +84,10 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           formData.append('category', selectedCategory);
           
           // Slanje zahteva za upload koristeći API endpoint
+          // Cookies će automatski biti poslati s zahtevom
           const response = await fetch('/api/storage/upload', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`
-            },
+            credentials: 'include',
             body: formData
           });
           
