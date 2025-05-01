@@ -25,29 +25,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUserProfile(userId: string) {
+    async function loadUserProfile(user: SupabaseUser) {
       try {
-        // Dobavljanje dodatnih informacija o korisniku iz baze
-        // Koristimo 'user_profiles' tabelu umesto 'users'
-        const { data: profileData, error } = await supabase
-          .from('user_profiles')
-          .select('role, subscription_type')
-          .eq('user_id', userId)
-          .single();
-          
-        if (error) {
-          console.error("Greška pri dobavljanju korisničkog profila:", error);
-          // Default vrednosti ako nema profila
-          return {
-            role: 'user',
-            subscription_type: 'free'
-          };
-        }
+        // Supabase auth podaci se skladište u user metapodacima
+        // Koristiće se user.app_metadata za čuvanje informacija o tipu pretplate i ulozi
+        const metadata = user.app_metadata || {};
         
-        // Mapiramo nazive kolona da odgovaraju našem modelu
+        // Dobavimo ulogu i tip pretplate iz metapodataka, ako postoje
+        const role = metadata.role || 'user';
+        const subscriptionType = metadata.subscription_type || 'free';
+        
         return {
-          role: profileData.role,
-          subscriptionType: profileData.subscription_type
+          role,
+          subscriptionType
         };
       } catch (error) {
         console.error("Greška pri dobavljanju korisničkog profila:", error);
@@ -65,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         // Dohvati dodatne informacije o korisniku
-        const profileData = await loadUserProfile(session.user.id);
+        const profileData = await loadUserProfile(session.user);
         
         // Proširi korisnika sa dodatnim informacijama
         const enhancedUser: User = {
@@ -88,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         // Dohvati dodatne informacije o korisniku
-        const profileData = await loadUserProfile(session.user.id);
+        const profileData = await loadUserProfile(session.user);
         
         // Proširi korisnika sa dodatnim informacijama
         const enhancedUser: User = {
