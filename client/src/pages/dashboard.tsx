@@ -47,7 +47,7 @@ const ProUpgradeCard = () => {
             <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Veći prostor za skladište</p>
-              <p className="text-sm text-muted-foreground">1GB prostora za sve vaše dokumente</p>
+              <p className="text-sm text-muted-foreground">1GB prostora umesto 50MB za FREE korisnike</p>
             </div>
           </div>
         </div>

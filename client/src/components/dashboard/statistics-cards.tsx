@@ -22,11 +22,23 @@ export default function StatisticsCards() {
     queryKey: ['/api/stats'],
   });
 
-  // Dodaj RegulatoryUpdatesWidget na vrh
-  return (
-    <>
-      <RegulatoryUpdatesWidget />
+  if (isLoading) {
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
+          <Card className="p-5" key={i}>
+            <div className="flex items-center">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="ml-4 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
   
   const stats: StatCard[] = [
     {
@@ -58,24 +70,6 @@ export default function StatisticsCards() {
       bgColor: "bg-red-100",
     },
   ];
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[1, 2, 3, 4].map((i) => (
-          <Card className="p-5" key={i}>
-            <div className="flex items-center">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="ml-4 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-6 w-16" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
-  }
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
