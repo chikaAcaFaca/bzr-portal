@@ -14,10 +14,27 @@ import {
   Trash2,
   Folder,
   Loader,
-  Info
+  Info,
+  Grid2X2,
+  Grid3X3,
+  LayoutGrid,
+  List,
+  FolderPlus
 } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface UserDocument {
   id: string;
@@ -42,6 +59,9 @@ export function UserDocumentsViewer() {
   const { user } = useAuth();
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "grid-small" | "grid-medium" | "grid-large" | "grid-extra-large">("grid-small");
+  const [newFolderName, setNewFolderName] = useState<string>("");
+  const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false);
   
   // Kategorije dokumenata
   const categories = [
@@ -220,6 +240,67 @@ export function UserDocumentsViewer() {
     return documentsData.filter(doc => doc.folder === selectedFolder);
   };
   
+  // Funkcija za kreiranje novog foldera
+  const handleCreateNewFolder = async () => {
+    try {
+      if (!user) {
+        throw new Error('Niste prijavljeni');
+      }
+      
+      if (!newFolderName.trim()) {
+        toast({
+          title: 'Greška',
+          description: 'Naziv foldera ne može biti prazan',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Slanje zahteva za kreiranje novog foldera
+      const response = await fetch('/api/storage/create-folder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          folderName: newFolderName.trim() 
+        }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Greška pri kreiranju foldera');
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Greška pri kreiranju foldera');
+      }
+      
+      toast({
+        title: 'Uspešno kreiran folder',
+        description: `Folder "${newFolderName}" je uspešno kreiran.`,
+        variant: 'default'
+      });
+      
+      // Resetuj polje i zatvori dijalog
+      setNewFolderName('');
+      setIsNewFolderDialogOpen(false);
+      
+      // Osveži listu dokumenata
+      refetchDocuments();
+      
+    } catch (error: any) {
+      console.error('Greška pri kreiranju foldera:', error);
+      toast({
+        title: 'Greška',
+        description: error.message || 'Došlo je do greške prilikom kreiranja foldera',
+        variant: 'destructive'
+      });
+    }
+  };
+  
   // Prikaz loading stanja
   if (isLoadingDocuments || isLoadingStorage) {
     return (
@@ -258,8 +339,162 @@ export function UserDocumentsViewer() {
     );
   }
   
+  // Funkcija za dobijanje CSS klasa za prikaz veličine dokumenata
+  const getDocumentViewClass = () => {
+    switch (viewMode) {
+      case "list":
+        return "grid grid-cols-1 gap-4";
+      case "grid-small":
+        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4";
+      case "grid-medium":
+        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4";
+      case "grid-large":
+        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4";
+      case "grid-extra-large":
+        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4";
+      default:
+        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4";
+    }
+  };
+
+  // Funkcija za dobijanje veličine ikone dokumenata
+  const getIconSize = () => {
+    switch (viewMode) {
+      case "list":
+        return "h-6 w-6";
+      case "grid-small":
+        return "h-8 w-8";
+      case "grid-medium":
+        return "h-12 w-12";
+      case "grid-large":
+        return "h-16 w-16";
+      case "grid-extra-large":
+        return "h-24 w-24";
+      default:
+        return "h-8 w-8";
+    }
+  };
+
+  // Funkcija za prikaz dokumenata u različitim veličinama
+  const renderDocumentCard = (document: UserDocument) => {
+    if (viewMode === "list") {
+      // List prikaz
+      return (
+        <Card key={document.id} className="overflow-hidden">
+          <div className="flex items-center p-4">
+            <div className="flex-shrink-0">
+              {getFileIcon(document)}
+            </div>
+            <div className="ml-4 flex-grow overflow-hidden">
+              <h3 className="text-sm font-medium truncate">{document.name}</h3>
+              <p className="text-xs text-muted-foreground">
+                {formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
+              </p>
+            </div>
+            <div className="flex-shrink-0 ml-4 space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDeleteDocument(document)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownloadDocument(document)}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      );
+    } else {
+      // Grid prikaz (mala, srednja, velika, ogromna)
+      const iconSizeClass = getIconSize();
+      const isExtraLarge = viewMode === "grid-extra-large";
+      const isLarge = viewMode === "grid-large";
+      const isMedium = viewMode === "grid-medium";
+      
+      return (
+        <Card key={document.id} className="overflow-hidden flex flex-col">
+          <div className={`p-4 flex ${isExtraLarge || isLarge ? 'justify-center' : ''} items-center`}>
+            <div className={`${isExtraLarge || isLarge ? 'text-center' : 'flex-shrink-0'}`}>
+              <div className={iconSizeClass}>
+                {getFileIcon(document)}
+              </div>
+            </div>
+            {isExtraLarge && (
+              <div className="mt-2 text-center w-full">
+                <h3 className="text-sm font-medium break-words">{document.name}</h3>
+                <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
+                <p className="text-xs text-muted-foreground">{formatDate(new Date(document.createdAt))}</p>
+              </div>
+            )}
+            {!isExtraLarge && (
+              <div className={`${isLarge ? 'mt-2 text-center w-full' : 'ml-3 flex-grow overflow-hidden'}`}>
+                <h3 className={`${isLarge || isMedium ? 'text-sm' : 'text-xs'} font-medium truncate`}>{document.name}</h3>
+                <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
+                {!isLarge && !isMedium && (
+                  <p className="text-xs text-muted-foreground hidden sm:block">{formatDate(new Date(document.createdAt))}</p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="mt-auto p-2 flex justify-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleDeleteDocument(document)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleDownloadDocument(document)}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
+      );
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Dijalog za kreiranje novog foldera */}
+      <Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novi folder</DialogTitle>
+            <DialogDescription>
+              Unesite naziv za novi folder
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Naziv
+              </Label>
+              <Input
+                id="name"
+                placeholder="Unesite naziv foldera"
+                className="col-span-3"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewFolderDialogOpen(false)}>Otkaži</Button>
+            <Button onClick={handleCreateNewFolder}>Kreiraj folder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Prikaz iskorišćenosti skladišta */}
       {storageInfo && (
         <Card className="mb-4">
@@ -284,60 +519,77 @@ export function UserDocumentsViewer() {
           className="w-full"
         >
           <div className="border-b">
-            <TabsList className="flex w-full overflow-x-auto pb-0">
-              {folders.map(folder => (
-                <TabsTrigger 
-                  key={folder} 
-                  value={folder}
-                  className="data-[state=active]:bg-background flex items-center"
+            <div className="flex items-center justify-between mb-4">
+              <TabsList className="flex overflow-x-auto pb-0">
+                {folders.map(folder => (
+                  <TabsTrigger 
+                    key={folder} 
+                    value={folder}
+                    className="data-[state=active]:bg-background flex items-center"
+                  >
+                    <Folder className="h-4 w-4 mr-2" />
+                    {folder}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <div className="flex items-center space-x-2">
+                {/* Dugmad za promenu prikaza */}
+                <RadioGroup
+                  value={viewMode}
+                  onValueChange={(value) => setViewMode(value as any)}
+                  className="flex"
                 >
-                  <Folder className="h-4 w-4 mr-2" />
-                  {folder}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+                  <div className="flex space-x-1 border rounded-md p-1">
+                    <div className="rounded hover:bg-secondary p-1">
+                      <RadioGroupItem value="list" id="list" className="hidden" />
+                      <Label htmlFor="list" className="cursor-pointer">
+                        <List className="h-5 w-5" />
+                      </Label>
+                    </div>
+                    
+                    <div className="rounded hover:bg-secondary p-1">
+                      <RadioGroupItem value="grid-small" id="grid-small" className="hidden" />
+                      <Label htmlFor="grid-small" className="cursor-pointer">
+                        <Grid3X3 className="h-5 w-5" />
+                      </Label>
+                    </div>
+                    
+                    <div className="rounded hover:bg-secondary p-1">
+                      <RadioGroupItem value="grid-medium" id="grid-medium" className="hidden" />
+                      <Label htmlFor="grid-medium" className="cursor-pointer">
+                        <Grid2X2 className="h-5 w-5" />
+                      </Label>
+                    </div>
+                    
+                    <div className="rounded hover:bg-secondary p-1">
+                      <RadioGroupItem value="grid-large" id="grid-large" className="hidden" />
+                      <Label htmlFor="grid-large" className="cursor-pointer">
+                        <LayoutGrid className="h-5 w-5" />
+                      </Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+                
+                {/* Dugme za kreiranje novog foldera */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsNewFolderDialogOpen(true)}
+                  className="gap-1"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Novi folder</span>
+                </Button>
+              </div>
+            </div>
           </div>
           
           {/* Prikaz dokumenata za svaki folder */}
           {folders.map(folder => (
             <TabsContent key={folder} value={folder} className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {getFilteredDocuments().map(document => (
-                  <Card key={document.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center">
-                          {getFileIcon(document)}
-                          <CardTitle className="ml-2 text-base truncate">{document.name}</CardTitle>
-                        </div>
-                        <CardDescription className="text-xs">
-                          {formatDate(new Date(document.createdAt))}
-                        </CardDescription>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <p className="text-sm text-muted-foreground">
-                        Veličina: {formatBytes(document.size, 2)}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="pt-2 flex justify-end space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDeleteDocument(document)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" /> Obriši
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={() => handleDownloadDocument(document)}
-                      >
-                        <Download className="h-4 w-4 mr-1" /> Preuzmi
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+              <div className={getDocumentViewClass()}>
+                {getFilteredDocuments().map(document => renderDocumentCard(document))}
               </div>
             </TabsContent>
           ))}

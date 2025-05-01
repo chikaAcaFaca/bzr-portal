@@ -102,10 +102,21 @@
 
   html {
     @apply transition-colors duration-300;
+    font-family: 'Noto Sans', system-ui, sans-serif;
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground transition-colors duration-300;
+    @apply bg-background text-foreground transition-colors duration-300;
+    font-family: 'Noto Sans', system-ui, sans-serif;
+  }
+  
+  /* Specifična podešavanja za ćirilicu i latinicu */
+  :lang(sr-Cyrl) {
+    font-family: 'Noto Sans', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Serif', serif;
   }
   
   /* Animacije za temu */
