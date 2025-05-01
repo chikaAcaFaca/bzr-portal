@@ -29,6 +29,7 @@ import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
 import ReferralProgram from "./pages/referral-program";
+import ResetPassword from "./pages/reset-password";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -189,6 +190,10 @@ function Router() {
             <ReferralProgram />
           </MainLayout>
         </RequireAuth>
+      </Route>
+      
+      <Route path="/reset-password">
+        <ResetPassword />
       </Route>
       
       <Route path="/regulatory-updates">

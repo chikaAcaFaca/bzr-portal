@@ -291,8 +291,12 @@ export default function AuthPage() {
                       setIsLoading(true);
                       try {
                         await signOut();
+                        // Dobavljamo trenutni domen (ili Replit URL ili prilagođeni domen)
+                        const currentSiteUrl = window.location.origin;
+                        console.log("Reset password redirect URL:", `${currentSiteUrl}/reset-password`);
+                        
                         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                          redirectTo: `${window.location.origin}/reset-password`,
+                          redirectTo: `${currentSiteUrl}/reset-password`,
                         });
                         
                         if (error) throw error;
