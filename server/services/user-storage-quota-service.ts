@@ -102,7 +102,7 @@ class UserStorageQuotaService {
       const baseQuota = isPro ? STORAGE_QUOTA.PRO_USER : STORAGE_QUOTA.FREE_USER;
       
       // Pribavi referalne informacije i bonus prostor
-      const referralBonus = this.getReferralBonus(userId);
+      const referralBonus = await this.getReferralBonus(userId);
       const totalSize = baseQuota + referralBonus;
       
       const remainingSize = Math.max(0, totalSize - usedSize);
