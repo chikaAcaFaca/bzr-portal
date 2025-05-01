@@ -223,8 +223,24 @@ export function UserDocumentsViewer() {
   
   // Funkcija za preuzimanje dokumenta
   const handleDownloadDocument = (document: UserDocument) => {
-    // Otvaranje novog taba sa URL-om dokumenta
-    window.open(document.url, '_blank');
+    if (!document.url) {
+      toast({
+        title: 'Greška',
+        description: 'URL dokumenta nije dostupan',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Kreiranje linka za preuzimanje
+    const a = window.document.createElement('a');
+    a.href = document.url;
+    a.download = document.name;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    window.document.body.appendChild(a);
+    a.click();
+    window.document.body.removeChild(a);
   };
   
   // Funkcija za prikaz ikone na osnovu tipa dokumenta
@@ -691,41 +707,80 @@ export function UserDocumentsViewer() {
           </DialogHeader>
           
           <div className="flex-grow overflow-hidden overflow-y-auto border rounded-md bg-secondary/20">
-            {selectedDocument && selectedDocument.type.includes('image') ? (
-              <div className="h-full flex items-center justify-center p-4">
-                <img 
-                  src={selectedDocument.url} 
-                  alt={selectedDocument.name} 
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-            ) : selectedDocument && selectedDocument.type.includes('pdf') ? (
-              <div className="h-full w-full p-4">
-                <iframe 
-                  src={selectedDocument.url} 
-                  title={selectedDocument.name}
-                  className="w-full h-full border-0"
-                />
-              </div>
+            {selectedDocument ? (
+              selectedDocument.type.includes('image') ? (
+                <div className="h-full flex items-center justify-center p-4">
+                  <img 
+                    src={selectedDocument.url} 
+                    alt={selectedDocument.name} 
+                    className="max-h-full max-w-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMgOUgxOVYxNUgxM1Y5WiIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48L3BhdGg+PHBhdGggZD0iTTVCREZMT0FEIHUgZmlsZSBpY29uIi8+PC9zdmc+';
+                      toast({
+                        title: 'Slika nije dostupna',
+                        description: 'Nije moguće prikazati sliku direktno. Pokušajte preuzeti dokument.',
+                        variant: 'destructive'
+                      });
+                    }}
+                  />
+                </div>
+              ) : selectedDocument.type.includes('pdf') ? (
+                <div className="h-full w-full p-4">
+                  <div className="bg-gray-100 p-4 rounded-lg h-full flex flex-col items-center justify-center">
+                    <FileIcon className="h-12 w-12 text-red-500 mb-4" />
+                    <p className="text-center mb-4">
+                      PDF dokumenti se ne mogu prikazati direktno u aplikaciji.
+                    </p>
+                    <div className="flex space-x-4">
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => window.open(selectedDocument.url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Otvori u novom prozoru
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDownloadDocument(selectedDocument)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Preuzmi dokument
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 h-full flex flex-col items-center justify-center">
+                  <div className="mb-4 text-center">
+                    <FileIcon className="h-12 w-12 text-gray-500" />
+                  </div>
+                  <p className="text-center mb-4">
+                    Nije moguće prikazati sadržaj ovog dokumenta direktno u pregledaču.
+                  </p>
+                  <div className="flex space-x-4">
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => handleDownloadDocument(selectedDocument)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Preuzmi dokument
+                    </Button>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="p-4 h-full flex flex-col items-center justify-center">
                 <div className="mb-4 text-center">
                   <FileIcon className="h-12 w-12 text-gray-500" />
                 </div>
                 <p className="text-center">
-                  Nije moguće prikazati sadržaj ovog dokumenta direktno u pregledaču.
+                  Nije odabran nijedan dokument za pregled.
                 </p>
-                {selectedDocument && (
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    className="mt-4"
-                    onClick={() => window.open(selectedDocument.url, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Otvori u novom prozoru
-                  </Button>
-                )}
               </div>
             )}
           </div>
