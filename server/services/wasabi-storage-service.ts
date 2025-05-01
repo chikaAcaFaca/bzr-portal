@@ -17,10 +17,11 @@ interface WasabiFile {
 }
 
 // Konfiguracija Wasabi servisa
-const WASABI_ENDPOINT = 'https://s3.eu-west-2.wasabisys.com';
-const WASABI_REGION = 'eu-west-2';
+// Korišćenje bucket-specific endpointa kako bismo izbegli TemporaryRedirect greške
 const WASABI_USER_DOCUMENTS_BUCKET = process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-user-documents-bucket';
 const WASABI_KNOWLEDGE_BASE_BUCKET = process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bzr-knowledge-base-bucket';
+const WASABI_ENDPOINT = `https://${WASABI_USER_DOCUMENTS_BUCKET}.s3.eu-west-2.wasabisys.com`;
+const WASABI_REGION = 'eu-west-2';
 
 class WasabiStorageService {
   private s3Client: S3Client;
@@ -34,7 +35,7 @@ class WasabiStorageService {
         accessKeyId: process.env.WASABI_ACCESS_KEY_ID || '',
         secretAccessKey: process.env.WASABI_SECRET_ACCESS_KEY || ''
       },
-      forcePathStyle: true
+      forcePathStyle: false
     });
 
     // Provera da li su postavljeni potrebni enviroment parametri
