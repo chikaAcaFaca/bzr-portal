@@ -73,18 +73,16 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
         formData.append('category', selectedCategory);
         
         // Slanje zahteva za otpremanje
-        const response = await apiRequest('POST', '/api/storage/upload', formData, {
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / (progressEvent.total || file.size)
-            );
-            // Nije 100% precizan za više fajlova, ali daje vizuelnu povratnu informaciju
-            setProgress((prevProgress) => {
-              const fileProgress = (percentCompleted / 100) * (1 / totalFiles);
-              const completedFilesProgress = (uploadedFiles / totalFiles) * 100;
-              return completedFilesProgress + fileProgress;
-            });
-          }
+        const response = await fetch('/api/storage/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include'
+        });
+        
+        // Ažuriranje progresa - jednostavno povećanje za svaki fajl
+        setProgress((prevProgress) => {
+          const fileProgress = (1 / totalFiles) * 100;
+          return Math.min(prevProgress + fileProgress, 100);
         });
         
         const data = await response.json();

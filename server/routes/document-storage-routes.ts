@@ -24,6 +24,13 @@ import { wasabiStorageService } from '../services/wasabi-storage-service';
 import { userStorageQuotaService } from '../services/user-storage-quota-service';
 
 export function registerDocumentStorageRoutes(app: Express) {
+  // Konfiguracija multer-a za otpremanje fajlova
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 100 * 1024 * 1024, // Maksimalna veličina 100MB
+    }
+  });
   // Endpoint za dobijanje liste korisničkih dokumenata
   app.get('/api/user-documents', async (req: Request, res: Response) => {
     try {
@@ -117,6 +124,83 @@ export function registerDocumentStorageRoutes(app: Express) {
       res.status(500).json({
         success: false,
         message: 'Došlo je do greške pri dobavljanju informacija o skladištu',
+        error: error.message
+      });
+    }
+  });
+
+  // Endpoint za otpremanje fajlova
+  app.post('/api/storage/upload', upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      // Provera autentikacije
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Niste prijavljeni' });
+      }
+
+      const userId = req.user.id;
+      
+      // Provera da li je fajl uspešno otpremljen (multer middleware)
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Fajl nije priložen' });
+      }
+      
+      // Provera kategorije/foldera
+      const category = req.body.category || 'opsti';
+      
+      // Određivanje putanje za skladištenje
+      const fileName = req.file.originalname;
+      const key = `user_${userId}/${category}/${fileName}`;
+      
+      // Određivanje MIME tipa za fajl
+      const contentType = req.file.mimetype || getFileType(fileName);
+      
+      // Provera da li korisnik ima dovoljno prostora
+      const fileSize = req.file.size;
+      const isPro = req.user.subscriptionType === 'pro';
+      
+      const hasSpace = await userStorageQuotaService.hasEnoughSpace(
+        userId.toString(),
+        fileSize,
+        isPro
+      );
+      
+      if (!hasSpace) {
+        return res.status(400).json({
+          success: false,
+          message: 'Nedovoljno prostora za skladištenje. Razmotrite nadogradnju na PRO nalog ili brisanje postojećih fajlova.'
+        });
+      }
+      
+      // Otpremanje fajla na Wasabi
+      const uploadResult = await wasabiStorageService.uploadFile(
+        key,
+        req.file.buffer,
+        contentType
+      );
+      
+      // Kreiranje URL-a za pristup fajlu
+      const fileUrl = `${process.env.WASABI_ENDPOINT}/${process.env.WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+      
+      res.json({
+        success: true,
+        message: 'Fajl je uspešno otpremljen',
+        fileData: {
+          id: uploadResult.ETag?.replace(/"/g, '') || key,
+          name: fileName,
+          size: fileSize,
+          type: contentType,
+          path: key,
+          folder: category,
+          createdAt: new Date().toISOString(),
+          url: fileUrl
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Greška pri otpremanju fajla:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Došlo je do greške pri otpremanju fajla',
         error: error.message
       });
     }
