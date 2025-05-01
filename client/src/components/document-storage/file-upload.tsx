@@ -9,6 +9,7 @@ import { Upload, File, X, Info, Loader } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 interface FileUploadProps {
   onUploadComplete?: () => void;
@@ -61,6 +62,15 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       return;
     }
     
+    if (!user) {
+      toast({
+        title: 'Niste prijavljeni',
+        description: 'Molimo vas da se prijavite pre otpremanja fajlova',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setIsUploading(true);
     setProgress(0);
     
@@ -70,44 +80,42 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       
       for (const file of selectedFiles) {
         try {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('category', selectedCategory);
+          // Generisanje jedinstvenog imena fajla da bismo izbegli konflikte
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${uuidv4()}.${fileExt}`;
+          const filePath = `${user.id}/${selectedCategory}/${fileName}`;
           
-          // Provera da li korisnik ima token sesije
-          if (!session || !session.access_token) {
-            throw new Error('Niste prijavljeni. Prijavite se ponovo.');
+          // Direktno korišćenje Supabase Storage API-ja za otpremanje
+          const { data, error } = await supabase.storage
+            .from('user-documents')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: file.type
+            });
+            
+          // Nakon uspešnog otpremanja, dodaj metapodatke u bazu
+          if (!error && data) {
+            // Ovde bismo dodali metapodatke u bazu, ali za sada samo logujemo
+            console.log('Metadata for file:', {
+              originalName: file.name,
+              size: file.size,
+              category: selectedCategory,
+              uploadedBy: user.id,
+              uploadedAt: new Date().toISOString(),
+              path: filePath
+            });
           }
           
-          // Slanje zahteva za otpremanje sa tokenom
-          const response = await fetch('/api/storage/upload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`
-            },
-            body: formData
-          });
+          if (error) {
+            throw error;
+          }
           
           // Ažuriranje progresa za ovaj fajl
           uploadedFiles++;
           setProgress((uploadedFiles / totalFiles) * 100);
           
-          if (!response.ok) {
-            // Pokušaj da dobiješ tekst greške
-            const errorText = await response.text();
-            console.error('Server error response:', errorText);
-            
-            try {
-              // Pokušaj da parsiraš JSON odgovor
-              const errorData = JSON.parse(errorText);
-              throw new Error(errorData.message || `Greška (${response.status}): ${response.statusText}`);
-            } catch (jsonError) {
-              // Ako nije JSON, koristi originalni tekst greške
-              throw new Error(`Greška (${response.status}): ${errorText || response.statusText}`);
-            }
-          }
-          
-          // Sve je prošlo u redu za ovaj fajl
+          console.log('Uspešno otpremljen fajl:', data);
         } catch (error) {
           console.error(`Greška pri otpremanju fajla ${file.name}:`, error);
           // Nastavljamo sa sledećim fajlom umesto da prekinemo ceo proces
@@ -142,6 +150,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       }
       
     } catch (error: any) {
+      console.error('Generalna greška pri otpremanju:', error);
       toast({
         title: 'Greška pri otpremanju',
         description: error.message || 'Došlo je do greške prilikom otpremanja fajlova',
