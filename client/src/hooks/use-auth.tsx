@@ -1,6 +1,12 @@
 import { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Session, User, AuthError, AuthResponse, AuthTokenResponsePassword } from "@supabase/supabase-js";
+import { Session, User as SupabaseUser, AuthError, AuthResponse, AuthTokenResponsePassword } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+
+// Prošireni tip korisnika sa dodatnim poljima koja dobijamo iz profila
+export interface User extends SupabaseUser {
+  role?: 'admin' | 'user';
+  subscriptionType?: 'free' | 'pro';
+}
 
 interface AuthContextProps {
   session: Session | null;
@@ -19,17 +25,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    async function loadUserProfile(userId: string) {
+      try {
+        // Dobavljanje dodatnih informacija o korisniku iz baze
+        // Koristimo 'user_profiles' tabelu umesto 'users'
+        const { data: profileData, error } = await supabase
+          .from('user_profiles')
+          .select('role, subscription_type')
+          .eq('user_id', userId)
+          .single();
+          
+        if (error) {
+          console.error("Greška pri dobavljanju korisničkog profila:", error);
+          // Default vrednosti ako nema profila
+          return {
+            role: 'user',
+            subscription_type: 'free'
+          };
+        }
+        
+        // Mapiramo nazive kolona da odgovaraju našem modelu
+        return {
+          role: profileData.role,
+          subscriptionType: profileData.subscription_type
+        };
+      } catch (error) {
+        console.error("Greška pri dobavljanju korisničkog profila:", error);
+        // Default vrednosti ako dođe do greške
+        return {
+          role: 'user',
+          subscriptionType: 'free'
+        };
+      }
+    }
+    
     // Inicijalno dobijanje sesije
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Dohvati dodatne informacije o korisniku
+        const profileData = await loadUserProfile(session.user.id);
+        
+        // Proširi korisnika sa dodatnim informacijama
+        const enhancedUser: User = {
+          ...session.user,
+          role: profileData?.role || 'user',
+          subscriptionType: profileData?.subscriptionType || 'free'
+        };
+        
+        setUser(enhancedUser);
+      } else {
+        setUser(null);
+      }
+      
       setIsLoading(false);
     });
 
     // Slušanje promena autentikacije
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        // Dohvati dodatne informacije o korisniku
+        const profileData = await loadUserProfile(session.user.id);
+        
+        // Proširi korisnika sa dodatnim informacijama
+        const enhancedUser: User = {
+          ...session.user,
+          role: profileData?.role || 'user',
+          subscriptionType: profileData?.subscriptionType || 'free'
+        };
+        
+        setUser(enhancedUser);
+      } else {
+        setUser(null);
+      }
+      
       setIsLoading(false);
     });
 

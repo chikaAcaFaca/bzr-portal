@@ -29,32 +29,8 @@ import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
 import ReferralProgram from "./pages/referral-program";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-
-
-// Komponenta koja zahteva autentikaciju
-function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
-  const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-  
-  // Ako korisnik nije prijavljen, preusmeravamo ga na auth stranicu
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-  
-  // Ako je korisnik prijavljen, prikazujemo komponentu
-  return <Component />;
-}
+import { AuthProvider } from "@/hooks/use-auth";
+import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
 // Komponenta MainLayout za zajednički UI (sidebar, header)
 function MainLayout({ children }: { children: React.ReactNode }) {
@@ -74,92 +50,14 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
-      
-      <Route path="/">
-        <MainLayout>
-          <Dashboard />
-        </MainLayout>
+      {/* Javna stranica - autentifikacija */}
+      <Route path="/auth">
+        <RedirectIfAuthenticated>
+          <AuthPage />
+        </RedirectIfAuthenticated>
       </Route>
       
-      <Route path="/job-positions">
-        <MainLayout>
-          <JobPositions />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/job-descriptions">
-        <MainLayout>
-          <JobDescriptions />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/base-documents">
-        <MainLayout>
-          <BaseDocuments />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/risk-categories">
-        <MainLayout>
-          <RiskCategories />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/safety-measures">
-        <MainLayout>
-          <SafetyMeasures />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/employee-training">
-        <MainLayout>
-          <EmployeeTraining />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/reports">
-        <MainLayout>
-          <Reports />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/document-processor">
-        <MainLayout>
-          <DocumentProcessor />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/document-storage">
-        <MainLayout>
-          <DocumentStorage />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/ai-assistant">
-        <MainLayout>
-          <AIAssistant />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/knowledge-references">
-        <MainLayout>
-          <KnowledgeReferences />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/settings">
-        <MainLayout>
-          <Settings />
-        </MainLayout>
-      </Route>
-      
-      <Route path="/users">
-        <MainLayout>
-          <Users />
-        </MainLayout>
-      </Route>
-      
+      {/* Javne stranice - blog */}
       <Route path="/blog">
         <MainLayout>
           <Blog />
@@ -172,30 +70,153 @@ function Router() {
         </MainLayout>
       </Route>
       
-      <Route path="/user-profile">
-        <MainLayout>
-          <UserProfile />
-        </MainLayout>
+      {/* Stranice zaštićene za registrovane korisnike */}
+      <Route path="/">
+        <RequireAuth>
+          <MainLayout>
+            <Dashboard />
+          </MainLayout>
+        </RequireAuth>
       </Route>
       
-      <Route path="/admin-dashboard">
-        <MainLayout>
-          <AdminDashboard />
-        </MainLayout>
+      <Route path="/job-positions">
+        <RequireAuth>
+          <MainLayout>
+            <JobPositions />
+          </MainLayout>
+        </RequireAuth>
       </Route>
-
-      <Route path="/regulatory-updates">
-        <MainLayout>
-          <RegulatoryUpdates />
-        </MainLayout>
+      
+      <Route path="/job-descriptions">
+        <RequireAuth>
+          <MainLayout>
+            <JobDescriptions />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/base-documents">
+        <RequireAuth>
+          <MainLayout>
+            <BaseDocuments />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/risk-categories">
+        <RequireAuth>
+          <MainLayout>
+            <RiskCategories />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/safety-measures">
+        <RequireAuth>
+          <MainLayout>
+            <SafetyMeasures />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/employee-training">
+        <RequireAuth>
+          <MainLayout>
+            <EmployeeTraining />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/reports">
+        <RequireAuth>
+          <MainLayout>
+            <Reports />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/document-processor">
+        <RequireAuth>
+          <MainLayout>
+            <DocumentProcessor />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/document-storage">
+        <RequireAuth>
+          <MainLayout>
+            <DocumentStorage />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/ai-assistant">
+        <RequireAuth>
+          <MainLayout>
+            <AIAssistant />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/knowledge-references">
+        <RequireAuth>
+          <MainLayout>
+            <KnowledgeReferences />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/settings">
+        <RequireAuth>
+          <MainLayout>
+            <Settings />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      <Route path="/user-profile">
+        <RequireAuth>
+          <MainLayout>
+            <UserProfile />
+          </MainLayout>
+        </RequireAuth>
       </Route>
       
       <Route path="/referral-program">
-        <MainLayout>
-          <ReferralProgram />
-        </MainLayout>
+        <RequireAuth>
+          <MainLayout>
+            <ReferralProgram />
+          </MainLayout>
+        </RequireAuth>
       </Route>
       
+      <Route path="/regulatory-updates">
+        <RequireAuth>
+          <MainLayout>
+            <RegulatoryUpdates />
+          </MainLayout>
+        </RequireAuth>
+      </Route>
+      
+      {/* Admin stranice */}
+      <Route path="/admin-dashboard">
+        <RequireAdmin>
+          <MainLayout>
+            <AdminDashboard />
+          </MainLayout>
+        </RequireAdmin>
+      </Route>
+      
+      <Route path="/users">
+        <RequireAdmin>
+          <MainLayout>
+            <Users />
+          </MainLayout>
+        </RequireAdmin>
+      </Route>
+      
+      {/* 404 stranica */}
       <Route>
         <NotFound />
       </Route>

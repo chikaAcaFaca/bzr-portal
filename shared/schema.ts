@@ -37,6 +37,12 @@ export const insertSystematizationHistorySchema = createInsertSchema(systematiza
   isActive: true,
 });
 
+// User role enum
+export const userRoleEnum = pgEnum('user_role', ['admin', 'user']);
+
+// User subscription type enum
+export const userSubscriptionEnum = pgEnum('user_subscription', ['free', 'pro']);
+
 // Users
 export const users = pgTable("users", {
   companyId: integer("company_id").notNull(),
@@ -45,7 +51,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email"),
   fullName: text("full_name"),
-  role: text("role").notNull().default("user"), // admin, user
+  role: userRoleEnum("role").notNull().default("user"), // admin, user
+  subscriptionType: userSubscriptionEnum("subscription_type").notNull().default("free"), // free, pro
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
