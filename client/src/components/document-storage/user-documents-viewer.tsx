@@ -143,6 +143,12 @@ export function UserDocumentsViewer() {
         throw new Error('Niste prijavljeni');
       }
       
+      // Dodatna provera
+      const confirmDelete = window.confirm(`Da li ste sigurni da želite da obrišete dokument "${document.name}"?`);
+      if (!confirmDelete) {
+        return;
+      }
+      
       // Brisanje dokumenta preko API-ja
       const response = await fetch(`/api/user-documents/${document.id}`, {
         method: 'DELETE',
@@ -154,7 +160,8 @@ export function UserDocumentsViewer() {
       });
       
       if (!response.ok) {
-        throw new Error('Greška pri brisanju dokumenta');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Greška pri brisanju dokumenta');
       }
       
       const data = await response.json();
