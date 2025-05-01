@@ -256,20 +256,22 @@ export default function Sidebar() {
             </NavSection>
             
             {/* Admin sekcija - vidljiva samo admin korisnicima */}
-            <NavSection title="Administracija">
-              <NavItem
-                href="/admin-dashboard"
-                icon="fas fa-crown"
-                label="Admin panel"
-                active={location === "/admin-dashboard"}
-              />
-              <NavItem
-                href="/users"
-                icon="fas fa-users"
-                label="Upravljanje korisnicima"
-                active={location === "/users"}
-              />
-            </NavSection>
+            {user?.role === 'admin' && (
+              <NavSection title="Administracija">
+                <NavItem
+                  href="/admin-dashboard"
+                  icon="fas fa-crown"
+                  label="Admin panel"
+                  active={location === "/admin-dashboard"}
+                />
+                <NavItem
+                  href="/users"
+                  icon="fas fa-users"
+                  label="Upravljanje korisnicima"
+                  active={location === "/users"}
+                />
+              </NavSection>
+            )}
           </div>
         </nav>
       </div>
