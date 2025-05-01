@@ -591,9 +591,18 @@ export function UserDocumentsViewer() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => {/* TODO: Open folder */}}
+                onClick={() => handleOpenFolder(document)}
               >
                 <FolderOpen className="h-4 w-4" />
+              </Button>
+            )}
+            {!isFolder && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleViewDocument(document)}
+              >
+                <Eye className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -604,6 +613,76 @@ export function UserDocumentsViewer() {
 
   return (
     <div className="space-y-6">
+      {/* Dijalog za pregled dokumenta */}
+      <Dialog open={isDocumentPreviewOpen} onOpenChange={setIsDocumentPreviewOpen}>
+        <DialogContent className="sm:max-w-4xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedDocument?.name}</DialogTitle>
+            <DialogDescription>
+              {selectedDocument && (
+                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                  <span>{formatBytes(selectedDocument.size, 2)}</span>
+                  <span>•</span>
+                  <span>{formatDate(new Date(selectedDocument.createdAt))}</span>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-grow overflow-hidden overflow-y-auto border rounded-md bg-secondary/20">
+            {selectedDocument && selectedDocument.type.includes('image') ? (
+              <div className="h-full flex items-center justify-center p-4">
+                <img 
+                  src={selectedDocument.url} 
+                  alt={selectedDocument.name} 
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            ) : selectedDocument && selectedDocument.type.includes('pdf') ? (
+              <div className="h-full w-full p-4">
+                <iframe 
+                  src={selectedDocument.url} 
+                  title={selectedDocument.name}
+                  className="w-full h-full border-0"
+                />
+              </div>
+            ) : (
+              <div className="p-4 h-full flex flex-col items-center justify-center">
+                <div className="mb-4 text-center">
+                  {getFileIcon(selectedDocument || {name: '', type: ''})}
+                </div>
+                <p className="text-center">
+                  Nije moguće prikazati sadržaj ovog dokumenta direktno u pregledaču.
+                </p>
+                {selectedDocument && (
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="mt-4"
+                    onClick={() => window.open(selectedDocument.url, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Otvori u novom prozoru
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDocumentPreviewOpen(false)}>Zatvori</Button>
+            {selectedDocument && (
+              <Button 
+                onClick={() => handleDownloadDocument(selectedDocument)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Preuzmi
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {/* Dijalog za kreiranje novog foldera */}
       <Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>
         <DialogContent className="sm:max-w-md">
