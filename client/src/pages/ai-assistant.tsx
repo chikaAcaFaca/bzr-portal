@@ -15,6 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/page-header";
+import { useAuth } from "@/hooks/use-auth";
+import { BZROnlyLimitation } from "@/components/ai-assistant/bzr-only-limitation";
+import { RequirePro } from "@/lib/route-guards";
 
 
 const AIAssistant = () => {
@@ -320,36 +323,46 @@ const AIAssistant = () => {
                 </div>
 
                 <TabsContent value="ask" className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="question">Pitanje</Label>
-                    <Textarea
-                      id="question"
-                      placeholder="Postavite pitanje o bezbednosti i zdravlju na radu..."
-                      value={question}
-                      onChange={(e) => setQuestion(e.target.value)}
-                      className="min-h-32"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="context">Kontekst (opciono)</Label>
-                    <Textarea
-                      id="context"
-                      placeholder="Unesite dodatni kontekst za bolje razumevanje pitanja..."
-                      value={context}
-                      onChange={(e) => setContext(e.target.value)}
-                      className="min-h-24"
-                    />
-                  </div>
-
-                  <Button 
-                    onClick={handleAskQuestion} 
-                    disabled={isLoading || !question.trim()} 
-                    className="w-full"
+                  {/* PRO korisnici imaju pristup svim mogućnostima */}
+                  <RequirePro 
+                    fallback={
+                      <BZROnlyLimitation onSubmit={(q) => {
+                        setQuestion(q);
+                        handleAskQuestion();
+                      }} />
+                    }
                   >
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Pošalji pitanje
-                  </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="question">Pitanje</Label>
+                      <Textarea
+                        id="question"
+                        placeholder="Postavite bilo koje pitanje..."
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        className="min-h-32"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="context">Kontekst (opciono)</Label>
+                      <Textarea
+                        id="context"
+                        placeholder="Unesite dodatni kontekst za bolje razumevanje pitanja..."
+                        value={context}
+                        onChange={(e) => setContext(e.target.value)}
+                        className="min-h-24"
+                      />
+                    </div>
+
+                    <Button 
+                      onClick={handleAskQuestion} 
+                      disabled={isLoading || !question.trim()} 
+                      className="w-full"
+                    >
+                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                      Pošalji pitanje
+                    </Button>
+                  </RequirePro>
                 </TabsContent>
 
                 <TabsContent value="generate" className="space-y-4 pt-4">

@@ -1,134 +1,146 @@
-import { ReactNode } from "react";
-import { Redirect, useLocation } from "wouter";
+import { ReactNode, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
-// Komponenta koja štiti rute koje zahtevaju autentikaciju
+/**
+ * Komponenta koja štiti rute koje zahtevaju autentikaciju
+ * Preusmeriće korisnika na /auth ako nije prijavljen
+ */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, isLoading, navigate]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  // Ako korisnik nije prijavljen, preusmeravamo ga na auth stranicu
+
   if (!user) {
-    navigate("/auth");
-    return null;
+    return null; // useEffect će preusmeriti korisnika
   }
-  
-  // Ako je korisnik prijavljen, prikazujemo komponentu
+
   return <>{children}</>;
 }
 
-// Komponenta koja štiti admin rute
+/**
+ * Komponenta koja štiti admin rute
+ * Preusmeriće korisnika na početnu stranicu ako nije admin
+ */
 export function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        navigate("/auth");
+      } else if (user.role !== "admin") {
+        navigate("/");
+      }
+    }
+  }, [user, isLoading, navigate]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  // Ako korisnik nije prijavljen ili nije admin, preusmeravamo ga
+
   if (!user || user.role !== "admin") {
-    navigate("/");
-    return null;
+    return null; // useEffect će preusmeriti korisnika
   }
-  
-  // Ako je korisnik admin, prikazujemo komponentu
+
   return <>{children}</>;
 }
 
-// Komponenta koja štiti PRO funkcionalnosti
+/**
+ * Komponenta koja štiti PRO rute
+ * Prikazuje rezervni sadržaj (fallback) ako korisnik nije PRO
+ */
 export function RequirePro({ children, fallback }: { children: ReactNode, fallback?: ReactNode }) {
   const { user, isLoading } = useAuth();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  // Ako korisnik nije PRO, prikazujemo alternativni sadržaj ili redirect
+
+  // Ako korisnik nije prijavljen ili nije PRO, prikaži rezervni sadržaj
   if (!user || user.subscriptionType !== "pro") {
-    if (fallback) {
-      return <>{fallback}</>;
-    }
-    
-    // Ako nema fallback komponente, prikazujemo poruku o nadogradnji
-    return (
-      <div className="p-6 bg-muted rounded-lg shadow-sm">
-        <h3 className="text-lg font-semibold mb-2">PRO funkcionalnost</h3>
-        <p className="mb-4 text-muted-foreground">
-          Ova funkcionalnost je dostupna samo PRO korisnicima. Nadogradite svoj nalog da biste pristupili ovoj funkciji.
-        </p>
-        <a 
-          href="/settings" 
-          className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
-        >
-          Nadogradi na PRO
-        </a>
-      </div>
-    );
+    return fallback ? <>{fallback}</> : null;
   }
-  
-  // Ako je korisnik PRO, prikazujemo komponentu
+
   return <>{children}</>;
 }
 
-// Komponenta koja usmerava već autentifikovane korisnike na glavnu stranicu
+/**
+ * Komponenta koja preusmerava autentifikovane korisnike
+ * Koristi se za stranice kao što je /auth koje ne bi trebale biti dostupne prijavljenim korisnicima
+ */
 export function RedirectIfAuthenticated({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("/");
+    }
+  }, [user, isLoading, navigate]);
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  // Ako je korisnik prijavljen, preusmeravamo ga na glavnu stranicu
+
   if (user) {
-    navigate("/");
-    return null;
+    return null; // useEffect će preusmeriti korisnika
   }
-  
-  // Ako korisnik nije prijavljen, prikazujemo komponentu
+
   return <>{children}</>;
 }
 
-// Komponenta koja ograničava AI asistenta za FREE korisnike
+/**
+ * Komponenta koja ograničava AI asistenta za FREE korisnike
+ * FREE korisnici mogu koristiti AI asistenta samo za BZR teme
+ */
 export function LimitedAIAssistant({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-  
-  // Dok se proverava autentikacija, prikazujemo loader
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
-  // Ovde će se implementirati logika ograničavanja AI asistenta za FREE korisnike
-  // Potrebna je dodatna logika da se proveri da li je pitanje vezano za BZR PORTAL
-  
+
+  // AI asistent je dostupan svim prijavljenim korisnicima, ali FREE korisnici imaju ograničenja
+  if (!user) {
+    return (
+      <div className="p-4 border border-red-200 bg-red-50 rounded-md text-red-700">
+        Morate biti prijavljeni da biste koristili AI asistenta. 
+        <a href="/auth" className="ml-2 underline font-semibold">Prijavite se</a>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
