@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
 
 interface UserDocument {
   id: string;
@@ -62,66 +61,28 @@ export function UserDocumentsViewer() {
     isError: isErrorDocuments,
     refetch: refetchDocuments
   } = useQuery({
-    queryKey: ['/storage/user-documents'],
+    queryKey: ['/api/user-documents'],
     queryFn: async () => {
       if (!user) {
         throw new Error('Niste prijavljeni');
       }
       
-      // Dobijanje svih datoteka iz korisničkog direktorijuma
-      const { data: files, error } = await supabase.storage
-        .from('user-documents')
-        .list(`${user.id}`, {
-          limit: 1000,
-          offset: 0,
-          sortBy: { column: 'name', order: 'asc' }
-        });
+      // Dobijanje dokumenata preko API-ja
+      const response = await fetch('/api/user-documents', {
+        method: 'GET',
+        credentials: 'include'
+      });
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error('Greška pri dobavljanju dokumenata');
       }
       
-      const userDocs: UserDocument[] = [];
-      
-      // Za svaki direktorijum (kategoriju) dobiti datoteke
-      for (const dir of files || []) {
-        if (dir.id && !dir.name.includes('.')) { // Ako je to direktorijum
-          const { data: categoryFiles, error: categoryError } = await supabase.storage
-            .from('user-documents')
-            .list(`${user.id}/${dir.name}`, {
-              limit: 1000,
-              offset: 0,
-              sortBy: { column: 'created_at', order: 'desc' }
-            });
-            
-          if (categoryError) {
-            console.error(`Greška pri dobavljanju datoteka iz kategorije ${dir.name}:`, categoryError);
-            continue;
-          }
-          
-          // Mapiranje datoteka u format za prikaz
-          for (const file of categoryFiles || []) {
-            if (file.id && file.name.includes('.')) { // Ako je to datoteka
-              const { data: url } = supabase.storage
-                .from('user-documents')
-                .getPublicUrl(`${user.id}/${dir.name}/${file.name}`);
-              
-              userDocs.push({
-                id: file.id,
-                name: file.name,
-                size: file.metadata?.size || 0,
-                type: file.metadata?.mimetype || 'application/octet-stream',
-                path: `${user.id}/${dir.name}/${file.name}`,
-                folder: dir.name,
-                createdAt: file.created_at || new Date().toISOString(),
-                url: url.publicUrl
-              });
-            }
-          }
-        }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Greška pri dobavljanju dokumenata');
       }
       
-      return userDocs;
+      return data.documents as UserDocument[];
     },
     enabled: !!user
   });
@@ -132,24 +93,34 @@ export function UserDocumentsViewer() {
     isLoading: isLoadingStorage,
     isError: isErrorStorage
   } = useQuery({
-    queryKey: ['/storage/user-storage-info'],
+    queryKey: ['/api/user-storage-info'],
     queryFn: async () => {
-      // Za potrebe demo verzije, vraćamo fiksne vrednosti
-      // U stvarnoj aplikaciji ovo bi se dobijalo od servera
+      if (!user) {
+        throw new Error('Niste prijavljeni');
+      }
       
-      // Pretpostavljamo da FREE korisnik ima 50MB, a PRO korisnik 1GB
-      const totalStorage = 50 * 1024 * 1024; // 50MB za FREE korisnike
-      const usedStorage = Math.min(totalStorage * 0.3, totalStorage); // 30% iskorišćeno ili manje
-      const remainingStorage = totalStorage - usedStorage;
-      const usagePercentage = (usedStorage / totalStorage) * 100;
+      const response = await fetch('/api/user-storage-info', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Greška pri dobavljanju informacija o skladištu');
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Greška pri dobavljanju informacija o skladištu');
+      }
       
       return {
-        usedStorage,
-        totalStorage,
-        remainingStorage,
-        usagePercentage
+        usedStorage: data.usedStorage,
+        totalStorage: data.totalStorage,
+        remainingStorage: data.remainingStorage,
+        usagePercentage: data.usagePercentage
       } as StorageInfo;
-    }
+    },
+    enabled: !!user
   });
   
   // Kada se dobiju dokumenti, grupiraj ih po folderima
@@ -172,13 +143,23 @@ export function UserDocumentsViewer() {
         throw new Error('Niste prijavljeni');
       }
       
-      // Direktno brisanje fajla iz Supabase Storage
-      const { error } = await supabase.storage
-        .from('user-documents')
-        .remove([document.path]);
-        
-      if (error) {
-        throw error;
+      // Brisanje dokumenta preko API-ja
+      const response = await fetch(`/api/user-documents/${document.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ path: document.path }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Greška pri brisanju dokumenta');
+      }
+      
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || 'Greška pri brisanju dokumenta');
       }
       
       toast({

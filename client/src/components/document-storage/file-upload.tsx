@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Upload, File, X, Info, Loader } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
-import { v4 as uuidv4 } from 'uuid';
 
 interface FileUploadProps {
   onUploadComplete?: () => void;
@@ -71,6 +69,15 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       return;
     }
     
+    if (!session?.access_token) {
+      toast({
+        title: 'Nevalidna sesija',
+        description: 'Molimo vas da se odjavite i ponovo prijavite',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setIsUploading(true);
     setProgress(0);
     
@@ -80,42 +87,33 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       
       for (const file of selectedFiles) {
         try {
-          // Generisanje jedinstvenog imena fajla da bismo izbegli konflikte
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${uuidv4()}.${fileExt}`;
-          const filePath = `${user.id}/${selectedCategory}/${fileName}`;
+          // Kreiranje FormData objekta za slanje fajla
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('category', selectedCategory);
           
-          // Direktno korišćenje Supabase Storage API-ja za otpremanje
-          const { data, error } = await supabase.storage
-            .from('user-documents')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: false,
-              contentType: file.type
-            });
-            
-          // Nakon uspešnog otpremanja, dodaj metapodatke u bazu
-          if (!error && data) {
-            // Ovde bismo dodali metapodatke u bazu, ali za sada samo logujemo
-            console.log('Metadata for file:', {
-              originalName: file.name,
-              size: file.size,
-              category: selectedCategory,
-              uploadedBy: user.id,
-              uploadedAt: new Date().toISOString(),
-              path: filePath
-            });
+          // Slanje zahteva za upload koristeći API endpoint
+          const response = await fetch('/api/storage/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: formData
+          });
+          
+          // Provera odgovora
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP greška: ${response.status}`);
           }
           
-          if (error) {
-            throw error;
-          }
+          const data = await response.json();
           
           // Ažuriranje progresa za ovaj fajl
           uploadedFiles++;
           setProgress((uploadedFiles / totalFiles) * 100);
           
-          console.log('Uspešno otpremljen fajl:', data);
+          console.log('Uspešno otpremljen fajl:', data.fileData);
         } catch (error) {
           console.error(`Greška pri otpremanju fajla ${file.name}:`, error);
           // Nastavljamo sa sledećim fajlom umesto da prekinemo ceo proces
