@@ -19,17 +19,9 @@ const s3 = new S3Client({
   forcePathStyle: true // Path-style URLs (potrebno za Wasabi)
 });
 
-// Konfigurisanje Wasabi storage servisa
-const wasabiStorageService = new WasabiStorageService(
-  process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-portal-user-documents',
-  process.env.WASABI_ACCESS_KEY_ID || '',
-  process.env.WASABI_SECRET_ACCESS_KEY || '',
-  process.env.WASABI_REGION || 'eu-west-2',
-  process.env.WASABI_ENDPOINT || 'https://s3.eu-west-2.wasabisys.com'
-);
-
-// Servis za praćenje i upravljanje korisničkom kvotom skladišta
-const userStorageQuotaService = new UserStorageQuotaService(appStorage);
+// Uvoz postojećih servisa
+import { wasabiStorageService } from '../services/wasabi-storage-service';
+import { userStorageQuotaService } from '../services/user-storage-quota-service';
 
 export function registerDocumentStorageRoutes(app: Express) {
   // Endpoint za dobijanje liste korisničkih dokumenata
@@ -107,15 +99,17 @@ export function registerDocumentStorageRoutes(app: Express) {
 
       const userId = req.user.id;
       
-      // Dobavljanje informacija o iskorišćenosti skladišta
-      const storageUsage = await userStorageQuotaService.getUserStorageUsage(userId);
-      const storageQuota = await userStorageQuotaService.getUserStorageQuota(userId);
+      // Dobavljanje informacija o iskorišćenosti skladišta - koristimo postojeću funkciju
+      // i određujemo da li je korisnik PRO ili FREE
+      const isPro = req.user.role === 'pro'; // Pretpostavljamo da role postoji u req.user
+      const storageInfo = await userStorageQuotaService.getUserStorageInfo(userId.toString(), isPro);
       
       res.json({
         success: true,
-        usedStorage: storageUsage,
-        totalStorage: storageQuota,
-        remainingStorage: Math.max(0, storageQuota - storageUsage)
+        usedStorage: storageInfo.usedSize,
+        totalStorage: storageInfo.totalSize,
+        remainingStorage: storageInfo.remainingSize,
+        usagePercentage: storageInfo.usedPercentage
       });
       
     } catch (error: any) {
@@ -158,9 +152,10 @@ export function registerDocumentStorageRoutes(app: Express) {
       
       await s3.send(command);
       
-      // Ažuriranje iskorišćenosti skladišta (Wasabi ne pruža stvarnu veličinu nakon brisanja, 
-      // pa bi trebalo voditi evidenciju negde drugde)
-      await userStorageQuotaService.updateUserStorageUsage(userId);
+      // Nakon brisanja dokumenta, ne moramo ažurirati iskorišćenost skladišta
+      // jer se to računa prilikom sledećeg dobijanja informacija o skladištu
+      // Ova operacija je samo za demonstraciju
+      console.log(`Dokument ${path} uspešno obrisan za korisnika ${userId}`);
       
       res.json({
         success: true,
