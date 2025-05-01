@@ -43,7 +43,7 @@ import {
   FileText, 
   FileSpreadsheet, 
   FileImage,
-  FileIcon
+  File as FileIcon
 } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 
@@ -358,7 +358,7 @@ export function DocumentExplorer() {
                   id="custom-folder"
                   placeholder="npr. 2023/Q4"
                   value={customFolder}
-                  onChange={(e) => setCustomFolder(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCustomFolder(e.target.value)}
                 />
               </div>
             </div>

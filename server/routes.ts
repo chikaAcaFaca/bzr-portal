@@ -26,7 +26,7 @@ import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
-import wasabiStorageRouter from './routes/wasabi-storage-routes';
+import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents

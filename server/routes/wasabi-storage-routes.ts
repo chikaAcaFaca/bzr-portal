@@ -1,37 +1,16 @@
 import { Router, Request, Response } from 'express';
-import { wasabiStorageService } from '../services/wasabi-storage-service';
 import multer from 'multer';
+import { WasabiStorageService } from '../services/wasabi-storage-service';
 import path from 'path';
-import fs from 'fs';
 
+// Kreiranje router instance
 const router = Router();
 
-// Konfigurisanje multer za privremeno skladištenje fajlova pre uploada na Wasabi
-const upload = multer({
-  dest: 'uploads/',
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
-  },
-  fileFilter: (req, file, callback) => {
-    const allowedExtensions = [
-      '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.odt', 
-      '.ods', '.jpg', '.jpeg', '.png', '.csv', '.bmp'
-    ];
-    
-    const ext = path.extname(file.originalname).toLowerCase();
-    
-    if (allowedExtensions.includes(ext)) {
-      callback(null, true);
-    } else {
-      const error: any = new Error('Nedozvoljen tip fajla!');
-      error.code = 'UNSUPPORTED_FILE_TYPE';
-      callback(error);
-    }
-  }
-});
+// Kreiranje instance za Wasabi Storage Service
+const wasabiStorageService = new WasabiStorageService();
 
-// Pripremamo predefinisane foldere za korisnike
-const predefinedFolders = [
+// Predefinisani folderi podržani u aplikaciji
+const PREDEFINED_FOLDERS = [
   'SISTEMATIZACIJA',
   'SISTEMATIZACIJA SA IMENIMA',
   'OPIS POSLOVA',
@@ -43,6 +22,21 @@ const predefinedFolders = [
   'OSTALO'
 ];
 
+// Middleware za upload fajlova - čuva u memoriji
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  }
+});
+
+// Validiraj putanju foldera - čistimo putanju da bude bezbedna
+function sanitizePath(folderPath: string): string {
+  // Ukloni sve specijalne karaktere osim alfanumerika i nekih dozvoljenih separatora
+  return folderPath.replace(/[^a-zA-Z0-9\/_\-]/g, '');
+}
+
 /**
  * API endpoint za upload korisničkog dokumenta
  * Zahteva multipart/form-data sa fajlom i sledećim poljima:
@@ -51,89 +45,63 @@ const predefinedFolders = [
  */
 router.post('/upload-user-document', upload.single('file'), async (req: Request, res: Response) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'Fajl nije prosleđen'
-      });
-    }
-    
     const file = req.file;
-    const userId = req.body.userId || 'anonymous'; // Ovde biste dobili ID korisnika iz autentifikacije
-    const folder = req.body.folder || 'OSTALO';
+    const userId = req.body.userId;
+    const predefinedFolder = req.body.folder;
     const customFolderPath = req.body.customFolderPath || '';
-    
-    // Proveri da li je izabrani folder dozvoljen
-    if (!predefinedFolders.includes(folder.toUpperCase())) {
-      return res.status(400).json({
-        success: false,
-        message: 'Izabrani folder nije podržan'
+
+    if (!file) {
+      return res.status(400).send({ success: false, message: 'Fajl nije priložen' });
+    }
+
+    if (!userId) {
+      return res.status(400).send({ success: false, message: 'Korisnički ID je obavezan' });
+    }
+
+    if (!predefinedFolder || !PREDEFINED_FOLDERS.includes(predefinedFolder)) {
+      return res.status(400).send({ 
+        success: false, 
+        message: 'Neispravan folder. Molimo izaberite jedan od predefinisanih foldera.',
+        validFolders: PREDEFINED_FOLDERS
       });
     }
+
+    // Sanitiziramo customFolderPath
+    const sanitizedCustomPath = sanitizePath(customFolderPath);
     
-    // Kreiraj putanju za fajl u Wasabi storage
-    let destinationPath = `${userId}/${folder.toUpperCase()}`;
-    
-    // Dodaj dodatnu putanju ako postoji
-    if (customFolderPath) {
-      // Očisti putanju da ne sadrži specijalne karaktere
-      const cleanedCustomPath = customFolderPath
-        .replace(/[^\w\s\/-]/g, '') // Dozvoli samo alfanumeričke karaktere, razmake, crte i /
-        .replace(/\/{2,}/g, '/'); // Izbaci duplirane /
-        
-      destinationPath += `/${cleanedCustomPath}`;
+    // Izgradnja kompletne putanje do fajla
+    let folderPath = `${userId}/${predefinedFolder}`;
+    if (sanitizedCustomPath) {
+      folderPath += `/${sanitizedCustomPath}`;
     }
-    
-    // Dodaj originalno ime fajla
-    destinationPath += `/${file.originalname}`;
-    
-    // Sačuvaj metadata informacije
-    const metadata = {
-      'uploadedBy': userId,
-      'originalName': file.originalname,
-      'contentType': file.mimetype,
-      'uploadDate': new Date().toISOString()
-    };
-    
+
+    // Čuvanje originalnog naziva fajla
+    const originalFileName = file.originalname;
+    const key = `${folderPath}/${originalFileName}`;
+
     // Upload fajla na Wasabi
-    const uploadResult = await wasabiStorageService.uploadUserDocument(
-      file.path,
-      destinationPath,
-      metadata
+    const result = await wasabiStorageService.uploadFile(
+      key,
+      file.buffer,
+      file.mimetype
     );
-    
-    // Obriši privremeni fajl nakon uploada
-    fs.unlinkSync(file.path);
-    
-    if (!uploadResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: uploadResult.error || 'Greška prilikom uploadovanja fajla'
-      });
-    }
-    
-    // Vrati uspešan odgovor sa URL-om do fajla
-    return res.status(200).json({
+
+    res.status(200).send({
       success: true,
-      message: 'Fajl uspešno uploadovan',
-      url: uploadResult.url,
-      path: destinationPath
+      message: 'Fajl je uspešno uploadovan',
+      file: {
+        name: originalFileName,
+        path: key,
+        size: file.size,
+        type: file.mimetype,
+        url: result.Location
+      }
     });
   } catch (error: any) {
-    console.error('Greška pri uploadovanju korisničkog dokumenta:', error);
-    
-    // Obriši privremeni fajl u slučaju greške
-    if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (e) {
-        console.error('Greška pri brisanju privremenog fajla:', e);
-      }
-    }
-    
-    return res.status(500).json({
+    console.error('Greška pri uploadovanju fajla:', error);
+    res.status(500).send({
       success: false,
-      message: error.message || 'Greška prilikom uploadovanja fajla'
+      message: `Greška pri uploadovanju fajla: ${error.message}`
     });
   }
 });
@@ -146,62 +114,53 @@ router.post('/upload-user-document', upload.single('file'), async (req: Request,
  */
 router.get('/list-user-documents', async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId as string || 'anonymous'; // Ovde biste dobili ID korisnika iz autentifikacije
+    const userId = req.query.userId as string;
     const folder = req.query.folder as string;
-    const customPath = req.query.path as string;
-    
-    // Kreiraj putanju za listanje
-    let folderPath = '';
+    const pathParam = req.query.path as string;
+
+    if (!userId) {
+      return res.status(400).send({ success: false, message: 'Korisnički ID je obavezan' });
+    }
+
+    let prefix = `${userId}/`;
     
     if (folder) {
-      folderPath = folder.toUpperCase();
+      prefix += `${folder}/`;
       
-      // Dodaj dodatnu putanju ako postoji
-      if (customPath) {
-        folderPath += `/${customPath}`;
+      if (pathParam) {
+        const sanitizedPath = sanitizePath(pathParam);
+        prefix += `${sanitizedPath}/`;
       }
     }
+
+    const files = await wasabiStorageService.listFiles(prefix);
     
-    // Listaj fajlove korisnika
-    const listResult = await wasabiStorageService.listUserDocuments(userId, folderPath);
-    
-    if (!listResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: listResult.error || 'Greška prilikom listanja dokumenata'
-      });
-    }
-    
-    // Ako nema fajlova, vrati praznu listu
-    if (!listResult.files || listResult.files.length === 0) {
-      // Ako je folder prazan i to je root folder korisnika, pokušaj kreirati predefinisane foldere
-      if (!folderPath) {
-        return res.status(200).json({
-          success: true,
-          files: predefinedFolders.map(folder => ({
-            name: folder,
-            path: `${userId}/${folder}/`,
-            isFolder: true
-          }))
-        });
-      }
-      
-      return res.status(200).json({
-        success: true,
-        files: []
-      });
-    }
-    
-    // Vrati listu fajlova
-    return res.status(200).json({
+    // Transformacija liste fajlova za lakše korišćenje na frontend-u
+    const transformedFiles = files.map(file => {
+      const isFolder = file.Key.endsWith('/');
+      const name = isFolder 
+        ? path.basename(file.Key.slice(0, -1)) 
+        : path.basename(file.Key);
+        
+      return {
+        name,
+        path: file.Key,
+        size: file.Size,
+        lastModified: file.LastModified,
+        isFolder
+      };
+    });
+
+    res.status(200).send({
       success: true,
-      files: listResult.files
+      prefix,
+      files: transformedFiles
     });
   } catch (error: any) {
-    console.error('Greška pri listanju korisničkih dokumenata:', error);
-    return res.status(500).json({
+    console.error('Greška pri listanju fajlova:', error);
+    res.status(500).send({
       success: false,
-      message: error.message || 'Greška prilikom listanja dokumenata'
+      message: `Greška pri listanju fajlova: ${error.message}`
     });
   }
 });
@@ -212,44 +171,36 @@ router.get('/list-user-documents', async (req: Request, res: Response) => {
  */
 router.delete('/delete-user-document', async (req: Request, res: Response) => {
   try {
-    const { documentPath } = req.body;
-    const userId = req.body.userId || 'anonymous'; // Ovde biste dobili ID korisnika iz autentifikacije
-    
+    const documentPath = req.body.documentPath;
+    const userId = req.body.userId;
+
     if (!documentPath) {
-      return res.status(400).json({
-        success: false,
-        message: 'Putanja dokumenta nije prosleđena'
-      });
+      return res.status(400).send({ success: false, message: 'Putanja dokumenta je obavezna' });
     }
-    
-    // Proveri da li je putanja validna i pripada korisniku
+
+    if (!userId) {
+      return res.status(400).send({ success: false, message: 'Korisnički ID je obavezan' });
+    }
+
+    // Sigurnosna provera - dozvoli brisanje samo fajlova iz korisničkog foldera
     if (!documentPath.startsWith(`${userId}/`)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Nemate dozvolu za brisanje ovog dokumenta'
+      return res.status(403).send({ 
+        success: false, 
+        message: 'Nije dozvoljeno brisanje fajlova izvan korisničkog prostora' 
       });
     }
-    
-    // Obriši dokument
-    const deleteResult = await wasabiStorageService.deleteUserDocument(documentPath);
-    
-    if (!deleteResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: deleteResult.error || 'Greška prilikom brisanja dokumenta'
-      });
-    }
-    
-    // Vrati uspešan odgovor
-    return res.status(200).json({
+
+    await wasabiStorageService.deleteFile(documentPath);
+
+    res.status(200).send({
       success: true,
-      message: 'Dokument uspešno obrisan'
+      message: 'Dokument je uspešno obrisan'
     });
   } catch (error: any) {
-    console.error('Greška pri brisanju korisničkog dokumenta:', error);
-    return res.status(500).json({
+    console.error('Greška pri brisanju dokumenta:', error);
+    res.status(500).send({
       success: false,
-      message: error.message || 'Greška prilikom brisanja dokumenta'
+      message: `Greška pri brisanju dokumenta: ${error.message}`
     });
   }
 });
@@ -261,50 +212,43 @@ router.delete('/delete-user-document', async (req: Request, res: Response) => {
 router.get('/download-user-document', async (req: Request, res: Response) => {
   try {
     const documentPath = req.query.path as string;
-    const userId = req.query.userId as string || 'anonymous'; // Ovde biste dobili ID korisnika iz autentifikacije
-    
+    const userId = req.query.userId as string;
+
     if (!documentPath) {
-      return res.status(400).json({
-        success: false,
-        message: 'Putanja dokumenta nije prosleđena'
-      });
+      return res.status(400).send({ success: false, message: 'Putanja dokumenta je obavezna' });
     }
-    
-    // Proveri da li je putanja validna i pripada korisniku
+
+    if (!userId) {
+      return res.status(400).send({ success: false, message: 'Korisnički ID je obavezan' });
+    }
+
+    // Sigurnosna provera - dozvoli preuzimanje samo fajlova iz korisničkog foldera
     if (!documentPath.startsWith(`${userId}/`)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Nemate dozvolu za preuzimanje ovog dokumenta'
+      return res.status(403).send({ 
+        success: false, 
+        message: 'Nije dozvoljeno preuzimanje fajlova izvan korisničkog prostora' 
       });
     }
-    
-    // Preuzmi dokument
-    const documentResult = await wasabiStorageService.getUserDocument(documentPath);
-    
-    if (!documentResult.success || !documentResult.stream) {
-      return res.status(500).json({
-        success: false,
-        message: documentResult.error || 'Greška prilikom preuzimanja dokumenta'
-      });
-    }
-    
-    // Dobavi ime fajla iz putanje
+
+    // Dobijanje imena fajla iz putanje
     const fileName = path.basename(documentPath);
+
+    // Preuzimanje fajla kao stream
+    const fileStream = await wasabiStorageService.getFileAsStream(documentPath);
     
-    // Postavi headere za download
+    // Postavljanje header-a za preuzimanje
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
     
-    // Prosledi stream direktno klijentu
-    documentResult.stream.pipe(res);
+    // Pipe stream-a direktno u response
+    fileStream.pipe(res);
+
   } catch (error: any) {
-    console.error('Greška pri preuzimanju korisničkog dokumenta:', error);
-    return res.status(500).json({
+    console.error('Greška pri preuzimanju dokumenta:', error);
+    res.status(500).send({
       success: false,
-      message: error.message || 'Greška prilikom preuzimanja dokumenta'
+      message: `Greška pri preuzimanju dokumenta: ${error.message}`
     });
   }
 });
 
-// Eksportiraj router
-export default router;
+export const wasabiStorageRouter = router;
