@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import PageHeader from "@/components/layout/page-header";
 import { useAuth } from "@/hooks/use-auth";
 import { BZROnlyLimitation } from "@/components/ai-assistant/bzr-only-limitation";
+import { DailyQuestionLimit } from "@/components/ai-assistant/daily-question-limit";
 import { RequirePro } from "@/lib/route-guards";
 
 
@@ -323,6 +324,17 @@ const AIAssistant = () => {
                 </div>
 
                 <TabsContent value="ask" className="space-y-4 pt-4">
+                  {/* Komponenta za praćenje dnevnog limita pitanja za FREE korisnike */}
+                  <DailyQuestionLimit 
+                    onQuestionLimitReached={() => {
+                      toast({
+                        title: "Dnevni limit pitanja dostignut",
+                        description: "FREE korisnici mogu postaviti samo 3 pitanja dnevno. Nadogradite na PRO za neograničen pristup.",
+                        variant: "destructive"
+                      });
+                    }} 
+                  />
+                  
                   {/* PRO korisnici imaju pristup svim mogućnostima */}
                   <RequirePro 
                     fallback={
