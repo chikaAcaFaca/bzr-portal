@@ -13,13 +13,17 @@ import {
   Download,
   Trash2,
   Folder,
+  FolderOpen,
   Loader,
   Info,
   Grid2X2,
   Grid3X3,
   LayoutGrid,
   List,
-  FolderPlus
+  FolderPlus,
+  ChevronLeft,
+  Eye,
+  ExternalLink
 } from 'lucide-react';
 import { formatBytes, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
@@ -63,6 +67,10 @@ export function UserDocumentsViewer() {
   const [viewMode, setViewMode] = useState<"list" | "grid-small" | "grid-medium" | "grid-large" | "grid-extra-large">("grid-small");
   const [newFolderName, setNewFolderName] = useState<string>("");
   const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false);
+  const [currentPath, setCurrentPath] = useState<string>('');
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<UserDocument | null>(null);
+  const [isDocumentPreviewOpen, setIsDocumentPreviewOpen] = useState<boolean>(false);
   
   // Kategorije dokumenata
   const categories = [
@@ -241,9 +249,73 @@ export function UserDocumentsViewer() {
   const getFilteredDocuments = () => {
     if (!documentsData) return [];
     
-    if (!selectedFolder) return documentsData;
+    // Ako smo u folderu, prikaži samo dokumente u tom folderu
+    if (currentPath) {
+      // Prikaži dokumente u trenutnom folderu i podfoldere
+      return documentsData.filter(doc => {
+        if (doc.isFolder) {
+          // Za foldere, proveri da li su direktno u trenutnom folderu
+          const folderPath = doc.path.replace(`user_${user?.id}/`, '');
+          const pathParts = folderPath.split('/');
+          return pathParts.length === 2 && folderPath.startsWith(currentPath + '/');
+        } else {
+          // Za dokumente, proveri da li su direktno u trenutnom folderu
+          const docPath = doc.path.replace(`user_${user?.id}/`, '');
+          const pathParts = docPath.split('/');
+          return pathParts.length === 2 && docPath.startsWith(currentPath + '/');
+        }
+      });
+    }
     
-    return documentsData.filter(doc => doc.folder === selectedFolder);
+    // Prikaz početnog direktorijuma - standardni prikaz po folderima
+    if (selectedFolder) {
+      return documentsData.filter(doc => doc.folder === selectedFolder);
+    }
+    
+    // Ako nema selektovanog foldera, prikaži sve dokumente
+    return documentsData;
+  };
+  
+  // Funkcija za otvaranje foldera
+  const handleOpenFolder = (document: UserDocument) => {
+    // Ako je dokument folder
+    if (document.isFolder) {
+      // Dodaj trenutnu putanju u istoriju navigacije
+      setNavigationHistory(prev => [...prev, currentPath]);
+      
+      // Postavi novu putanju
+      const folderPath = document.path.replace(`user_${user?.id}/`, '').replace('/', '');
+      setCurrentPath(folderPath);
+      
+      toast({
+        title: 'Folder otvoren',
+        description: `Otvoren folder: ${document.name}`,
+        variant: 'default'
+      });
+    }
+  };
+  
+  // Funkcija za vraćanje nazad
+  const handleGoBack = () => {
+    if (navigationHistory.length > 0) {
+      // Uzmi poslednju putanju iz istorije
+      const previousPath = navigationHistory[navigationHistory.length - 1];
+      
+      // Ažuriraj istoriju navigacije
+      setNavigationHistory(prev => prev.slice(0, -1));
+      
+      // Postavi putanju
+      setCurrentPath(previousPath);
+    } else {
+      // Vrati se na početni prikaz
+      setCurrentPath('');
+    }
+  };
+  
+  // Funkcija za otvaranje pregleda dokumenta
+  const handleViewDocument = (document: UserDocument) => {
+    setSelectedDocument(document);
+    setIsDocumentPreviewOpen(true);
   };
   
   // Funkcija za kreiranje novog foldera
@@ -436,9 +508,18 @@ export function UserDocumentsViewer() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => {/* TODO: Open folder */}}
+                  onClick={() => handleOpenFolder(document)}
                 >
                   <FolderOpen className="h-4 w-4" />
+                </Button>
+              )}
+              {!isFolder && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleViewDocument(document)}
+                >
+                  <Eye className="h-4 w-4" />
                 </Button>
               )}
             </div>
