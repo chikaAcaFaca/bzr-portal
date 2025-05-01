@@ -221,7 +221,8 @@ class ReferralRewardService {
     postLink?: string
   ): Promise<Referral | null> {
     try {
-      const rewardSize = isProUser ? PRO_REFERRAL_REWARD_BYTES : FREE_REFERRAL_REWARD_BYTES;
+      // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
+      const rewardSize = BASE_REFERRAL_REWARD_BYTES + (isProUser ? PRO_REFERRAL_BONUS_BYTES : 0);
       
       // Računanje datuma isteka nagrade
       // Za besplatne korisnike, nagrada nikad ne ističe (30 godina u budućnost)
@@ -503,7 +504,8 @@ class ReferralRewardService {
         
         if (referral.isProUser !== isProUser) {
           // Ažuriranje statusa referala
-          const rewardSize = isProUser ? PRO_REFERRAL_REWARD_BYTES : FREE_REFERRAL_REWARD_BYTES;
+          // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
+          const rewardSize = BASE_REFERRAL_REWARD_BYTES + (isProUser ? PRO_REFERRAL_BONUS_BYTES : 0);
           
           // Računanje novog datuma isteka
           const now = new Date();
