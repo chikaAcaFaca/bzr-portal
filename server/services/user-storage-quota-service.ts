@@ -1,4 +1,5 @@
 import { wasabiStorageService } from './wasabi-storage-service';
+import { referralRewardService } from './referral-reward-service';
 
 // Konstante za kvote skladištenja
 export const STORAGE_QUOTA = {
@@ -7,12 +8,13 @@ export const STORAGE_QUOTA = {
 };
 
 export interface UserStorageInfo {
-  totalSize: number;
-  usedSize: number;
-  remainingSize: number;
-  usedPercentage: number;
-  quota: number;
-  userType: 'free' | 'pro';
+  totalSize: number;          // Ukupna veličina skladišta (osnovni + referalni)
+  usedSize: number;           // Iskorišćeni prostor
+  remainingSize: number;      // Preostali slobodan prostor
+  usedPercentage: number;     // Procenat iskorišćenosti
+  quota: number;              // Osnovni prostor (bez referalnog)
+  referralBonus: number;      // Dodatni prostor od referala
+  userType: 'free' | 'pro';   // Tip korisnika
 }
 
 class UserStorageQuotaService {
@@ -75,9 +77,11 @@ class UserStorageQuotaService {
   async hasEnoughSpace(userId: string, fileSize: number, isPro: boolean): Promise<boolean> {
     try {
       const usedSize = await this.calculateUserStorageSize(userId);
-      const userQuota = isPro ? STORAGE_QUOTA.PRO_USER : STORAGE_QUOTA.FREE_USER;
       
-      return (usedSize + fileSize) <= userQuota;
+      // Pribavljamo ukupan dostupan prostor uključujući referale
+      const totalAvailableSpace = referralRewardService.getTotalAvailableStorage(userId, isPro);
+      
+      return (usedSize + fileSize) <= totalAvailableSpace;
     } catch (error) {
       console.error(`Greška pri proveri raspoloživog prostora za korisnika ${userId}:`, error);
       throw error;
@@ -93,22 +97,43 @@ class UserStorageQuotaService {
   async getUserStorageInfo(userId: string, isPro: boolean): Promise<UserStorageInfo> {
     try {
       const usedSize = await this.calculateUserStorageSize(userId);
-      const quota = isPro ? STORAGE_QUOTA.PRO_USER : STORAGE_QUOTA.FREE_USER;
-      const remainingSize = Math.max(0, quota - usedSize);
-      const usedPercentage = (usedSize / quota) * 100;
+      
+      // Dobijamo osnovnu kvotu i referalni bonus
+      const baseQuota = isPro ? STORAGE_QUOTA.PRO_USER : STORAGE_QUOTA.FREE_USER;
+      
+      // Pribavi referalne informacije i bonus prostor
+      const referralBonus = this.getReferralBonus(userId);
+      const totalSize = baseQuota + referralBonus;
+      
+      const remainingSize = Math.max(0, totalSize - usedSize);
+      const usedPercentage = (usedSize / totalSize) * 100;
       
       return {
-        totalSize: quota,
+        totalSize,
         usedSize,
         remainingSize,
         usedPercentage,
-        quota,
+        quota: baseQuota,
+        referralBonus,
         userType: isPro ? 'pro' : 'free'
       };
     } catch (error) {
       console.error(`Greška pri pribavljanju informacija o skladištu za korisnika ${userId}:`, error);
       throw error;
     }
+  }
+  
+  /**
+   * Dobija dodatni prostor zarađen kroz referale
+   * @param userId ID korisnika
+   * @returns Veličina dodatnog prostora u bajtovima
+   */
+  getReferralBonus(userId: string): number {
+    const referralInfo = referralRewardService.getUserReferralInfo(userId);
+    if (!referralInfo) {
+      return 0;
+    }
+    return referralInfo.activeSpace;
   }
 }
 
