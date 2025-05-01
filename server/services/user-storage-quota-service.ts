@@ -1,5 +1,5 @@
 import { wasabiStorageService } from './wasabi-storage-service';
-import { referralRewardService } from './referral-reward-service';
+import ReferralRewardService from './referral-reward-service';
 
 // Konstante za kvote skladištenja
 export const STORAGE_QUOTA = {
@@ -79,7 +79,7 @@ class UserStorageQuotaService {
       const usedSize = await this.calculateUserStorageSize(userId);
       
       // Pribavljamo ukupan dostupan prostor uključujući referale
-      const totalAvailableSpace = referralRewardService.getTotalAvailableStorage(userId, isPro);
+      const totalAvailableSpace = await ReferralRewardService.getTotalAvailableStorage(userId, isPro);
       
       return (usedSize + fileSize) <= totalAvailableSpace;
     } catch (error) {
@@ -128,12 +128,17 @@ class UserStorageQuotaService {
    * @param userId ID korisnika
    * @returns Veličina dodatnog prostora u bajtovima
    */
-  getReferralBonus(userId: string): number {
-    const referralInfo = referralRewardService.getUserReferralInfo(userId);
-    if (!referralInfo) {
+  async getReferralBonus(userId: string): Promise<number> {
+    try {
+      const referralInfo = await ReferralRewardService.getUserReferralInfo(userId);
+      if (!referralInfo) {
+        return 0;
+      }
+      return referralInfo.activeSpace;
+    } catch (error) {
+      console.error(`Greška pri dobavljanju referalnog bonusa za korisnika ${userId}:`, error);
       return 0;
     }
-    return referralInfo.activeSpace;
   }
 }
 

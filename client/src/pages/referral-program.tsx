@@ -59,7 +59,7 @@ export default function ReferralProgramPage() {
                 <div>
                   <h3 className="font-medium">Zaradite nagrade</h3>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Za svakog novog FREE korisnika dobijate 50MB dodatnog prostora, a za PRO korisnika čak 100MB prostora.
+                    Za svakog novog FREE korisnika dobijate 50MB dodatnog prostora. Ako se vaš referral pretplati na PRO, dobijate čak 100MB prostora!
                   </p>
                 </div>
               </div>
@@ -72,7 +72,8 @@ export default function ReferralProgramPage() {
             <AlertDescription>
               <ul className="list-disc list-inside text-sm space-y-1 mt-2">
                 <li>Besplatni korisnici mogu da zarade do 2GB dodatnog prostora</li>
-                <li>PRO korisnici mogu da zarade do 3GB dodatnog prostora</li>
+                <li>PRO korisnici mogu da zarade do 5GB dodatnog prostora</li>
+                <li>Za svakog PRO referrala dobijate 100MB prostora</li>
                 <li>Nagrade za besplatne korisnike traju neograničeno</li>
                 <li>Nagrade za PRO korisnike traju dok god je pretplata aktivna + 12 meseci</li>
               </ul>

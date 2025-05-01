@@ -1,169 +1,179 @@
 import { Router, Request, Response } from 'express';
-import { referralRewardService, ReferralSource } from '../services/referral-reward-service';
+import ReferralRewardService from '../services/referral-reward-service';
 
 const router = Router();
 
 /**
- * Pribavlja referalni kod korisnika
+ * Get the referral code and URL for the current user
  * GET /api/referrals/code
  */
-router.get('/code', (req: Request, res: Response) => {
-  const userId = req.user?.id?.toString();
-  
-  // Provera da li je korisnik ulogovan
-  if (!userId) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Morate biti ulogovani da biste dobili referalni kod' 
-    });
-  }
-  
+router.get('/code', async (req: Request, res: Response) => {
   try {
-    const referralCode = referralRewardService.getUserReferralCode(userId);
-    const referralInfo = referralRewardService.getUserReferralInfo(userId);
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Morate biti prijavljeni da biste dobili referalni kod'
+      });
+    }
+
+    // Generišemo referalni kod za korisnika
+    const referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
     
-    // Formiramo osnovne URL varijante
-    const baseUrl = process.env.APP_URL || 'https://bzr-portal.com';
-    const referralUrl = `${baseUrl}/register?ref=${referralCode}`;
-    
-    res.json({ 
+    // Dobavljamo referalni URL
+    const referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
+
+    return res.status(200).json({
       success: true,
       referralCode,
-      referralInfo,
       referralUrl
     });
   } catch (error) {
     console.error('Greška pri dobavljanju referalnog koda:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Došlo je do greške pri dobavljanju referalnog koda' 
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri dobavljanju referalnog koda'
     });
   }
 });
 
 /**
- * Pribavlja referalne informacije korisnika
+ * Get referral information and statistics for the current user
  * GET /api/referrals/info
  */
-router.get('/info', (req: Request, res: Response) => {
-  const userId = req.user?.id?.toString();
-  
-  // Provera da li je korisnik ulogovan
-  if (!userId) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Morate biti ulogovani da biste videli referalne informacije' 
-    });
-  }
-  
+router.get('/info', async (req: Request, res: Response) => {
   try {
-    const referralInfo = referralRewardService.getUserReferralInfo(userId);
-    const referrals = referralRewardService.getUserReferrals(userId);
-    
-    if (!referralInfo) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Referalne informacije nisu pronađene' 
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Morate biti prijavljeni da biste videli referalne informacije'
       });
     }
+
+    // Dobavljanje statistike referala
+    const referralInfo = await ReferralRewardService.getReferralStats(req.user.id);
     
-    res.json({ 
+    // Dobavljanje liste referala
+    const referrals = await ReferralRewardService.getUserReferrals(req.user.id);
+
+    return res.status(200).json({
       success: true,
       referralInfo,
       referrals
     });
   } catch (error) {
     console.error('Greška pri dobavljanju referalnih informacija:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Došlo je do greške pri dobavljanju referalnih informacija' 
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri dobavljanju referalnih informacija'
     });
   }
 });
 
 /**
- * Obrađuje registraciju korisnika preko referalnog koda
- * POST /api/referrals/register
+ * Process a referral during registration
+ * POST /api/referrals/process
  */
-router.post('/register', (req: Request, res: Response) => {
-  const { referralCode, newUserId, isProUser = false, source = ReferralSource.UNKNOWN, socialPlatform, postLink } = req.body;
-  
-  // Validacija ulaznih parametara
-  if (!referralCode || !newUserId) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Referalni kod i ID novog korisnika su obavezni' 
-    });
-  }
-  
+router.post('/process', async (req: Request, res: Response) => {
   try {
-    const success = referralRewardService.registerReferral(
-      referralCode, 
-      newUserId, 
-      isProUser, 
-      source, 
-      socialPlatform, 
-      postLink
-    );
-    
-    if (!success) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Nije moguće registrovati referal sa datim kodom' 
+    const { referredUserId, referralCode, isProUser, source, socialPlatform, postLink } = req.body;
+
+    if (!referredUserId || !referralCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Potrebni su ID korisnika i referalni kod'
       });
     }
-    
-    res.json({ 
-      success: true,
-      message: 'Referal je uspešno registrovan'
-    });
+
+    const success = await ReferralRewardService.processReferral(
+      referredUserId,
+      referralCode,
+      isProUser || false,
+      source || 'direct_link',
+      socialPlatform,
+      postLink
+    );
+
+    if (success) {
+      return res.status(200).json({
+        success: true,
+        message: 'Referral uspešno procesiran'
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Nije moguće procesirati referral'
+      });
+    }
   } catch (error) {
-    console.error('Greška pri registraciji referala:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Došlo je do greške pri registraciji referala' 
+    console.error('Greška pri procesiranju referala:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri procesiranju referala'
     });
   }
 });
 
 /**
- * Ažuriranje statusa PRO pretplate za korisnika
+ * Update user PRO status and adjust referrals
  * PUT /api/referrals/update-pro-status
  */
-router.put('/update-pro-status', (req: Request, res: Response) => {
-  const { userId, isProActive } = req.body;
-  
-  // Validacija ulaznih parametara
-  if (!userId || isProActive === undefined) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'ID korisnika i status PRO pretplate su obavezni' 
-    });
-  }
-  
-  // Dodatna provera da li je zahtev poslao administrator
-  const requesterId = req.user?.id?.toString();
-  const isAdmin = req.user?.role === 'admin'; // Pretpostavljamo da postoji polje role
-  
-  if (!requesterId || (!isAdmin && requesterId !== userId)) {
-    return res.status(403).json({ 
-      success: false, 
-      message: 'Nemate dozvolu da ažurirate ovaj status' 
-    });
-  }
-  
+router.put('/update-pro-status', async (req: Request, res: Response) => {
   try {
-    referralRewardService.updateReferralStatus(userId, isProActive);
-    
-    res.json({ 
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'Morate biti prijavljeni da biste ažurirali PRO status'
+      });
+    }
+
+    const { isProUser } = req.body;
+
+    if (typeof isProUser !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'Potrebno je definisati PRO status (true/false)'
+      });
+    }
+
+    await ReferralRewardService.updateUserProStatus(req.user.id, isProUser);
+
+    return res.status(200).json({
       success: true,
-      message: 'Status PRO pretplate je uspešno ažuriran'
+      message: `PRO status uspešno ${isProUser ? 'aktiviran' : 'deaktiviran'}`
     });
   } catch (error) {
     console.error('Greška pri ažuriranju PRO statusa:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Došlo je do greške pri ažuriranju PRO statusa' 
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri ažuriranju PRO statusa'
+    });
+  }
+});
+
+/**
+ * Manually check and update expired referrals
+ * POST /api/referrals/check-expired (Admin only)
+ */
+router.post('/check-expired', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Samo administratori mogu izvršiti ovu akciju'
+      });
+    }
+
+    await ReferralRewardService.checkExpiredReferrals();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Istekli referali su uspešno ažurirani'
+    });
+  } catch (error) {
+    console.error('Greška pri proveri isteklih referala:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri proveri isteklih referala'
     });
   }
 });
