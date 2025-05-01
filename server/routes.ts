@@ -26,6 +26,7 @@ import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
+import wasabiStorageRouter from './routes/wasabi-storage-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Base Documents
@@ -947,6 +948,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register text extraction router
   app.use('/api/process', textExtractionRouter);
+  
+  // Register Wasabi storage routes
+  app.use('/api/storage', wasabiStorageRouter);
   
   // Register blog routes
   app.use('/api/blog', blogRouter);
