@@ -16,7 +16,7 @@ export default function Dashboard() {
       <StatisticsCards />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="recent-trainings">
+        <div className="recent-trainings lg:col-span-2">
           <RecentTrainings />
         </div>
         

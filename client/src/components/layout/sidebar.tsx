@@ -138,6 +138,12 @@ export default function Sidebar() {
               active={location === "/"}
               data-tour="dashboard"
             />
+            <NavItem
+              href="/blog"
+              icon="fas fa-newspaper"
+              label="Blog"
+              active={location === "/blog" || location.startsWith("/blog/")}
+            />
 
             <NavSection title="Dokumentacija" data-tour="document-section">
               <NavItem
@@ -228,18 +234,12 @@ export default function Sidebar() {
               />
             </NavSection>
 
-            <NavSection title="Sistemske postavke" data-tour="settings-section">
+            <NavSection title="Korisnički nalog" data-tour="settings-section">
               <NavItem
                 href="/settings"
                 icon="fas fa-cog"
                 label="Postavke"
                 active={location === "/settings"}
-              />
-              <NavItem
-                href="/users"
-                icon="fas fa-users"
-                label="Korisnici"
-                active={location === "/users"}
               />
               <NavItem
                 href="/user-profile"
@@ -253,11 +253,21 @@ export default function Sidebar() {
                 label="Referalni program"
                 active={location === "/referral-program"}
               />
+            </NavSection>
+            
+            {/* Admin sekcija - vidljiva samo admin korisnicima */}
+            <NavSection title="Administracija">
               <NavItem
                 href="/admin-dashboard"
                 icon="fas fa-crown"
                 label="Admin panel"
                 active={location === "/admin-dashboard"}
+              />
+              <NavItem
+                href="/users"
+                icon="fas fa-users"
+                label="Upravljanje korisnicima"
+                active={location === "/users"}
               />
             </NavSection>
           </div>
