@@ -153,11 +153,15 @@ function OnboardingController() {
   const [hasShownTour, setHasShownTour] = useState(false);
 
   useEffect(() => {
-    // Proveri da li je tura već završena
+    // Proveri da li je korisnik već video turu
+    const hasSeenTour = localStorage.getItem('bzr-tour-seen') === 'true';
     const tourCompleted = localStorage.getItem('bzr-tour-completed') === 'true';
     
-    // Samo na dashboard stranici i samo jednom
-    if (match && !tourCompleted && !hasShownTour) {
+    // Prikaži turu samo na dashboard stranici, prvi put kad korisnik poseti aplikaciju
+    if (match && !hasSeenTour && !tourCompleted && !hasShownTour) {
+      // Označi da je korisnik video turu
+      localStorage.setItem('bzr-tour-seen', 'true');
+      
       // Odloži pokretanje ture da bi se DOM elementi učitali
       const timer = setTimeout(() => {
         setCurrentStep(0);

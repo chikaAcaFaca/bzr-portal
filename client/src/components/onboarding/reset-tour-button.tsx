@@ -8,6 +8,7 @@ export function ResetTourButton() {
   
   const handleResetTour = () => {
     resetTourCompletion();
+    localStorage.removeItem('bzr-tour-seen');
     toast({
       title: 'Onboarding vodič je resetovan',
       description: 'Vodič će se prikazati prilikom sledeće posete početnoj stranici.',
