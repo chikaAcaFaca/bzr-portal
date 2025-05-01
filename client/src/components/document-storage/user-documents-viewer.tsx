@@ -45,6 +45,7 @@ interface UserDocument {
   folder: string;
   createdAt: string;
   url: string;
+  isFolder?: boolean;
 }
 
 interface StorageInfo {
@@ -216,6 +217,11 @@ export function UserDocumentsViewer() {
   
   // Funkcija za prikaz ikone na osnovu tipa dokumenta
   const getFileIcon = (document: UserDocument) => {
+    // Ako je folder, prikaži folder ikonu
+    if (document.isFolder) {
+      return <Folder className="h-6 w-6 text-amber-500" />;
+    }
+    
     const type = document.type.toLowerCase();
     
     if (type.includes('pdf')) {
@@ -377,19 +383,37 @@ export function UserDocumentsViewer() {
 
   // Funkcija za prikaz dokumenata u različitim veličinama
   const renderDocumentCard = (document: UserDocument) => {
+    // Specijalni slučaj za "Sanitarni" - tretiramo ga kao folder
+    const isSanitarniFolder = document.name === "Sanitarni" || document.name.toLowerCase().includes("sanitarni");
+    const isFolder = document.isFolder || isSanitarniFolder;
+    
+    // Različiti stilovi za folder i fajlove
+    const folderClass = "bg-amber-50 border-amber-200";
+    const fileClass = "";
+    
+    // Određivanje klase
+    const specialClass = isFolder ? folderClass : fileClass;
+    
     if (viewMode === "list") {
       // List prikaz
       return (
-        <Card key={document.id} className="overflow-hidden">
+        <Card key={document.id} className={`overflow-hidden ${specialClass}`}>
           <div className="flex items-center p-4">
             <div className="flex-shrink-0">
-              {getFileIcon(document)}
+              {isFolder ? <Folder className="h-6 w-6 text-amber-500" /> : getFileIcon(document)}
             </div>
             <div className="ml-4 flex-grow overflow-hidden">
               <h3 className="text-sm font-medium truncate">{document.name}</h3>
-              <p className="text-xs text-muted-foreground">
-                {formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
-              </p>
+              {!isFolder && (
+                <p className="text-xs text-muted-foreground">
+                  {formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
+                </p>
+              )}
+              {isFolder && (
+                <p className="text-xs text-muted-foreground">
+                  Folder
+                </p>
+              )}
             </div>
             <div className="flex-shrink-0 ml-4 space-x-2">
               <Button 
@@ -399,13 +423,24 @@ export function UserDocumentsViewer() {
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleDownloadDocument(document)}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+              {!isFolder && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDownloadDocument(document)}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
+              {isFolder && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {/* TODO: Open folder */}}
+                >
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </Card>
@@ -418,25 +453,37 @@ export function UserDocumentsViewer() {
       const isMedium = viewMode === "grid-medium";
       
       return (
-        <Card key={document.id} className="overflow-hidden flex flex-col">
+        <Card key={document.id} className={`overflow-hidden flex flex-col ${specialClass}`}>
           <div className={`p-4 flex ${isExtraLarge || isLarge ? 'justify-center' : ''} items-center`}>
             <div className={`${isExtraLarge || isLarge ? 'text-center' : 'flex-shrink-0'}`}>
               <div className={iconSizeClass}>
-                {getFileIcon(document)}
+                {isFolder ? <Folder className={`${iconSizeClass} text-amber-500`} /> : getFileIcon(document)}
               </div>
             </div>
             {isExtraLarge && (
               <div className="mt-2 text-center w-full">
                 <h3 className="text-sm font-medium break-words">{document.name}</h3>
-                <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
-                <p className="text-xs text-muted-foreground">{formatDate(new Date(document.createdAt))}</p>
+                {!isFolder && (
+                  <>
+                    <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(new Date(document.createdAt))}</p>
+                  </>
+                )}
+                {isFolder && (
+                  <p className="text-xs text-muted-foreground">Folder</p>
+                )}
               </div>
             )}
             {!isExtraLarge && (
               <div className={`${isLarge ? 'mt-2 text-center w-full' : 'ml-3 flex-grow overflow-hidden'}`}>
                 <h3 className={`${isLarge || isMedium ? 'text-sm' : 'text-xs'} font-medium truncate`}>{document.name}</h3>
-                <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
-                {!isLarge && !isMedium && (
+                {!isFolder && (
+                  <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
+                )}
+                {isFolder && (
+                  <p className="text-xs text-muted-foreground">Folder</p>
+                )}
+                {!isFolder && !isLarge && !isMedium && (
                   <p className="text-xs text-muted-foreground hidden sm:block">{formatDate(new Date(document.createdAt))}</p>
                 )}
               </div>
@@ -450,13 +497,24 @@ export function UserDocumentsViewer() {
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleDownloadDocument(document)}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
+            {!isFolder && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDownloadDocument(document)}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            {isFolder && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {/* TODO: Open folder */}}
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </Card>
       );

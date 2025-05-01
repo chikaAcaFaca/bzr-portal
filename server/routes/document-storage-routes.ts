@@ -51,13 +51,54 @@ export function registerDocumentStorageRoutes(app: Express) {
       const response = await s3.send(command);
       
       // Transformisanje odgovora u format za klijent stranu
-      const documents = (response.Contents || [])
-        .filter(item => item.Key && !item.Key.endsWith('/')) // Ignorisanje folder objekata
-        .map(item => {
-          // Izvlačenje imena folder i fajla iz ključa
-          const key = item.Key as string;
-          const relativePath = key.replace(userPrefix, '');
-          const parts = relativePath.split('/');
+      const allItems = response.Contents || [];
+      
+      // Izvlaćenje foldera i fajlova
+      const folderSet = new Set<string>();
+      const documentItems: any[] = [];
+      
+      allItems.forEach(item => {
+        if (!item.Key) return;
+        
+        const key = item.Key as string;
+        const relativePath = key.replace(userPrefix, '');
+        
+        // Ako se ključ završava sa '/', to je folder
+        if (key.endsWith('/')) {
+          // Za folder objekat, dodajemo ga u listu foldera
+          const folderName = relativePath.slice(0, -1); // Ukloni trailing slash
+          if (folderName && !folderName.includes('/')) {
+            folderSet.add(folderName);
+          }
+          return;
+        }
+        
+        // Za fajl, dodajemo ga u listu dokumenata
+        documentItems.push({
+          item,
+          key,
+          relativePath
+        });
+      });
+      
+      // Kreiraj listu foldera
+      const folders = Array.from(folderSet).map(folderName => {
+        return {
+          id: `folder_${folderName}`,
+          name: folderName,
+          size: 0,
+          type: 'folder',
+          path: `${userPrefix}${folderName}/`,
+          folder: '',
+          createdAt: new Date().toISOString(),
+          url: '',
+          isFolder: true
+        };
+      });
+      
+      // Kreiraj listu dokumenata
+      const documents = documentItems.map(({item, key, relativePath}) => {
+        const parts = relativePath.split('/');
           
           // Folder je sve osim poslednjeg dela puta
           const folderPath = parts.slice(0, -1).join('/');
@@ -95,9 +136,12 @@ export function registerDocumentStorageRoutes(app: Express) {
           };
         });
       
+      // Merge dokumenata i foldera u jedan odgovor
+      const mergedItems = [...folders, ...documents];
+      
       res.json({
         success: true,
-        documents
+        documents: mergedItems
       });
       
     } catch (error: any) {
