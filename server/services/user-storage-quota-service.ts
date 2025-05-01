@@ -50,7 +50,7 @@ class UserStorageQuotaService {
    * @returns Lista svih fajlova
    */
   private async getAllUserFiles(userId: string, prefix?: string): Promise<any[]> {
-    const userPrefix = prefix || `${userId}/`;
+    const userPrefix = prefix || `user_${userId}/`;
     const files = await wasabiStorageService.listFiles(userPrefix);
     
     let allFiles = [...files.filter(file => !file.Key.endsWith('/'))]; // Samo fajlovi, ne folderi

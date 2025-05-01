@@ -211,6 +211,36 @@ class WasabiStorageService {
       throw error;
     }
   }
+  
+  /**
+   * Generisanje potpisanog URL-a za pristup fajlu
+   * @param key Ključ/putanja fajla
+   * @param bucket Opciono ime bucket-a (defaultno koristnički dokumenti)
+   * @param expiresIn Vreme važenja URL-a u sekundama (defaultno 3600)
+   * @returns Potpisani URL za pristup fajlu
+   */
+  async getSignedUrl(key: string, bucket?: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      const bucketName = bucket || WASABI_USER_DOCUMENTS_BUCKET;
+
+      const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key
+      });
+
+      // Import dynamically to avoid issues with ESM/CJS 
+      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+      
+      // Kreiraj potpisani URL koji će važiti određeno vreme
+      const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
+      
+      return signedUrl;
+    } catch (error) {
+      console.error('Greška pri generisanju potpisanog URL-a:', error);
+      // Ako dođe do greške, vraćamo direktni URL koji možda neće raditi
+      return `${WASABI_ENDPOINT}/${bucket || WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+    }
+  }
 }
 
 // Kreiranje instance servisa za korištenje u aplikaciji

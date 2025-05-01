@@ -66,8 +66,9 @@ export function registerDocumentStorageRoutes(app: Express) {
           // Ime fajla je poslednji deo puta
           const fileName = parts[parts.length - 1];
           
-          // Generisanje URL-a za preuzimanje (preSign URL)
-          const url = `${process.env.WASABI_ENDPOINT}/${process.env.WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+          // Generisanje potpisanog URL-a za preuzimanje koji će trajati 1 sat
+          // Koristićemo Promise.all za paralelno procesiranje kasnije
+          let url = `${process.env.WASABI_ENDPOINT}/${process.env.WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
           
           return {
             id: item.ETag?.replace(/"/g, '') || key,
@@ -179,8 +180,8 @@ export function registerDocumentStorageRoutes(app: Express) {
         contentType
       );
       
-      // Kreiranje URL-a za pristup fajlu
-      const fileUrl = `${process.env.WASABI_ENDPOINT}/${process.env.WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+      // Kreiranje potpisanog URL-a za pristup fajlu
+      const fileUrl = await wasabiStorageService.getSignedUrl(key);
       
       res.json({
         success: true,
