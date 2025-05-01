@@ -4,10 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { apiRequest } from '@/lib/queryClient';
-import { Upload, File, CheckCircle, X, Info } from 'lucide-react';
+import { Upload, File, X, Info, Loader } from 'lucide-react';
 import { formatBytes } from '@/lib/utils';
 
 interface FileUploadProps {
@@ -68,48 +66,58 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
       let uploadedFiles = 0;
       
       for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('category', selectedCategory);
-        
-        // Slanje zahteva za otpremanje
-        const response = await fetch('/api/storage/upload', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include'
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('category', selectedCategory);
+          
+          // Slanje zahteva za otpremanje
+          const response = await fetch('/api/storage/upload', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+          });
+          
+          // Ažuriranje progresa za ovaj fajl
+          uploadedFiles++;
+          setProgress((uploadedFiles / totalFiles) * 100);
+          
+          if (!response.ok) {
+            throw new Error(`Greška (${response.status}): ${response.statusText}`);
+          }
+          
+          // Sve je prošlo u redu za ovaj fajl
+        } catch (error) {
+          console.error(`Greška pri otpremanju fajla ${file.name}:`, error);
+          // Nastavljamo sa sledećim fajlom umesto da prekinemo ceo proces
+        }
+      }
+      
+      // Ako je bar jedan fajl uspešno otpremljen
+      if (uploadedFiles > 0) {
+        toast({
+          title: 'Otpremanje završeno',
+          description: `${uploadedFiles} od ${totalFiles} fajlova uspešno otpremljeno`,
+          variant: 'default'
         });
         
-        // Ažuriranje progresa - jednostavno povećanje za svaki fajl
-        setProgress((prevProgress) => {
-          const fileProgress = (1 / totalFiles) * 100;
-          return Math.min(prevProgress + fileProgress, 100);
-        });
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-          throw new Error(data.message || 'Greška pri otpremanju fajla');
+        // Resetovanje forme
+        setSelectedFiles([]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
         
-        uploadedFiles++;
-        setProgress((uploadedFiles / totalFiles) * 100);
-      }
-      
-      toast({
-        title: 'Uspešno otpremanje',
-        description: `${totalFiles} ${totalFiles === 1 ? 'fajl je' : 'fajlova je'} uspešno otpremljeno`,
-        variant: 'default'
-      });
-      
-      // Resetovanje forme
-      setSelectedFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      
-      // Pozivanje callback-a ako postoji
-      if (onUploadComplete) {
-        onUploadComplete();
+        // Pozivanje callback-a ako postoji
+        if (onUploadComplete) {
+          onUploadComplete();
+        }
+      } else {
+        // Nijedan fajl nije uspešno otpremljen
+        toast({
+          title: 'Greška pri otpremanju',
+          description: 'Nijedan fajl nije uspešno otpremljen',
+          variant: 'destructive'
+        });
       }
       
     } catch (error: any) {
@@ -179,7 +187,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           ) : (
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">Izabrani fajlovi</h3>
+                <h3 className="text-sm font-medium">Izabrani fajlovi ({selectedFiles.length})</h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -191,7 +199,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
                 </Button>
               </div>
               
-              <div className="border rounded-md divide-y">
+              <div className="border rounded-md divide-y max-h-48 overflow-y-auto">
                 {selectedFiles.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-3">
                     <div className="flex items-center space-x-2">
@@ -215,7 +223,10 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
         {isUploading && (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm">Otpremanje u toku...</span>
+              <span className="text-sm flex items-center">
+                <Loader className="h-4 w-4 mr-2 animate-spin" /> 
+                Otpremanje u toku...
+              </span>
               <span className="text-sm font-medium">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -242,7 +253,8 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
         >
           {isUploading ? (
             <>
-              <span className="mr-2">Otpremanje...</span>
+              <Loader className="h-4 w-4 mr-2 animate-spin" />
+              Otpremanje...
             </>
           ) : (
             <>
