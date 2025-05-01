@@ -6,6 +6,7 @@ import {
   ListObjectsV2Command
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
 
 // Tipovi za objekte i rezultate

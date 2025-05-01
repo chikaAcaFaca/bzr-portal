@@ -85,6 +85,7 @@
     "pdfjs-dist": "^5.2.133",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
+    "react-doc-viewer": "^0.1.14",
     "react-dom": "^18.3.1",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.55.0",

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Express } from 'express';
-import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { WasabiStorageService } from '../services/wasabi-storage-service';
 import { UserStorageQuotaService } from '../services/user-storage-quota-service';
 import fs from 'fs';
