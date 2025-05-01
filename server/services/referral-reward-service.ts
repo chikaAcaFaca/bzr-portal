@@ -247,14 +247,16 @@ class ReferralRewardService {
     
     // Pronalazimo referalni kod korisnika
     let referralInfo: ReferralInfo | undefined;
-    for (const [code, info] of this.referralCodes.entries()) {
+    let referralCode: string | undefined;
+    
+    this.referralCodes.forEach((info, code) => {
       if (info.userId === userId) {
         referralInfo = info;
-        break;
+        referralCode = code;
       }
-    }
+    });
     
-    if (!referralInfo) {
+    if (!referralInfo || !referralCode) {
       return;
     }
     
@@ -278,12 +280,7 @@ class ReferralRewardService {
     referralInfo.activeSpace = Math.min(referralInfo.activeSpace, maxSpace);
     
     // Ažuriramo referalni kod
-    for (const [code, info] of this.referralCodes.entries()) {
-      if (info.userId === userId) {
-        this.referralCodes.set(code, referralInfo);
-        break;
-      }
-    }
+    this.referralCodes.set(referralCode, referralInfo);
   }
   
   /**
@@ -298,12 +295,12 @@ class ReferralRewardService {
     
     // Dodajemo referalni prostor
     let referralBonus = 0;
-    for (const [code, info] of this.referralCodes.entries()) {
+    
+    this.referralCodes.forEach((info) => {
       if (info.userId === userId) {
         referralBonus = info.activeSpace;
-        break;
       }
-    }
+    });
     
     return baseStorage + referralBonus;
   }
@@ -314,13 +311,22 @@ class ReferralRewardService {
    * @returns Informacije o referalima ili undefined ako korisnik nema referalni kod
    */
   getUserReferralInfo(userId: string): ReferralInfo | undefined {
-    for (const [code, info] of this.referralCodes.entries()) {
+    let referralInfo: ReferralInfo | undefined;
+    let referralCode: string | undefined;
+    
+    this.referralCodes.forEach((info, code) => {
       if (info.userId === userId) {
-        // Pre vraćanja, proveravamo da li je potrebno ažurirati aktivni prostor
-        this.recalculateActiveSpace(userId);
-        return this.referralCodes.get(code);
+        referralInfo = info;
+        referralCode = code;
       }
+    });
+    
+    if (referralInfo) {
+      // Pre vraćanja, proveravamo da li je potrebno ažurirati aktivni prostor
+      this.recalculateActiveSpace(userId);
+      return this.referralCodes.get(referralCode);
     }
+    
     return undefined;
   }
   
