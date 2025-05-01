@@ -168,22 +168,17 @@ export function UserDocumentsViewer() {
   // Funkcija za brisanje dokumenta
   const handleDeleteDocument = async (document: UserDocument) => {
     try {
-      const response = await fetch(`/api/user-documents/${document.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ path: document.path }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Greška pri brisanju dokumenta');
+      if (!user) {
+        throw new Error('Niste prijavljeni');
       }
       
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.message || 'Greška pri brisanju dokumenta');
+      // Direktno brisanje fajla iz Supabase Storage
+      const { error } = await supabase.storage
+        .from('user-documents')
+        .remove([document.path]);
+        
+      if (error) {
+        throw error;
       }
       
       toast({
@@ -196,6 +191,7 @@ export function UserDocumentsViewer() {
       refetchDocuments();
       
     } catch (error: any) {
+      console.error('Greška pri brisanju dokumenta:', error);
       toast({
         title: 'Greška',
         description: error.message || 'Došlo je do greške prilikom brisanja dokumenta',
