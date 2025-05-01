@@ -65,9 +65,15 @@ export function registerDocumentStorageRoutes(app: Express) {
           
           // Ime fajla je poslednji deo puta - dekodiraj URL karaktere za ispravno prikazivanje ćirilice
           let fileName = parts[parts.length - 1];
+          
           try {
             // Pokušavamo da dekodiramo URL encoding za podršku ćirilici
+            // Dvostruko dekodiranje jer možda je enkodovano više puta u određenim slučajevima
             fileName = decodeURIComponent(fileName);
+            // Pokušaj dodatnog dekodiranja ako je i dalje enkodovano
+            if (/%[0-9A-F]{2}/.test(fileName)) {
+              fileName = decodeURIComponent(fileName);
+            }
           } catch (e) {
             // Ako decodiranje ne uspe, koristimo originalni naziv
             console.log('Nije moguće dekodirati ime fajla:', fileName);
@@ -156,7 +162,13 @@ export function registerDocumentStorageRoutes(app: Express) {
       const category = req.body.category || 'opsti';
       
       // Određivanje putanje za skladištenje
-      const fileName = req.file.originalname;
+      // Dobijanje originalnog imena datoteke i ispravno kodiranje za skladištenje
+      let fileName = req.file.originalname;
+      
+      // Ako je datoteka na ćirilici, ne menjamo je, samo je pravilno prikazujemo
+      // Buffer je već ispravno kodiran kada dođe do servera
+      
+      // Kreiranje ključa za skladištenje
       const key = `user_${userId}/${category}/${fileName}`;
       
       // Određivanje MIME tipa za fajl
