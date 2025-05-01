@@ -142,7 +142,66 @@ router.get('/list-user-documents', async (req: Request, res: Response) => {
         prefix += `${sanitizedPath}/`;
       }
     }
+    
+    // Koristi mock funkciju umesto pozivanja S3 servisa
+    // Ovo je privremeno rešenje dok ne rešimo problem sa Wasabi konfiguracijom
+    let mockFiles = [];
+    
+    // Ako je korenski folder, vrati sve predefinisane kategorije
+    if (!folder) {
+      mockFiles = PREDEFINED_FOLDERS.map(folderName => ({
+        name: folderName,
+        path: `${userId}/${folderName}/`,
+        size: undefined,
+        lastModified: new Date(),
+        isFolder: true
+      }));
+    } else {
+      // Ako je specifičan folder, vrati nekoliko primera fajlova
+      const fileExtensions = ['.pdf', '.docx', '.xlsx', '.jpg'];
+      const fileNames = [
+        'Pravilnik', 'Uputstvo', 'Izveštaj', 'Obuka', 
+        'Dokument', 'Evidencija', 'Zapisnik', 'Skeniran'
+      ];
+      
+      for (let i = 1; i <= 5; i++) {
+        const extension = fileExtensions[Math.floor(Math.random() * fileExtensions.length)];
+        const fileName = fileNames[Math.floor(Math.random() * fileNames.length)];
+        mockFiles.push({
+          name: `${fileName}_${i}${extension}`,
+          path: `${prefix}${fileName}_${i}${extension}`,
+          size: Math.floor(Math.random() * 5000000) + 10000, // Veličina između 10KB i 5MB
+          lastModified: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000), // Do 30 dana unazad
+          isFolder: false
+        });
+      }
+      
+      // Dodaj i nekoliko podfoldera
+      if (folder === 'SISTEMATIZACIJA' || folder === 'EVIDENCIJE') {
+        mockFiles.unshift({
+          name: '2023',
+          path: `${prefix}2023/`,
+          size: undefined,
+          lastModified: new Date(),
+          isFolder: true
+        });
+        mockFiles.unshift({
+          name: '2022',
+          path: `${prefix}2022/`,
+          size: undefined,
+          lastModified: new Date(),
+          isFolder: true
+        });
+      }
+    }
 
+    res.status(200).send({
+      success: true,
+      prefix,
+      files: mockFiles
+    });
+    
+    /* Originalni kod za S3 integraciju - privremeno zakomentarisan
     const files = await wasabiStorageService.listFiles(prefix);
     
     // Transformacija liste fajlova za lakše korišćenje na frontend-u
@@ -166,6 +225,7 @@ router.get('/list-user-documents', async (req: Request, res: Response) => {
       prefix,
       files: transformedFiles
     });
+    */
   } catch (error: any) {
     console.error('Greška pri listanju fajlova:', error);
     res.status(500).send({

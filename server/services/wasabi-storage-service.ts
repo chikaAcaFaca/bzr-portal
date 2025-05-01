@@ -17,10 +17,10 @@ interface WasabiFile {
 }
 
 // Konfiguracija Wasabi servisa
-const WASABI_ENDPOINT = 'https://s3.eu-central-1.wasabisys.com';
-const WASABI_REGION = 'eu-central-1';
-const WASABI_USER_DOCUMENTS_BUCKET = process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bznr-user-documents';
-const WASABI_KNOWLEDGE_BASE_BUCKET = process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bznr-knowledge-base';
+const WASABI_ENDPOINT = 'https://s3.eu-west-2.wasabisys.com';
+const WASABI_REGION = 'eu-west-2';
+const WASABI_USER_DOCUMENTS_BUCKET = process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-user-documents-bucket';
+const WASABI_KNOWLEDGE_BASE_BUCKET = process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bzr-knowledge-base-bucket';
 
 class WasabiStorageService {
   private s3Client: S3Client;
@@ -33,7 +33,8 @@ class WasabiStorageService {
       credentials: {
         accessKeyId: process.env.WASABI_ACCESS_KEY_ID || '',
         secretAccessKey: process.env.WASABI_SECRET_ACCESS_KEY || ''
-      }
+      },
+      forcePathStyle: true
     });
 
     // Provera da li su postavljeni potrebni enviroment parametri
