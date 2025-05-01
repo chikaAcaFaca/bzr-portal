@@ -17,6 +17,7 @@ import SafetyMeasures from "./pages/safety-measures";
 import EmployeeTraining from "./pages/employee-training";
 import Reports from "./pages/reports";
 import DocumentProcessor from "./pages/document-processor";
+import DocumentStorage from "./pages/document-storage";
 import AIAssistant from "./pages/ai-assistant";
 import KnowledgeReferences from "./pages/knowledge-references";
 import Settings from "./pages/settings";
@@ -125,6 +126,12 @@ function Router() {
       <Route path="/document-processor">
         <MainLayout>
           <DocumentProcessor />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/document-storage">
+        <MainLayout>
+          <DocumentStorage />
         </MainLayout>
       </Route>
       
