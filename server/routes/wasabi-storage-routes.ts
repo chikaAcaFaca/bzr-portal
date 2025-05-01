@@ -52,11 +52,14 @@ interface MulterFile {
   path?: string;
 }
 
+import { userStorageQuotaService } from '../services/user-storage-quota-service';
+
 /**
  * API endpoint za upload korisničkog dokumenta
  * Zahteva multipart/form-data sa fajlom i sledećim poljima:
  * - folder: Predefinisani folder (iz liste predefinedFolders)
  * - customFolderPath: (opciono) Dodatna putanja foldera
+ * - isPro: (opciono) Da li je korisnik u PRO statusu (podrazumevano false)
  */
 router.post('/upload-user-document', upload.single('file'), async (req: Request, res: Response) => {
   try {
@@ -65,6 +68,7 @@ router.post('/upload-user-document', upload.single('file'), async (req: Request,
     const predefinedFolder = req.body.folder;
     const customFolderPath = req.body.customFolderPath || '';
     const useMock = req.body.mock === 'true'; // Opcioni parametar za korištenje mock podataka
+    const isPro = req.body.isPro === 'true'; // Da li je korisnik PRO, default je false (FREE)
 
     if (!file) {
       return res.status(400).send({ success: false, message: 'Fajl nije priložen' });
@@ -80,6 +84,26 @@ router.post('/upload-user-document', upload.single('file'), async (req: Request,
         message: 'Neispravan folder. Molimo izaberite jedan od predefinisanih foldera.',
         validFolders: PREDEFINED_FOLDERS
       });
+    }
+
+    // Provera kvote skladišta - da li korisnik ima dovoljno prostora
+    try {
+      const hasSpace = await userStorageQuotaService.hasEnoughSpace(userId, file.size, isPro);
+      
+      if (!hasSpace) {
+        // Ako korisnik nema dovoljno prostora, vrati odgovarajuću grešku
+        const userStorageInfo = await userStorageQuotaService.getUserStorageInfo(userId, isPro);
+        return res.status(400).send({
+          success: false,
+          message: isPro 
+            ? 'Prekoračili ste vaš PRO limit od 1GB. Molimo izbrišite neke dokumente da biste oslobodili prostor.'
+            : 'Prekoračili ste vaš FREE limit od 50MB. Nadogradite na PRO nalog za dobijanje 1GB prostora ili izbrišite neke dokumente.',
+          storageInfo: userStorageInfo
+        });
+      }
+    } catch (quotaError) {
+      console.warn('Nije moguće proveriti kvotu skladišta:', quotaError);
+      // Ne prekidamo upload ako ne možemo proveriti kvotu, nastavićemo sa upozorenjem
     }
 
     // Sanitiziramo customFolderPath
@@ -143,6 +167,14 @@ router.post('/upload-user-document', upload.single('file'), async (req: Request,
           mockFoldersIndex.set(parentFolder, new Set());
         }
         mockFoldersIndex.get(parentFolder)!.add(key);
+        
+        // Dobavi ažurirane informacije o skladištu nakon uploada
+        let storageInfo;
+        try {
+          storageInfo = await userStorageQuotaService.getUserStorageInfo(userId, isPro);
+        } catch (storageError) {
+          console.warn('Nije moguće dobiti informacije o skladištu:', storageError);
+        }
     
         res.status(200).send({
           success: true,
@@ -154,7 +186,8 @@ router.post('/upload-user-document', upload.single('file'), async (req: Request,
             type: file.mimetype,
             url: result.Location
           },
-          mode: 'wasabi'
+          mode: 'wasabi',
+          storageInfo // Informacije o skladištu korisnika nakon uploada
         });
       } catch (wasabiError: any) {
         console.error('Greška pri uploadovanju fajla preko Wasabi servisa:', wasabiError);
@@ -545,5 +578,61 @@ router.get('/download-user-document', async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * API endpoint za dobijanje informacija o skladištu korisnika
+ * Query parametri:
+ * - userId: Korisnički ID
+ * - isPro: (opciono) Da li je korisnik u PRO statusu (podrazumevano false)
+ */
+router.get('/user-storage-info', async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    const isPro = req.query.isPro === 'true'; // Da li je korisnik PRO, default je false (FREE)
+
+    if (!userId) {
+      return res.status(400).send({ success: false, message: 'Korisnički ID je obavezan' });
+    }
+
+    // Dobijanje informacija o skladištu za korisnika
+    const storageInfo = await userStorageQuotaService.getUserStorageInfo(userId, isPro);
+
+    // Formatiranje veličina za lakše korišćenje (MB ili GB)
+    const formattedInfo = {
+      ...storageInfo,
+      totalSizeFormatted: isPro ? '1 GB' : '50 MB',
+      usedSizeFormatted: formatFileSize(storageInfo.usedSize),
+      remainingSizeFormatted: formatFileSize(storageInfo.remainingSize)
+    };
+
+    res.status(200).send({
+      success: true,
+      storageInfo: formattedInfo
+    });
+  } catch (error: any) {
+    console.error('Greška pri dobijanju informacija o skladištu:', error);
+    res.status(500).send({
+      success: false,
+      message: `Greška pri dobijanju informacija o skladištu: ${error.message}`
+    });
+  }
+});
+
+/**
+ * Pomoćna funkcija za formatiranje veličine fajla
+ * @param bytes Veličina u bajtovima
+ * @returns Formatirana veličina (npr. "1.5 MB", "2.3 GB")
+ */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) {
+    return bytes + ' B';
+  } else if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(1) + ' KB';
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  } else {
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+}
 
 export const wasabiStorageRouter = router;
