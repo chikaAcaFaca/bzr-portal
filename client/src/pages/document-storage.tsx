@@ -14,15 +14,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function DocumentStoragePage() {
   const [activeTab, setActiveTab] = useState("files");
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   // Ispravna provera korisničke uloge i tipa pretplate
   const isPro = user?.subscriptionType === 'pro';
   
   // Ispravno skladište za FREE korisnike je 50MB umesto 1GB
   const storageSize = isPro ? '1 GB' : '50 MB';
+  
+  // Funkcija koja će se pozvati nakon uspešnog otpremanja
+  const handleUploadComplete = () => {
+    // Promeni tab na "files"
+    setActiveTab("files");
+    
+    // Invalidira keš za dokumente kako bi primorao ponovno učitavanje
+    queryClient.invalidateQueries({queryKey: ['/api/user-documents']});
+    queryClient.invalidateQueries({queryKey: ['/api/user-storage-info']});
+  };
   
   return (
     <div className="container py-6 space-y-6">
@@ -64,7 +77,7 @@ export default function DocumentStoragePage() {
             
             <TabsContent value="upload" className="mt-0">
               <Card className="p-4">
-                <FileUpload onUploadComplete={() => setActiveTab("files")} />
+                <FileUpload onUploadComplete={handleUploadComplete} />
               </Card>
             </TabsContent>
           </div>
