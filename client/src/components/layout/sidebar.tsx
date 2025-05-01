@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 type NavItemProps = {
   href: string;
@@ -51,6 +52,7 @@ export default function Sidebar() {
   const [location] = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   // Funkcija za zatvaranje sidebara kada pointer izađe
   const handleMouseLeave = () => {

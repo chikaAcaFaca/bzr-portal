@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 
 // Validaciona šema za prijavu
 const loginSchema = z.object({
@@ -273,9 +274,46 @@ export default function AuthPage() {
                 </Form>
                 
                 <div className="mt-6 text-center">
-                  <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+                  <Button 
+                    variant="link" 
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 p-0"
+                    onClick={async () => {
+                      const email = loginForm.getValues("email");
+                      if (!email) {
+                        toast({
+                          title: "Unesite email",
+                          description: "Molimo unesite email adresu za koju želite da resetujete lozinku.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      setIsLoading(true);
+                      try {
+                        await signOut();
+                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        
+                        if (error) throw error;
+                        
+                        toast({
+                          title: "Email za resetovanje poslat",
+                          description: "Proverite svoj email za instrukcije za resetovanje lozinke.",
+                        });
+                      } catch (error: any) {
+                        toast({
+                          title: "Greška",
+                          description: error.message || "Došlo je do greške pri slanju zahteva za resetovanje lozinke.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                  >
                     Zaboravili ste lozinku?
-                  </a>
+                  </Button>
                 </div>
               </div>
             </TabsContent>
