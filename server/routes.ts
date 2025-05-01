@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -30,8 +30,43 @@ import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
 import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Inicijalizacija cookie-parser middleware-a
+  app.use(cookieParser());
+  
+  // Inicijalizacija sesije
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'supabase-bzr-portal-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 sata
+    }
+  }));
+  
+  // Middleware za proveru i postavljanje Supabase sesije
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Proveri da li korisnik ima Supabase sesiju
+      const authCookie = req.cookies['sb-auth-token'];
+      if (authCookie) {
+        const parsedToken = JSON.parse(authCookie);
+        if (parsedToken && parsedToken.user) {
+          // Postavi korisnika u req.user za dalju upotrebu
+          req.user = parsedToken.user;
+        }
+      }
+      next();
+    } catch (error) {
+      console.error("Greška pri proveri autentikacije:", error);
+      next();
+    }
+  });
   // Base Documents
   app.get('/api/documents', async (req: Request, res: Response) => {
     try {
