@@ -1,110 +1,115 @@
-import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Send, ArrowUp } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, ArrowUp, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'wouter';
 
-type BZROnlyLimitationProps = {
+const BZR_KEYWORDS = [
+  'bezbednost', 'zdravlje', 'rad', 'zaštita', 'rizik', 'opasnost', 'povreda', 
+  'nezgoda', 'pravila', 'zakon', 'propisi', 'obuka', 'trening', 'sigurnost', 
+  'procena', 'mere', 'zaštitna', 'oprema', 'inspekcija', 'akt', 'procena rizika', 
+  'ppe', 'lična zaštitna', 'primena', 'pravilnik', 'obaveze', 'radnog mesta', 
+  'osposobljavanje', 'instrukcije', 'pružanje prve pomoći', 'prva pomoć', 
+  'hitna pomoć', 'evakuacija', 'požar', 'protivpožarna', 'ventilacija', 'buka',
+  'vibracije', 'zračenje', 'temperatura', 'ergonomija', 'hemikalije', 'materije',
+  'otpad', 'inspektor', 'odgovornost', 'lice za bzr', 'licenca', 'provera', 
+  'nadzor', 'prevencija', 'uputstva'
+];
+
+interface BZROnlyLimitationProps {
   onSubmit: (question: string) => void;
-};
+}
 
-/**
- * Komponenta koja ograničava FREE korisnike samo na BZR pitanja
- * Koristi jednostavnu proveru da li je pitanje vezano za BZR
- */
 export function BZROnlyLimitation({ onSubmit }: BZROnlyLimitationProps) {
-  const { user } = useAuth();
   const [question, setQuestion] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [checked, setChecked] = useState(false);
+  const [isBzrRelated, setIsBzrRelated] = useState<boolean | null>(null);
+  const [showWarning, setShowWarning] = useState(false);
   
-  // Funkcija koja proverava da li je pitanje vezano za bezbednost i zdravlje na radu
-  function isBZRRelated(text: string): boolean {
-    const text_lower = text.toLowerCase();
-    
-    // Lista ključnih pojmova vezanih za BZR
-    const bzrKeywords = [
-      "bezbednost", "zdravlje", "rad", "rizik", "opasnost", "povrede", "zaštita",
-      "oprema", "obuka", "zakon", "pravilnik", "propis", "mera", "procena",
-      "nezgoda", "nesreća", "inspekcija", "kontrola", "audit", "pregled",
-      "btzbr", "bzr", "upozorenje", "zop", "akt", "provera", "osposobljavanje",
-      "evakuacija", "prve pomoći", "protivpožarne", "zaštitna oprema", "štetan",
-      "opasan", "licenca", "ispit", "obuka", "požar", "eksplozija", "lice za bzr",
-      "zaštita od požara", "pravilnik", "zakon o bezbednosti", "službeni glasnik",
-      "elaborat", "identifikacija", "mere za smanjenje rizika"
-    ];
-    
-    // Proveravamo da li pitanje sadrži neku od ključnih reči
-    return bzrKeywords.some(keyword => text_lower.includes(keyword));
+  useEffect(() => {
+    // Resetuj stanje kada se pitanje promeni
+    setChecked(false);
+    setIsBzrRelated(null);
+    setShowWarning(false);
+  }, [question]);
+  
+  // Za PRO korisnike, ova komponenta nema efekta
+  if (user?.subscriptionType === 'pro') {
+    return null;
   }
   
-  // Handler za slanje pitanja
-  const handleSubmit = () => {
-    // Resetujemo prethodno stanje greške
-    setError(null);
+  // Check if the question is related to BZR by keywords
+  const checkIfBzrRelated = () => {
+    setChecked(true);
+    const questionLower = question.toLowerCase();
     
-    // Ako je korisnik PRO, može da postavlja sva pitanja
-    if (user?.subscriptionType === 'pro') {
-      onSubmit(question);
-      setQuestion("");
-      return;
-    }
+    // Provera pitanja prema ključnim rečima BZR-a
+    const containsBzrKeyword = BZR_KEYWORDS.some(keyword => 
+      questionLower.includes(keyword.toLowerCase())
+    );
     
-    // Ako je FREE korisnik, proveravamo da li je pitanje vezano za BZR
-    if (isBZRRelated(question)) {
-      onSubmit(question);
-      setQuestion("");
+    setIsBzrRelated(containsBzrKeyword);
+    
+    if (containsBzrKeyword) {
+      setShowWarning(false);
+      onValidQuestion();
     } else {
-      setError("Kao FREE korisnik, možete postavljati samo pitanja vezana za bezbednost i zdravlje na radu. Ažurirajte na PRO za neograničen pristup AI asistentu.");
+      setShowWarning(true);
+      onInvalidQuestion();
     }
   };
   
-  return (
-    <div className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Ograničenje pitanja</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-          <div className="mt-3">
+  // Ako pitanje nije provereno, onda samo prikaži info poruku
+  if (!checked) {
+    return (
+      <Alert className="mb-4">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Ograničenje za FREE korisnike</AlertTitle>
+        <AlertDescription className="mt-2">
+          <p>FREE korisnici mogu koristiti AI asistenta samo za teme vezane za bezbednost i zdravlje na radu.</p>
+          <div className="mt-2">
             <Button 
-              variant="outline" 
+              variant="default" 
               size="sm" 
-              className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
-              onClick={() => window.location.href = "/settings"}
+              onClick={checkIfBzrRelated}
+              disabled={!question.trim()}
             >
-              <ArrowUp className="mr-2 h-4 w-4" />
-              Nadogradi na PRO
+              Proveri pitanje
             </Button>
           </div>
-        </Alert>
-      )}
-      
-      <div className="flex flex-col gap-2">
-        <Textarea
-          placeholder="Postavite pitanje vezano za BZR..."
-          className="min-h-[120px] resize-none"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        
-        <div className="flex justify-between items-center">
-          {user?.subscriptionType !== 'pro' && (
-            <div className="text-sm text-muted-foreground">
-              {user?.subscriptionType === 'free' ? "FREE korisnici: samo BZR pitanja" : ""}
-            </div>
-          )}
-          
-          <Button 
-            onClick={handleSubmit} 
-            disabled={!question.trim()}
-            className="ml-auto"
-          >
-            <Send className="mr-2 h-4 w-4" />
-            Pošalji
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Ako je pitanje provereno i nije BZR-vezano, prikaži upozorenje
+  if (checked && showWarning) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Pitanje nije vezano za BZR</AlertTitle>
+        <AlertDescription className="mt-2">
+          <p>Vaše pitanje nije prepoznato kao tema vezana za bezbednost i zdravlje na radu. FREE korisnici mogu postavljati samo pitanja vezana za BZR teme.</p>
+          <div className="mt-4 flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-white text-primary border-primary hover:bg-primary hover:text-white"
+              asChild
+            >
+              <Link href="/settings">
+                <ArrowUp className="mr-2 h-4 w-4" />
+                Nadogradi na PRO za neograničen pristup
+              </Link>
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  // Ako je pitanje provereno i jeste BZR-vezano, ne prikazuj ništa (ili samo malu potvrdu)
+  return null;
 }
