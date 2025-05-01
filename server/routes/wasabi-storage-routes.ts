@@ -1,13 +1,10 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import { WasabiStorageService } from '../services/wasabi-storage-service';
+import { wasabiStorageService } from '../services/wasabi-storage-service';
 import path from 'path';
 
 // Kreiranje router instance
 const router = Router();
-
-// Kreiranje instance za Wasabi Storage Service
-const wasabiStorageService = new WasabiStorageService();
 
 // Predefinisani folderi podržani u aplikaciji
 const PREDEFINED_FOLDERS = [
@@ -37,6 +34,19 @@ function sanitizePath(folderPath: string): string {
   return folderPath.replace(/[^a-zA-Z0-9\/_\-]/g, '');
 }
 
+// Tip za Multer file
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+  destination?: string;
+  filename?: string;
+  path?: string;
+}
+
 /**
  * API endpoint za upload korisničkog dokumenta
  * Zahteva multipart/form-data sa fajlom i sledećim poljima:
@@ -45,7 +55,7 @@ function sanitizePath(folderPath: string): string {
  */
 router.post('/upload-user-document', upload.single('file'), async (req: Request, res: Response) => {
   try {
-    const file = req.file;
+    const file = req.file as MulterFile;
     const userId = req.body.userId;
     const predefinedFolder = req.body.folder;
     const customFolderPath = req.body.customFolderPath || '';

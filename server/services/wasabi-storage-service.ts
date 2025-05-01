@@ -22,7 +22,7 @@ const WASABI_REGION = 'eu-central-1';
 const WASABI_USER_DOCUMENTS_BUCKET = process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bznr-user-documents';
 const WASABI_KNOWLEDGE_BASE_BUCKET = process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bznr-knowledge-base';
 
-export class WasabiStorageService {
+class WasabiStorageService {
   private s3Client: S3Client;
 
   constructor() {
@@ -205,3 +205,9 @@ export class WasabiStorageService {
     }
   }
 }
+
+// Kreiranje instance servisa za korištenje u aplikaciji
+const wasabiStorageService = new WasabiStorageService();
+
+// Eksportujemo i klasu i instancu
+export { WasabiStorageService, wasabiStorageService };

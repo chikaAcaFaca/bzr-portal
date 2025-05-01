@@ -178,6 +178,12 @@ export default function Sidebar() {
                 label="Opisi poslova"
                 active={location === "/job-descriptions"}
               />
+              <NavItem
+                href="/document-storage"
+                icon="fas fa-folder-open"
+                label="Skladište dokumenata"
+                active={location === "/document-storage"}
+              />
             </NavSection>
 
             <NavSection title="Bezbednost" data-tour="employee-section">
