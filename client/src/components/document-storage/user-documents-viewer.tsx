@@ -23,8 +23,12 @@ import {
   FolderPlus,
   ChevronLeft,
   Eye,
-  ExternalLink
+  ExternalLink,
+  Home,
+  ArrowLeft,
+  ChevronRight
 } from 'lucide-react';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { formatBytes, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -611,6 +615,63 @@ export function UserDocumentsViewer() {
     }
   };
 
+  // Funkcija za generisanje breadcrumb za trenutnu putanju
+  const renderBreadcrumbs = () => {
+    if (!currentPath) return null;
+    
+    const pathParts = currentPath.split('/');
+    let currentBuildPath = '';
+    
+    return (
+      <Breadcrumb className="py-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center gap-1 p-1 h-8"
+              onClick={() => {
+                setCurrentPath('');
+                setNavigationHistory([]);
+              }}
+            >
+              <Home className="h-4 w-4" />
+              <span>Glavni direktorijum</span>
+            </Button>
+          </BreadcrumbItem>
+          
+          {pathParts.map((part, index) => {
+            currentBuildPath = index === 0 ? part : `${currentBuildPath}/${part}`;
+            const isLast = index === pathParts.length - 1;
+            
+            return (
+              <React.Fragment key={index}>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <span className="font-medium">{part}</span>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="p-1 h-7"
+                      onClick={() => {
+                        setNavigationHistory(prev => [...prev.slice(0, index)]);
+                        setCurrentPath(currentBuildPath);
+                      }}
+                    >
+                      {part}
+                    </Button>
+                  )}
+                </BreadcrumbItem>
+              </React.Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Dijalog za pregled dokumenta */}
@@ -649,7 +710,7 @@ export function UserDocumentsViewer() {
             ) : (
               <div className="p-4 h-full flex flex-col items-center justify-center">
                 <div className="mb-4 text-center">
-                  {getFileIcon(selectedDocument || {name: '', type: ''})}
+                  <FileIcon className="h-12 w-12 text-gray-500" />
                 </div>
                 <p className="text-center">
                   Nije moguće prikazati sadržaj ovog dokumenta direktno u pregledaču.
@@ -729,8 +790,31 @@ export function UserDocumentsViewer() {
         </Card>
       )}
       
+      {/* Windows-style navigacija */}
+      {currentPath && (
+        <Card className="mb-4">
+          <CardContent className="p-2">
+            <div className="flex items-center justify-between">
+              <div className="flex-grow">
+                {renderBreadcrumbs()}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleGoBack}
+                className="ml-2"
+                disabled={navigationHistory.length === 0}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                <span>Nazad</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Tab navigacija po folderima */}
-      {folders.length > 0 && (
+      {folders.length > 0 && !currentPath && (
         <Tabs 
           value={selectedFolder || folders[0]} 
           onValueChange={setSelectedFolder}
@@ -812,6 +896,70 @@ export function UserDocumentsViewer() {
             </TabsContent>
           ))}
         </Tabs>
+      )}
+      
+      {/* Prikaz dokumenata kad smo u nekom folderu */}
+      {currentPath && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">
+              {currentPath.split('/').pop()}
+            </h2>
+            <div className="flex items-center space-x-2">
+              {/* Dugmad za promenu prikaza */}
+              <RadioGroup
+                value={viewMode}
+                onValueChange={(value) => setViewMode(value as any)}
+                className="flex"
+              >
+                <div className="flex space-x-1 border rounded-md p-1">
+                  <div className="rounded hover:bg-secondary p-1">
+                    <RadioGroupItem value="list" id="list-folder" className="hidden" />
+                    <Label htmlFor="list-folder" className="cursor-pointer">
+                      <List className="h-5 w-5" />
+                    </Label>
+                  </div>
+                  
+                  <div className="rounded hover:bg-secondary p-1">
+                    <RadioGroupItem value="grid-small" id="grid-small-folder" className="hidden" />
+                    <Label htmlFor="grid-small-folder" className="cursor-pointer">
+                      <Grid3X3 className="h-5 w-5" />
+                    </Label>
+                  </div>
+                  
+                  <div className="rounded hover:bg-secondary p-1">
+                    <RadioGroupItem value="grid-medium" id="grid-medium-folder" className="hidden" />
+                    <Label htmlFor="grid-medium-folder" className="cursor-pointer">
+                      <Grid2X2 className="h-5 w-5" />
+                    </Label>
+                  </div>
+                  
+                  <div className="rounded hover:bg-secondary p-1">
+                    <RadioGroupItem value="grid-large" id="grid-large-folder" className="hidden" />
+                    <Label htmlFor="grid-large-folder" className="cursor-pointer">
+                      <LayoutGrid className="h-5 w-5" />
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+              
+              {/* Dugme za kreiranje novog foldera */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsNewFolderDialogOpen(true)}
+                className="gap-1"
+              >
+                <FolderPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Novi folder</span>
+              </Button>
+            </div>
+          </div>
+          
+          <div className={getDocumentViewClass()}>
+            {getFilteredDocuments().map(document => renderDocumentCard(document))}
+          </div>
+        </div>
       )}
     </div>
   );
