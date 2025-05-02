@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FileIcon, 
   FileText, 
@@ -43,6 +44,78 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+
+// Komponenta za prikazivanje slika sa potpisanim URL-om
+interface ImagePreviewProps {
+  document: UserDocument;
+  onError: () => void;
+}
+
+function ImagePreview({ document, onError }: ImagePreviewProps) {
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    async function fetchSignedUrl() {
+      try {
+        if (!document.path) {
+          setError('Putanja dokumenta nije dostupna');
+          setIsLoading(false);
+          return;
+        }
+        
+        setIsLoading(true);
+        const response = await fetch(`/api/storage/signed-url?key=${encodeURIComponent(document.path)}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.url) {
+          throw new Error(data.message || 'Nije moguće dobiti URL za preuzimanje');
+        }
+        
+        setSignedUrl(data.url);
+        setIsLoading(false);
+      } catch (error: any) {
+        console.error('Greška pri dobavljanju potpisanog URL-a:', error);
+        setError(error.message || 'Došlo je do greške prilikom učitavanja slike');
+        setIsLoading(false);
+        onError();
+      }
+    }
+    
+    fetchSignedUrl();
+  }, [document.path, onError]);
+  
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full">
+        <Skeleton className="w-64 h-64 rounded-md" />
+        <div className="mt-2">Učitavanje slike...</div>
+      </div>
+    );
+  }
+  
+  if (error || !signedUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full">
+        <FileImage className="h-16 w-16 text-red-500" />
+        <div className="mt-2 text-red-500">{error || 'Došlo je do greške prilikom učitavanja slike'}</div>
+      </div>
+    );
+  }
+  
+  return (
+    <img 
+      src={signedUrl} 
+      alt={document.name} 
+      className="max-h-full max-w-full object-contain"
+      onError={() => {
+        setError('Nije moguće prikazati sliku');
+        onError();
+      }}
+    />
+  );
+}
 
 interface UserDocument {
   id: string;
@@ -727,14 +800,9 @@ export function UserDocumentsViewer() {
             {selectedDocument ? (
               selectedDocument.type.includes('image') ? (
                 <div className="h-full flex items-center justify-center p-4">
-                  <img 
-                    src={selectedDocument.url} 
-                    alt={selectedDocument.name} 
-                    className="max-h-full max-w-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMgOUgxOVYxNUgxM1Y5WiIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48L3BhdGg+PHBhdGggZD0iTTVCREZMT0FEIHUgZmlsZSBpY29uIi8+PC9zdmc+';
+                  <ImagePreview 
+                    document={selectedDocument} 
+                    onError={() => {
                       toast({
                         title: 'Slika nije dostupna',
                         description: 'Nije moguće prikazati sliku direktno. Pokušajte preuzeti dokument.',
