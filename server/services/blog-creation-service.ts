@@ -1,6 +1,7 @@
 import { storage } from '../storage';
 import { InsertBlogPost } from '@shared/schema';
 import { transliterate } from '../utils/transliterate';
+import { notificationService } from './notification-service';
 
 interface CreateBlogFromAIParams {
   originalQuestion: string;
@@ -57,22 +58,25 @@ class BlogCreationService {
         title,
         content: aiResponse,
         slug,
-        excerpt,
-        imageUrl,
-        category,
-        tags: tags || [],
+        excerpt: excerpt || null,
+        imageUrl: imageUrl || null,
+        category: category || 'general',
+        tags: tags || null,
         status: 'pending_approval', // Čeka odobrenje administratora
         authorId: userId,
-        originalQuestion,
-        createdAt: now,
-        updatedAt: now,
-        viewCount: 0,
+        originalQuestion: originalQuestion || null,
         publishedAt: null,
-        adminFeedback: null
+        adminFeedback: null,
+        viewCount: 0
       };
       
       // Kreiranje blog posta u storage-u
       const blogPost = await storage.createBlogPost(blogData);
+      
+      // Slanje notifikacije administratorima za odobrenje
+      await notificationService.notifyNewAIBlogPost(blogPost);
+      
+      console.log(`Blog post ${blogPost.id} kreiran i čeka odobrenje administratora.`);
       
       return blogPost;
     } catch (error) {

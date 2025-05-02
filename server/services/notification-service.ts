@@ -1,4 +1,5 @@
 import { storage } from '../storage';
+import { BlogPost } from '@shared/schema';
 
 export interface Notification {
   id: number;
@@ -79,6 +80,18 @@ class NotificationService {
       type: 'blog_approval',
       content: `Novi blog post "${title}" čeka vaše odobrenje.`,
       objectId: blogPostId,
+      objectType: 'blog_post'
+    });
+  }
+  
+  /**
+   * Šalje notifikaciju o novom AI-generisanom blog postu
+   */
+  public async notifyNewAIBlogPost(blogPost: BlogPost): Promise<Notification[]> {
+    return this.notifyAllAdmins({
+      type: 'blog_approval',
+      content: `Novi AI-generisani blog post "${blogPost.title}" čeka vaše odobrenje.`,
+      objectId: blogPost.id,
       objectType: 'blog_post'
     });
   }
