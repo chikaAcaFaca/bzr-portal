@@ -31,6 +31,7 @@ import RegulatoryUpdates from "./pages/regulatory-updates";
 import ReferralProgram from "./pages/referral-program";
 import ResetPassword from "./pages/reset-password";
 import FileUtils from "./pages/file-utils";
+import LandingPage from "./pages/landing-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -52,6 +53,16 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
+      {/* Javna stranica - Landing Page */}
+      <Route path="/">
+        {({ match }) => {
+          if (match) {
+            return <LandingPage />;
+          }
+          return null;
+        }}
+      </Route>
+      
       {/* Javna stranica - autentifikacija */}
       <Route path="/auth">
         <RedirectIfAuthenticated>
@@ -73,7 +84,7 @@ function Router() {
       </Route>
       
       {/* Stranice zaštićene za registrovane korisnike */}
-      <Route path="/">
+      <Route path="/dashboard">
         <RequireAuth>
           <MainLayout>
             <Dashboard />
