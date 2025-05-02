@@ -31,8 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Koristiće se user.app_metadata za čuvanje informacija o tipu pretplate i ulozi
         const metadata = user.app_metadata || {};
         
+        // Proverava se da li je korisnik jedan od predefinisanih administratora
+        const adminEmails = [
+          'chika.aca.cool.faca@gmail.com',
+          'nikolina.jovanovic@gmail.com'
+        ];
+        
+        // Ako je email u listi admin email-ova, dodeljujemo admin ulogu
+        const isAdmin = adminEmails.includes(user.email || '');
+        
         // Dobavimo ulogu i tip pretplate iz metapodataka, ako postoje
-        const role = metadata.role || 'user';
+        // Ukoliko je email u adminEmails listi, dobija ulogu admina bez obzira na ostalo
+        const role = isAdmin ? 'admin' : (metadata.role || 'user');
         const subscriptionType = metadata.subscription_type || 'free';
         
         return {
