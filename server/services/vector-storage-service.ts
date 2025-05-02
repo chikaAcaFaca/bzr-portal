@@ -144,7 +144,7 @@ export class VectorStorageService {
 
       // Filtriranje prema korisniku i javnim dokumentima
       if (query.userId || query.includePublic !== undefined) {
-        results = results.filter(item => {
+        results = results.filter((item: any) => {
           // Ako je dokument od traženog korisnika
           if (query.userId && item.metadata.userId === query.userId) {
             return true;
@@ -161,31 +161,31 @@ export class VectorStorageService {
 
       // Filtriranje prema kategoriji
       if (query.category) {
-        results = results.filter(item => item.metadata.category === query.category);
+        results = results.filter((item: any) => item.metadata.category === query.category);
       }
 
       // Filtriranje prema folderu
       if (query.folder) {
-        results = results.filter(item => item.metadata.folder === query.folder);
+        results = results.filter((item: any) => item.metadata.folder === query.folder);
       }
 
       // Filtriranje prema tipu fajla
       if (query.fileTypes && query.fileTypes.length > 0) {
-        results = results.filter(item => 
+        results = results.filter((item: any) => 
           query.fileTypes?.includes(item.metadata.fileType)
         );
       }
 
       // Filtriranje prema tagovima
       if (query.tags && query.tags.length > 0) {
-        results = results.filter(item => {
+        results = results.filter((item: any) => {
           if (!item.metadata.tags) return false;
           return query.tags?.some(tag => item.metadata.tags?.includes(tag));
         });
       }
 
       // Transformisanje rezultata u VectorDocument format
-      return results.map(item => ({
+      return results.map((item: any) => ({
         content: item.content,
         metadata: item.metadata
       }));
@@ -371,7 +371,8 @@ export class VectorStorageService {
       }
 
       if (options?.offset) {
-        query = query.offset(options.offset);
+        // Type assertion to access the offset method
+        (query as any).offset(options.offset);
       }
 
       const { data, error } = await query;
@@ -386,19 +387,19 @@ export class VectorStorageService {
       let results = data || [];
 
       if (options?.fileTypes && options.fileTypes.length > 0) {
-        results = results.filter(item => 
+        results = results.filter((item: any) => 
           options.fileTypes?.includes(item.metadata.fileType)
         );
       }
 
       if (options?.tags && options.tags.length > 0) {
-        results = results.filter(item => {
+        results = results.filter((item: any) => {
           if (!item.metadata.tags) return false;
           return options.tags?.some(tag => item.metadata.tags?.includes(tag));
         });
       }
 
-      return results.map(item => ({
+      return results.map((item: any) => ({
         content: item.content,
         metadata: item.metadata
       }));

@@ -74,7 +74,7 @@ export class DocumentExtractorService {
       const contentType = response.ContentType || this.getContentTypeFromKey(key);
       
       return { buffer, contentType };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri preuzimanju fajla sa Wasabi:', error);
       throw new Error(`Nije moguće preuzeti dokument: ${error.message}`);
     }
@@ -121,7 +121,7 @@ export class DocumentExtractorService {
     try {
       const result = await mammoth.extractRawText({ buffer });
       return result.value;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri ekstrakciji teksta iz DOCX-a:', error);
       throw new Error(`Nije moguće ekstraktovati tekst iz DOCX-a: ${error.message}`);
     }
@@ -144,16 +144,16 @@ export class DocumentExtractorService {
         text += `\n[Sheet: ${sheetName}]\n`;
         
         // Dodajemo sadržaj sheet-a
-        sheetData.forEach((row: any[]) => {
-          if (row && row.length) {
-            text += row.filter(cell => cell !== null && cell !== undefined)
+        sheetData.forEach((row: unknown) => {
+          if (row && Array.isArray(row) && row.length) {
+            text += (row as any[]).filter(cell => cell !== null && cell !== undefined)
                       .join(' | ') + '\n';
           }
         });
       });
       
       return text;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri ekstrakciji teksta iz Excel fajla:', error);
       throw new Error(`Nije moguće ekstraktovati tekst iz Excel fajla: ${error.message}`);
     }
@@ -178,7 +178,7 @@ export class DocumentExtractorService {
       
       // Privremeno vraćamo poruku da nije implementirano
       return '[Ekstrakcija teksta iz slika nije trenutno podržana]';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri ekstrakciji teksta iz slike:', error);
       throw new Error(`Nije moguće ekstraktovati tekst iz slike: ${error.message}`);
     }
