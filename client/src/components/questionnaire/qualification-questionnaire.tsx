@@ -89,6 +89,9 @@ const requirementsSchema = z.object({
   hasSafetyPerson: z.enum(["da", "ne", "neznam"], {
     required_error: "Molimo odgovorite na pitanje",
   }),
+  hasDocumentation: z.enum(["da", "ne", "delimično"], {
+    required_error: "Molimo odgovorite na pitanje",
+  }),
 });
 
 // Kombinovana validaciona šema
@@ -144,6 +147,7 @@ export default function QualificationQuestionnaire({
       hasRiskAssessment: formData.hasRiskAssessment as any || undefined,
       hasTrainingProgram: formData.hasTrainingProgram as any || undefined,
       hasSafetyPerson: formData.hasSafetyPerson as any || undefined,
+      hasDocumentation: formData.hasDocumentation as any || undefined,
     },
   });
 
