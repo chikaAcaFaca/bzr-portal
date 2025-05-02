@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Proverava se da li je korisnik jedan od predefinisanih administratora
         const adminEmails = [
           'chika.aca.cool.faca@gmail.com',
-          'nikolina.jovanovic@gmail.com'
+          '1.nikolina.jovanovic@gmail.com'
         ];
         
         // Ako je email u listi admin email-ova, dodeljujemo admin ulogu

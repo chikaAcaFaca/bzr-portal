@@ -108,13 +108,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Debug: Koristeći test korisnika za razvoj");
         
         // Možemo testirati različite korisnike menjajući email adresu
-        // Trenutno ćemo koristiti chika.aca.cool.faca@gmail.com za testiranje admin uloge
-        const testEmail = 'chika.aca.cool.faca@gmail.com';
+        // Za testiranje admin uloge, koristićemo jedan od admin email-ova
+        const testEmail = '1.nikolina.jovanovic@gmail.com';
         
         // Definiši listu admin email-ova
         const adminEmails = [
           'chika.aca.cool.faca@gmail.com',
-          'nikolina.jovanovic@gmail.com'
+          '1.nikolina.jovanovic@gmail.com'
         ];
         
         // Odredi ulogu na osnovu email-a
