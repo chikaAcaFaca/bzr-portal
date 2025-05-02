@@ -1069,6 +1069,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/referrals', referralRoutes);
   app.use('/api/ai/usage', aiUsageRoutes);
   
+  // Test ruta za serviranje lokalnih fajlova
+  app.get('/test-files/:filename', async (req: Request, res: Response) => {
+    try {
+      const filename = req.params.filename;
+      res.sendFile(filename, { root: './uploads' });
+    } catch (error) {
+      res.status(404).send('Fajl nije pronađen');
+    }
+  });
+  
   // Ruta za migraciju svih referenci znanja na Wasabi
   app.post('/api/knowledge-references/migrate-to-wasabi', async (req: Request, res: Response) => {
     try {
