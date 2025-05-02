@@ -822,7 +822,28 @@ export function UserDocumentsViewer() {
                       <Button 
                         variant="default" 
                         size="sm"
-                        onClick={() => window.open(selectedDocument.url, '_blank')}
+                        onClick={async () => {
+                          if (!selectedDocument.path) return;
+                          try {
+                            const response = await fetch(`/api/storage/signed-url?key=${encodeURIComponent(selectedDocument.path)}`);
+                            const data = await response.json();
+                            if (data.success && data.url) {
+                              window.open(data.url, '_blank');
+                            } else {
+                              toast({
+                                title: 'Greška',
+                                description: data.message || 'Nije moguće dobiti URL za pregled',
+                                variant: 'destructive'
+                              });
+                            }
+                          } catch (error: any) {
+                            toast({
+                              title: 'Greška',
+                              description: error.message || 'Greška pri otvaranju dokumenta',
+                              variant: 'destructive'
+                            });
+                          }
+                        }}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Otvori u novom prozoru
