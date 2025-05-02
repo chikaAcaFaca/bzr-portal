@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { embeddingsService } from './embeddings-service';
 
 interface VectorDocument {
   content: string;
