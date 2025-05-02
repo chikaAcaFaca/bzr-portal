@@ -31,6 +31,8 @@ import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
 import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
+import path from 'path';
+import fs from 'fs';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import { knowledgeReferenceService } from './services/knowledge-reference-service';
@@ -1117,6 +1119,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registracija korisničkih ruta
   app.use('/api/user', userRouter);
+  
+  // Test ruta za embeddings direktno implementirana
+  app.get('/api/test-embeddings', async (req: Request, res: Response) => {
+    try {
+      console.log('Test embeddings ruta pozvana...');
+      
+      // Čitanje test dokumenta
+      const testFilePath = path.join(process.cwd(), 'test-files', 'test_dokument.txt');
+      const fileExists = fs.existsSync(testFilePath);
+      
+      if (!fileExists) {
+        console.error(`Test fajl ne postoji na putanji: ${testFilePath}`);
+        return res.status(404).json({ 
+          success: false, 
+          error: 'Test fajl nije pronađen',
+          filePath: testFilePath
+        });
+      }
+      
+      const text = fs.readFileSync(testFilePath, 'utf8');
+      console.log(`Pročitan test dokument dužine: ${text.length} karaktera`);
+      
+      // Import embeddings servisa
+      const { embeddingsService } = await import('./services/embeddings-service');
+      
+      // Generisanje embeddings-a
+      console.log('Pozivanje embeddingsService.generateEmbedding...');
+      const embedding = await embeddingsService.generateEmbedding(text);
+      
+      return res.status(200).json({
+        success: true,
+        embeddingLength: embedding.length,
+        embeddingSample: embedding.slice(0, 10),
+        textLength: text.length
+      });
+    } catch (error: any) {
+      console.error('Greška pri testu embeddings-a:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || 'Greška pri generisanju embeddings-a'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

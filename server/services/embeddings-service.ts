@@ -179,7 +179,7 @@ export class EmbeddingsService {
           console.error('Neočekivan format odgovora od Gemini:', JSON.stringify(response.data));
           throw new Error('Nevalidan format odgovora od Gemini');
         }
-      } catch (axiosError) {
+      } catch (axiosError: any) {
         if (axiosError.response) {
           console.error('Gemini API odgovor greška:', 
                       axiosError.response.status, 
