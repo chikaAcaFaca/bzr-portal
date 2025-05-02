@@ -197,7 +197,7 @@ export class VectorStorageService {
   }
 
   /**
-   * Generiše embedding za tekst koristeći Supabase funkciju
+   * Generiše embedding za tekst koristeći EmbeddingsService
    */
   private async generateEmbedding(text: string): Promise<number[]> {
     if (!this.isReady) {
@@ -206,16 +206,8 @@ export class VectorStorageService {
     }
 
     try {
-      const { data, error } = await this.supabase.rpc('generate_embeddings', {
-        input_text: text
-      });
-
-      if (error) {
-        console.error('Greška pri generisanju embeddings-a:', error);
-        return [];
-      }
-
-      return data || [];
+      // Koristi embeddings servis umesto PostgreSQL funkcije
+      return await embeddingsService.generateEmbedding(text);
     } catch (error) {
       console.error('Greška pri generisanju embeddings-a:', error);
       return [];

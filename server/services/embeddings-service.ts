@@ -40,27 +40,37 @@ export class EmbeddingsService {
    */
   public async generateEmbedding(text: string): Promise<number[]> {
     if (!this.ready) {
+      console.error('Nijedan AI model za embeddings nije dostupan');
       throw new Error('Nijedan AI model za embeddings nije dostupan');
     }
 
-    try {
-      // Prvo pokušaj sa OpenRouter (OpenAI compatible API)
-      if (config.openrouterApiKey) {
-        return await this.getOpenRouterEmbedding(text);
+    console.log(`Generisanje embeddings za tekst dužine ${text.length} karaktera...`);
+    
+    // OpenRouter pokušaj
+    if (config.openrouterApiKey) {
+      try {
+        console.log('Pokušaj generisanja OpenRouter embeddings...');
+        const embeddings = await this.getOpenRouterEmbedding(text);
+        console.log(`Uspešno generisani OpenRouter embeddings, dužina vektora: ${embeddings.length}`);
+        return embeddings;
+      } catch (error) {
+        console.error('Greška pri generisanju OpenRouter embeddings:', error);
       }
-    } catch (error) {
-      console.error('Greška pri generisanju OpenRouter embeddings:', error);
     }
 
-    try {
-      // Fallback na Gemini ako OpenRouter ne uspe
-      if (config.geminiApiKey) {
-        return await this.getGeminiEmbedding(text);
+    // Gemini pokušaj kao fallback
+    if (config.geminiApiKey) {
+      try {
+        console.log('Pokušaj generisanja Gemini embeddings (fallback)...');
+        const embeddings = await this.getGeminiEmbedding(text);
+        console.log(`Uspešno generisani Gemini embeddings, dužina vektora: ${embeddings.length}`);
+        return embeddings;
+      } catch (error) {
+        console.error('Greška pri generisanju Gemini embeddings:', error);
       }
-    } catch (error) {
-      console.error('Greška pri generisanju Gemini embeddings:', error);
     }
 
+    console.error('Nije uspelo generisanje embeddings ni sa jednim dostupnim modelom');
     throw new Error('Nije moguće generisati embedding ni sa jednim dostupnim AI modelom');
   }
 
