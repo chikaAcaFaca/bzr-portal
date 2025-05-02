@@ -1,13 +1,6 @@
-Ovo je test dokument za proveru generisanja embeddings vektora pomoću Gemini API.
+Pravilan rad sa bezbednošću i zdravljem na radu
 
-Zakon o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017 - dr. zakon) uređuje sprovođenje i unapređivanje bezbednosti i zdravlja na radu lica koja učestvuju u radnim procesima, kao i lica koja se zateknu u radnoj okolini.
-
-Osnovni pojmovi u bezbednosti i zdravlju na radu:
-1. Bezbednost i zdravlje na radu jeste obezbeđivanje takvih uslova na radu kojima se, u najvećoj mogućoj meri, smanjuju povrede na radu, profesionalna oboljenja i oboljenja u vezi sa radom i koji pretežno stvaraju pretpostavku za puno fizičko, psihičko i socijalno blagostanje zaposlenih.
-2. Zaposleni jeste domaće ili strano fizičko lice koje je u radnom odnosu kod poslodavca, kao i lice koje po bilo kom osnovu obavlja rad ili se osposobljava za rad kod poslodavca, osim lica koje je u radnom odnosu kod poslodavca radi obavljanja poslova kućnog pomoćnog osoblja.
-3. Poslodavac jeste domaće ili strano pravno lice, odnosno fizičko lice koje zapošljava, odnosno radno angažuje jedno ili više lica.
-4. Predstavnik zaposlenih jeste lice izabrano da predstavlja zaposlene u oblasti bezbednosti i zdravlja na radu kod poslodavca.
-5. Prevencija jeste proces obezbeđivanja mera na radnom mestu i u radnoj okolini kod poslodavca, u cilju sprečavanja ili smanjenja rizika na radu.
+Zakon o bezbednosti i zdravlju na radu reguliše sprovođenje i unapređivanje bezbednosti i zdravlja na radu osoba koje učestvuju u radnim procesima, kao i osoba koje se zateknu u radnoj okolini.
 
 Poslodavac je dužan da:
 - donese akt o proceni rizika u pisanoj formi za sva radna mesta u radnoj okolini
@@ -17,3 +10,14 @@ Poslodavac je dužan da:
 - organizuje prvi i periodične lekarske preglede zaposlenih
 
 Akt o proceni rizika jeste akt koji sadrži opis procesa rada sa procenom rizika od povreda i/ili oštećenja zdravlja na radnom mestu u radnoj okolini i mere za otklanjanje ili smanjivanje rizika u cilju poboljšanja bezbednosti i zdravlja na radu.
+
+Procena rizika jeste sistematsko evidentiranje i procenjivanje svih faktora u procesu rada koji mogu uzrokovati nastanak povreda na radu, oboljenja ili oštećenja zdravlja i utvrđivanje mogućnosti, odnosno načina sprečavanja, otklanjanja ili smanjenja rizika.
+
+Poslodavac je dužan da zaposlenom izda na upotrebu sredstvo i/ili opremu za ličnu zaštitu na radu u skladu sa aktom o proceni rizika.
+
+Mere prevencije obuhvataju:
+- Otklanjanje rizika
+- Primenu modernih tehničkih dostignuća u oblasti zaštite
+- Prilagođavanje rada i radnog mesta zaposlenom
+- Informisanje i obučavanje zaposlenih
+- Usmerenost radnih postupaka na očuvanje zdravlja
