@@ -295,7 +295,7 @@ Ako je dostupan relevantni kontekst, koristi ga kao primarni izvor informacija. 
         answer,
         sourceDocuments: contextDocs.length > 0 ? contextDocs : undefined
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri generisanju odgovora:', error);
       return {
         answer: 'Došlo je do greške pri generisanju odgovora. Molimo pokušajte ponovo.',

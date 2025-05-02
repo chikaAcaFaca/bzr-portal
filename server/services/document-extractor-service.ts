@@ -247,7 +247,7 @@ export class DocumentExtractorService {
           fileSize: buffer.length
         }
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri ekstrakciji sadržaja dokumenta:', error);
       throw new Error(`Nije moguće ekstraktovati sadržaj dokumenta: ${error.message}`);
     }
