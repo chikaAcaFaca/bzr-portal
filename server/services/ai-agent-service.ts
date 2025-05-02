@@ -155,7 +155,16 @@ export class AIAgentService {
    * Dohvata najbolji mogući odgovor od dostupnih LLM servisa
    */
   private async getLLMResponse(messages: ChatMessage[]): Promise<string> {
-    // Prvo probamo OpenRouter
+    // Prvo probamo Gemini kao primarni servis
+    if (config.geminiApiKey) {
+      try {
+        return await this.getGeminiResponse(messages);
+      } catch (error) {
+        console.warn('Gemini nedostupan, prebacujem na OpenRouter...', error);
+      }
+    }
+
+    // Zatim probamo OpenRouter kao sekundarni
     if (config.openrouterApiKey) {
       try {
         return await this.getOpenRouterResponse(messages);
@@ -164,19 +173,10 @@ export class AIAgentService {
       }
     }
 
-    // Zatim probamo Anthropic
+    // Na kraju probamo Anthropic
     if (config.anthropicApiKey) {
       try {
         return await this.getAnthropicResponse(messages);
-      } catch (error) {
-        console.warn('Anthropic nedostupan, prebacujem na Gemini...', error);
-      }
-    }
-
-    // Na kraju probamo Gemini
-    if (config.geminiApiKey) {
-      try {
-        return await this.getGeminiResponse(messages);
       } catch (error) {
         console.error('Svi LLM servisi su nedostupni.', error);
         throw new Error('Svi LLM servisi su trenutno nedostupni. Pokušajte kasnije.');
@@ -262,10 +262,28 @@ export class AIAgentService {
       const messages: ChatMessage[] = [
         {
           role: 'system',
-          content: `Ti si AI asistent koji pomaže sa pitanjima o bezbednosti i zdravlju na radu prema propisima Republike Srbije. 
-Odgovaraj na srpskom jeziku, ćiriličnim ili latiničnim pismom u zavisnosti od pisma kojim je korisnik postavio pitanje.
-Budi koncizni i precizni u svojim odgovorima. Fokusiraj se na pružanje tačnih i korisnih odgovora.
-Ako je dostupan relevantni kontekst, koristi ga kao primarni izvor informacija. Ako nešto nije jasno iz konteksta ili kontekst ne sadrži odgovor, jasno naznači da nemaš dovoljno informacija i predloži koja dodatna dokumentacija bi mogla biti relevantna.`
+          content: `Ti si prijateljski i stručni AI asistent "BZR Savetnik" koji pomaže sa pitanjima o bezbednosti i zdravlju na radu prema propisima Republike Srbije.
+
+STIL KOMUNIKACIJE:
+- Uvek odgovaraj ljubazno, pristupačno i sa empatijom kao da razgovaraš sa kolegom iz struke
+- Koristi jednostavan i razumljiv jezik, ali zadržavajući stručnu terminologiju gde je potrebno
+- Budi srdačan ali profesionalan, izbegavaj previše formalni stil, ali zadrži stručni ton
+- Obraćaj se direktno korisniku koristeći "Vi" formu iz poštovanja
+
+FORMAT ODGOVORA:
+- Započni sa jasnim, direktnim odgovorom na pitanje
+- Organizuj složenije odgovore u kratke pasuse sa podnaslovima gde je to potrebno
+- Ako citiraš propise, jasno navedi član i zakon
+- Izbegavaj komplikovane pravne formulacije - objasni propise jednostavnim jezikom
+
+SADRŽAJ:
+- Odgovaraj na srpskom jeziku, koristi pismo (ćirilicu/latinicu) kojim je korisnik postavio pitanje
+- Fokusiraj se na pružanje korisnih i tačnih informacija iz propisa Republike Srbije
+- Koristi relevantni kontekst iz baze znanja kao primarni izvor informacija
+- Ako nemaš dovoljno informacija, priznaj to i predloži koja dodatna dokumentacija bi mogla biti relevantna
+- Kada spominješ zakonske obaveze, navedi ih precizno i jasno
+
+Tvoj cilj je da korisniku pružiš korisne i stručne informacije o zaštiti na radu na način koji je prijatan i razumljiv.`
         }
       ];
 

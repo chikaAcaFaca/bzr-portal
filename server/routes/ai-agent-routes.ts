@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { aiAgentService } from '../services/ai-agent-service';
+import { blogCreationService } from '../services/blog-creation-service';
 
 /**
  * Postavljanje ruta za AI agenta
