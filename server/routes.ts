@@ -22,7 +22,7 @@ import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
 import { setupDocumentExtractionRoutes } from "./routes/document-extraction-routes";
 import { setupDocumentRoutes } from './routes/document-routes';
 import { setupDocumentScraperRoutes } from './routes/document-scraper';
-import { blogRouter } from './routes/blog-routes';
+import { setupBlogRoutes } from './routes/blog-routes';
 import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
@@ -1067,6 +1067,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupDocumentProcessingRoutes(app);
   await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
+  await setupBlogRoutes(app);
   setupDocumentScraperRoutes(app);
   setupDocumentExtractionRoutes(app);
   
@@ -1079,8 +1080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Wasabi storage routes
   app.use('/api/storage', wasabiStorageRouter);
   
-  // Register blog routes
-  app.use('/api/blog', blogRouter);
+  // Blog routes already registered via setupBlogRoutes
   
   // Register notification routes
   app.use('/api/notifications', notificationRouter);
