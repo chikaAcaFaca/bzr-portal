@@ -192,6 +192,12 @@ export default function Sidebar() {
                 label="Skladište dokumenata"
                 active={location === "/document-storage"}
               />
+              <NavItem
+                href="/file-utils"
+                icon="fas fa-file-code"
+                label="Алати за датотеке"
+                active={location === "/file-utils"}
+              />
             </NavSection>
 
             <NavSection title="Bezbednost" data-tour="employee-section">

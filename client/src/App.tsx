@@ -30,6 +30,7 @@ import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
 import ReferralProgram from "./pages/referral-program";
 import ResetPassword from "./pages/reset-password";
+import FileUtils from "./pages/file-utils";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -194,6 +195,14 @@ function Router() {
       
       <Route path="/reset-password">
         <ResetPassword />
+      </Route>
+      
+      <Route path="/file-utils">
+        <RequireAuth>
+          <MainLayout>
+            <FileUtils />
+          </MainLayout>
+        </RequireAuth>
       </Route>
       
       <Route path="/regulatory-updates">

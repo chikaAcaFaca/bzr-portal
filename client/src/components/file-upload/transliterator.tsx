@@ -229,8 +229,8 @@ main();`;
       </CardHeader>
       <CardContent>
         {showWarning && (
-          <Alert variant="warning" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
+          <Alert className="mb-4 border-amber-500 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
             <AlertTitle>Упозорење</AlertTitle>
             <AlertDescription>
               Отпремљени фајлови садрже ћириличне или латиничне карактере са дијакритиком у имену.
