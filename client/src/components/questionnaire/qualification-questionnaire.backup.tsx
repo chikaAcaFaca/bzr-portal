@@ -186,9 +186,6 @@ export default function QualificationQuestionnaire({
           : "Angažovanje lica sa licencom za BZR"
         );
       }
-      if (data.hasDocumentation !== "da") {
-        recommendations.push("Izrada i ažuriranje dokumentacije o bezbednosti i zdravlju na radu");
-      }
 
       // Rezultat kvalifikacije
       const result = {
@@ -424,8 +421,9 @@ export default function QualificationQuestionnaire({
                       <SelectItem value="saobracaj">Saobraćaj i skladištenje</SelectItem>
                       <SelectItem value="rudarstvo">Rudarstvo</SelectItem>
                       <SelectItem value="energetika">Snabdevanje električnom energijom</SelectItem>
+                      <SelectItem value="vodoprivreda">Snabdevanje vodom i upravljanje otpadom</SelectItem>
                       <SelectItem value="zdravstvo">Zdravstvena zaštita</SelectItem>
-                      <SelectItem value="drugo">Drugo</SelectItem>
+                      <SelectItem value="drugo">Druga delatnost</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -466,11 +464,7 @@ export default function QualificationQuestionnaire({
                 <FormItem>
                   <FormLabel>Email adresa</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="Unesite email za slanje rezultata" 
-                      {...field} 
-                    />
+                    <Input type="email" placeholder="Unesite vašu email adresu" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -482,9 +476,9 @@ export default function QualificationQuestionnaire({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Telefon <span className="text-gray-500 text-sm ml-1">(opciono)</span></FormLabel>
+                  <FormLabel>Broj telefona (opciono)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Unesite kontakt telefon" {...field} />
+                    <Input placeholder="Unesite vaš broj telefona" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -496,9 +490,9 @@ export default function QualificationQuestionnaire({
               name="position"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Vaša pozicija u kompaniji</FormLabel>
+                  <FormLabel>Pozicija u kompaniji</FormLabel>
                   <FormControl>
-                    <Input placeholder="npr. Direktor, HR menadžer, itd." {...field} />
+                    <Input placeholder="Unesite vašu poziciju (npr. Direktor, HR menadžer)" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -566,7 +560,7 @@ export default function QualificationQuestionnaire({
               name="hasTrainingProgram"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Da li vaša kompanija ima program obuke zaposlenih za bezbedan i zdrav rad?</FormLabel>
+                  <FormLabel>Da li u vašoj kompaniji postoji program obuke zaposlenih o bezbednosti i zdravlju na radu?</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -635,49 +629,6 @@ export default function QualificationQuestionnaire({
               )}
             />
 
-            <FormField
-              control={requirementsForm.control}
-              name="hasDocumentation"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Da li vaša kompanija ima svu potrebnu BZR dokumentaciju spremnu i ažuriranu?</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="da" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Da, imamo svu dokumentaciju
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="delimično" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Delimično, nedostaje nam neka dokumentacija
-                        </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="ne" />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          Ne, nemamo potrebnu dokumentaciju
-                        </FormLabel>
-                      </FormItem>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="flex justify-between">
               <Button 
                 type="button" 
@@ -702,6 +653,20 @@ export default function QualificationQuestionnaire({
           </form>
         </Form>
       )}
+
+      <div className="p-4 bg-blue-50 rounded-md">
+        <div className="flex gap-3">
+          <HelpCircle className="text-blue-500 h-5 w-5 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-blue-800 mb-1">O Članu 47 Zakona o BZR</h4>
+            <p className="text-sm text-blue-700">
+              Prema Članu 47 Zakona o bezbednosti i zdravlju na radu, poslodavci u određenim delatnostima koji imaju
+              do 20 zaposlenih mogu samostalno obavljati poslove bezbednosti i zdravlja na radu, uz obavezu polaganja
+              stručnog ispita, bez angažovanja lica sa licencom.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
