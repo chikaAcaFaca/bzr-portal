@@ -53,9 +53,13 @@ export default function AIAssistant() {
     setLoading(true);
     
     try {
-      const response = await apiRequest('/api/ai-agent/chat', { 
+      const response = await fetch('/api/ai-agent/chat', { 
         method: 'POST',
-        body: JSON.stringify({ query: input }) 
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query: input }),
+        credentials: 'include'
       });
       
       if (!response.ok) {
@@ -76,7 +80,7 @@ export default function AIAssistant() {
       };
       
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška:', error);
       toast({
         title: 'Greška',
