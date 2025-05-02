@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 import { 
   Users, 
   FileText, 
@@ -13,8 +14,10 @@ import {
   BarChart2, 
   BarChart4,
   CreditCard,
-  Activity
+  Activity,
+  BookOpen
 } from "lucide-react";
+import { BlogApproval } from "@/components/admin/blog-approval";
 import {
   Table,
   TableBody,
@@ -205,8 +208,12 @@ const AdminQuickActions = () => {
             <Users className="mr-2 h-4 w-4" />
             Upravljanje korisnicima
           </Button>
-          <Button className="w-full justify-start" variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
+          <Button 
+            className="w-full justify-start" 
+            variant="outline" 
+            onClick={() => setActiveTab("blogovi")}
+          >
+            <BookOpen className="mr-2 h-4 w-4" />
             Odobravanje blog postova
           </Button>
           <Button className="w-full justify-start" variant="outline">
@@ -254,9 +261,10 @@ export default function AdminDashboard() {
       <div className="mb-6">
         <Tabs defaultValue="pregled" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between mb-4">
-            <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsList className="grid w-full max-w-md grid-cols-4">
               <TabsTrigger value="pregled">Pregled</TabsTrigger>
               <TabsTrigger value="korisnici">Korisnici</TabsTrigger>
+              <TabsTrigger value="blogovi">Blogovi</TabsTrigger>
               <TabsTrigger value="izveštaji">Izveštaji</TabsTrigger>
             </TabsList>
             
@@ -298,6 +306,27 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <p>Ova sekcija će prikazati detaljni pregled korisnika sa opcijama za upravljanje.</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="blogovi">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Upravljanje blog postovima</CardTitle>
+                    <CardDescription>
+                      Odobravanje, odbijanje i upravljanje blog sadržajem
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/blog">Vidi blog</Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <BlogApproval />
               </CardContent>
             </Card>
           </TabsContent>
