@@ -1,7 +1,8 @@
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as mammoth from 'mammoth';
-import * as PDFParser from 'pdf-parse';
+// Koristimo našu verziju PDF parsera
+import { parsePDF } from '../utils/pdf-parser';
 import * as xlsx from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,7 +10,19 @@ import * as os from 'os';
 import axios from 'axios';
 import fetch from 'node-fetch';
 import { pipeline } from 'stream/promises';
-import { config } from '../config';
+
+// Privremena konfiguracija dok čekamo popravku u ../config
+const config = {
+  wasabi: {
+    accessKeyId: process.env.WASABI_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.WASABI_SECRET_ACCESS_KEY || '',
+    region: 'eu-west-2',
+    endpoint: 'https://s3.eu-west-2.wasabisys.com',
+    knowledgeBaseBucket: process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bzr-knowledge-base',
+    userDocumentsBucket: process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-user-documents',
+    baseUrl: 'https://s3.eu-west-2.wasabisys.com'
+  }
+};
 
 // Konfiguracija za Wasabi S3
 const s3Client = new S3Client({
@@ -92,9 +105,10 @@ export class DocumentExtractorService {
    */
   private async extractTextFromPdf(buffer: Buffer): Promise<string> {
     try {
-      const data = await PDFParser(buffer);
+      // Koristimo našu wrapper funkciju za parsiranje PDF-a
+      const data = await parsePDF(buffer);
       return data.text;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri ekstrakciji teksta iz PDF-a:', error);
       throw new Error(`Nije moguće ekstraktovati tekst iz PDF-a: ${error.message}`);
     }
@@ -241,12 +255,53 @@ export class DocumentExtractorService {
   
   /**
    * Prebacuje dokument u vektorsku bazu
-   * Napomena: Implementirati kada se odlučimo za konkretnu vektorsku bazu (Pinecone, Supabase, itd.)
    */
-  public async storeDocumentInVectorDatabase(documentContent: DocumentContent): Promise<void> {
-    // TODO: Implementirati kada se odlučimo za konkretnu vektorsku bazu
-    console.log('Čuvanje dokumenta u vektorskoj bazi:', documentContent.metadata.filename);
-    // Ovo će biti implementirano kasnije
+  public async storeDocumentInVectorDatabase(documentContent: DocumentContent, additionalMetadata?: { 
+    userId?: string; 
+    isPublic?: boolean;
+    category?: string;
+    folder?: string;
+    tags?: string[];
+  }): Promise<string | null> {
+    try {
+      // Importujemo servis ovde da izbegnemo cirkularne zavisnosti
+      const { vectorStorageService } = await import('./vector-storage-service');
+      
+      // Proveravamo da li je vektorska baza dostupna
+      const isAvailable = await vectorStorageService.isAvailable();
+      if (!isAvailable) {
+        console.warn('Vektorska baza nije dostupna. Dokument neće biti sačuvan.');
+        return null;
+      }
+      
+      // Kreiranje unosa za vektorsku bazu
+      const vectorEntry = {
+        content: documentContent.text,
+        metadata: {
+          ...documentContent.metadata,
+          bucket: additionalMetadata?.folder ? 'bzr-user-documents-bucket' : 'bzr-knowledge-base-bucket',
+          filePath: additionalMetadata?.folder 
+            ? `${additionalMetadata.folder}/${documentContent.metadata.filename}`
+            : documentContent.metadata.filename,
+          addedAt: new Date().toISOString(),
+          ...additionalMetadata
+        }
+      };
+      
+      // Čuvanje u vektorskoj bazi
+      const documentId = await vectorStorageService.addDocument(vectorEntry);
+      
+      if (documentId) {
+        console.log(`Dokument uspešno sačuvan u vektorskoj bazi sa ID: ${documentId}`);
+      } else {
+        console.error('Greška pri čuvanju dokumenta u vektorskoj bazi');
+      }
+      
+      return documentId;
+    } catch (error) {
+      console.error('Greška pri čuvanju dokumenta u vektorskoj bazi:', error);
+      return null;
+    }
   }
 }
 

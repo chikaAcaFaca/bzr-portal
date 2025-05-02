@@ -187,14 +187,27 @@ Uvek budi formalan, precizan i kratak. Citiraj izvore kada je to moguće.`;
 
   /**
    * Pretraži i dobavi relevantni kontekst iz vektorske baze
-   * Napomena: Implementirati kada se odlučimo za konkretnu vektorsku bazu
    */
   private async retrieveRelevantContext(query: string, userId?: string): Promise<string[]> {
-    // TODO: Implementirati kada se odlučimo za konkretnu vektorsku bazu
-    console.log(`Pretraživanje relevantnog konteksta za upit: ${query}`);
-    
-    // Trenutno vraćamo prazan niz dok ne implementiramo vektorsku bazu
-    return [];
+    try {
+      // Importujemo servis ovde da izbegnemo cirkularne zavisnosti
+      const { vectorStorageService } = await import('./vector-storage-service');
+      
+      // Proveravamo da li je vektorska baza dostupna
+      const isAvailable = await vectorStorageService.isAvailable();
+      if (!isAvailable) {
+        console.warn('Vektorska baza nije dostupna. Nije moguće dobaviti kontekst.');
+        return [];
+      }
+      
+      console.log(`Pretraživanje relevantnog konteksta za upit: ${query}`);
+      
+      // Pozivamo metod za dobavljanje relevantnog konteksta
+      return await vectorStorageService.getRelevantContext(query, userId);
+    } catch (error) {
+      console.error('Greška pri dobavljanju konteksta iz vektorske baze:', error);
+      return [];
+    }
   }
 
   /**

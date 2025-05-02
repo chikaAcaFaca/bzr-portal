@@ -1034,6 +1034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupDocumentRoutes(app);
   await setupAIAgentRoutes(app);
   setupDocumentScraperRoutes(app);
+  setupDocumentExtractionRoutes(app);
   
   // Register OCR service router
   app.use('/api/process', ocrRouter);
