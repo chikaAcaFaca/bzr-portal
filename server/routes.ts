@@ -31,6 +31,7 @@ import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
 import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
+import { notificationRouter } from './routes/notification-routes';
 import path from 'path';
 import fs from 'fs';
 import session from 'express-session';
@@ -1080,6 +1081,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register blog routes
   app.use('/api/blog', blogRouter);
+  
+  // Register notification routes
+  app.use('/api/notifications', notificationRouter);
   
   // Register referral routes
   app.use('/api/referrals', referralRoutes);

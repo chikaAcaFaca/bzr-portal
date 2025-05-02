@@ -20,7 +20,7 @@ export async function setupAIAgentRoutes(app: any) {
    */
   router.post('/chat', async (req: Request, res: Response) => {
     try {
-      const { query, userId, includePublic, contextLimit, history } = req.body;
+      const { query, userId, includePublic, contextLimit, history, createBlog } = req.body;
       
       if (!query || typeof query !== 'string' || query.trim() === '') {
         return res.status(400).json({
@@ -57,11 +57,44 @@ export async function setupAIAgentRoutes(app: any) {
         });
       }
       
+      // Ako je zatraženo kreiranje bloga i ako je odgovor kvalitetan (min 200 karaktera)
+      let blogPost = null;
+      if (createBlog && aiResponse.answer.length > 200) {
+        try {
+          // Kategorija se može izvući iz sadržaja pitanja
+          let category = 'general';
+          if (query.toLowerCase().includes('zakon') || query.toLowerCase().includes('pravil')) {
+            category = 'regulative';
+          } else if (query.toLowerCase().includes('rizik') || query.toLowerCase().includes('opasnost')) {
+            category = 'procena-rizika';
+          } else if (query.toLowerCase().includes('obuk') || query.toLowerCase().includes('trening')) {
+            category = 'obuke-zaposlenih';
+          } else if (query.toLowerCase().includes('zaštit') || query.toLowerCase().includes('zdravlj')) {
+            category = 'zaštita-zdravlja';
+          }
+          
+          // Kreiranje blog posta
+          blogPost = await blogCreationService.createBlogFromAIResponse({
+            originalQuestion: query,
+            aiResponse: aiResponse.answer,
+            userId: req.user ? (req.user as any).id : null,
+            category,
+            tags: ['ai-generisano', 'bzr', 'bezbednost']
+          });
+          
+          console.log(`Blog post kreiran! ID: ${blogPost.id}, Naslov: ${blogPost.title}`);
+        } catch (blogError) {
+          console.error('Greška pri kreiranju blog posta:', blogError);
+          // Nastavljamo sa izvršavanjem iako je kreiranje bloga neuspelo
+        }
+      }
+      
       // Uspešan odgovor
       return res.status(200).json({
         success: true,
         answer: aiResponse.answer,
-        sourceDocuments: aiResponse.sourceDocuments
+        sourceDocuments: aiResponse.sourceDocuments,
+        blogPost: blogPost // Vraćamo podatke o kreiranom blog postu (ako je kreiran)
       });
     } catch (error: any) {
       console.error('Greška pri komunikaciji sa AI agentom:', error);
