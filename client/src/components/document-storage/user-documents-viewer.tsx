@@ -141,7 +141,8 @@ export function UserDocumentsViewer() {
   const { user } = useAuth();
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "grid-small" | "grid-medium" | "grid-large" | "grid-extra-large">("grid-small");
+  // Uvek koristimo samo "list" prikaz za bolju čitljivost
+  const viewMode = "list";
   const [newFolderName, setNewFolderName] = useState<string>("");
   const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState<string>('');
