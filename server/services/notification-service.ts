@@ -30,17 +30,17 @@ class NotificationService {
    * Kreira novu notifikaciju za korisnika
    */
   public async createNotification(notification: InsertNotification): Promise<Notification> {
-    const id = this.currentId++;
     const now = new Date();
     
     const newNotification: Notification = {
-      id,
+      id: this.currentId++,
       ...notification,
       read: false,
       createdAt: now
     };
     
-    this.notifications.set(id, newNotification);
+    this.notifications.set(newNotification.id, newNotification);
+    
     return newNotification;
   }
 
@@ -48,26 +48,27 @@ class NotificationService {
    * Šalje notifikaciju svim admin korisnicima
    */
   public async notifyAllAdmins(notification: Omit<InsertNotification, 'userId'>): Promise<Notification[]> {
-    try {
-      // U stvarnoj implementaciji, ovo bi dohvatalo sve admine iz baze
-      // Za sada, samo vraćamo fiksne ID-eve 
-      const adminUserIds = ['admin-1', 'admin-2']; 
-      
-      const createdNotifications: Notification[] = [];
-      
-      for (const adminId of adminUserIds) {
-        const notif = await this.createNotification({
-          ...notification,
-          userId: adminId
-        });
-        createdNotifications.push(notif);
-      }
-      
-      return createdNotifications;
-    } catch (error) {
-      console.error('Greška pri slanju notifikacije adminima:', error);
+    // 1. Dohvatamo sve admin korisnike
+    const adminUsers = await storage.getUsersByRole('admin');
+    
+    if (adminUsers.length === 0) {
+      console.warn('Nema admin korisnika za slanje notifikacije');
       return [];
     }
+    
+    // 2. Kreiramo notifikaciju za svakog admina
+    const notifications: Notification[] = [];
+    
+    for (const admin of adminUsers) {
+      const newNotification = await this.createNotification({
+        ...notification,
+        userId: admin.id.toString(),
+      });
+      
+      notifications.push(newNotification);
+    }
+    
+    return notifications;
   }
 
   /**
@@ -76,7 +77,7 @@ class NotificationService {
   public async notifyBlogApproval(blogPostId: number, title: string): Promise<Notification[]> {
     return this.notifyAllAdmins({
       type: 'blog_approval',
-      content: `Nov blog post čeka odobrenje: "${title}"`,
+      content: `Novi blog post "${title}" čeka vaše odobrenje.`,
       objectId: blogPostId,
       objectType: 'blog_post'
     });
@@ -87,8 +88,8 @@ class NotificationService {
    */
   public async getUnreadNotificationsForUser(userId: string): Promise<Notification[]> {
     return Array.from(this.notifications.values())
-      .filter(n => n.userId === userId && !n.read)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .filter(notification => notification.userId === userId && !notification.read)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sortirano po vremenu (najnovije prvo)
   }
 
   /**
@@ -96,8 +97,8 @@ class NotificationService {
    */
   public async getAllNotificationsForUser(userId: string): Promise<Notification[]> {
     return Array.from(this.notifications.values())
-      .filter(n => n.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .filter(notification => notification.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sortirano po vremenu (najnovije prvo)
   }
 
   /**
@@ -105,15 +106,15 @@ class NotificationService {
    */
   public async markAsRead(id: number): Promise<Notification | undefined> {
     const notification = this.notifications.get(id);
-    if (!notification) return undefined;
     
-    const updatedNotification = {
-      ...notification,
-      read: true
-    };
+    if (!notification) {
+      return undefined;
+    }
     
-    this.notifications.set(id, updatedNotification);
-    return updatedNotification;
+    notification.read = true;
+    this.notifications.set(id, notification);
+    
+    return notification;
   }
 }
 

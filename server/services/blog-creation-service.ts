@@ -1,11 +1,12 @@
 import { storage } from '../storage';
 import axios from 'axios';
 import { notificationService } from './notification-service';
+import { InsertBlogPost } from '@shared/schema';
 
 interface CreateBlogFromAIParams {
   originalQuestion: string;
   aiResponse: string;
-  userId?: string;
+  userId?: number | null; // Može biti null ako je AI generisao sadržaj
   category?: string;
   tags?: string[];
 }
@@ -43,7 +44,7 @@ class BlogCreationService {
       const imageUrl = await this.getImageForBlogPost(title, category);
 
       // 5. Kreiranje blog posta
-      const blogData = {
+      const blogData: InsertBlogPost = {
         title,
         slug: uniqueSlug,
         content: aiResponse,
@@ -51,9 +52,9 @@ class BlogCreationService {
         imageUrl,
         category,
         tags: [...tags, 'bezbednost', 'bzr', 'zaštita'], // Dodajemo defaultne tagove
-        authorId: userId || 'system',
+        authorId: userId || null, // Koristimo null ako nemamo ID korisnika
         originalQuestion, // Čuvamo originalno pitanje
-        status: "pending_approval" as const, // Zahteva ručno odobrenje pre objavljivanja
+        status: "pending_approval", // Zahteva ručno odobrenje pre objavljivanja
         callToAction: "Želite li više informacija o bezbednosti i zdravlju na radu? Kontaktirajte nas!"
       };
       
