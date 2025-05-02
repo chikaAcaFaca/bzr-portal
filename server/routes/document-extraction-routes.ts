@@ -4,7 +4,7 @@ import { documentExtractorService, DocumentContent } from '../services/document-
 /**
  * Postavljanje ruta za ekstrakciju dokumenta
  */
-export function setupDocumentExtractionRoutes(app) {
+export function setupDocumentExtractionRoutes(app: any) {
   const router = Router();
   
   /**

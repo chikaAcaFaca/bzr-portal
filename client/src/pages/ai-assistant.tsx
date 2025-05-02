@@ -53,8 +53,9 @@ export default function AIAssistant() {
     setLoading(true);
     
     try {
-      const response = await apiRequest('POST', '/api/ai-agent/chat', { 
-        query: input 
+      const response = await apiRequest('/api/ai-agent/chat', { 
+        method: 'POST',
+        body: JSON.stringify({ query: input }) 
       });
       
       if (!response.ok) {

@@ -1,85 +1,127 @@
 import { Router, Request, Response } from 'express';
 import { aiAgentService } from '../services/ai-agent-service';
-import type { Express } from 'express';
-
-const router = Router();
 
 /**
- * Postavljanje AI agent ruta
+ * Postavljanje ruta za AI agenta
  */
-export function setupAIAgentRoutes(app: Express) {
-  app.use('/api/ai-agent', router);
-}
-
-/**
- * Endpoint za chat sa AI agentom
- * 
- * @route POST /api/ai-agent/chat
- * @param {string} query - Pitanje korisnika
- * @param {string[]} context - Opcioni kontekst za odgovor (override za vektorsku bazu)
- * @param {number} maxTokens - Maksimalan broj tokena za odgovor
- */
-router.post('/chat', async (req: Request, res: Response) => {
-  try {
-    const { query, context, maxTokens } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({
+export async function setupAIAgentRoutes(app: any) {
+  const router = Router();
+  
+  /**
+   * Endpoint za dobijanje odgovora od AI agenta
+   * 
+   * @route POST /api/ai-agent/chat
+   * @param {string} query - Pitanje korisnika
+   * @param {string} userId - ID korisnika (opciono)
+   * @param {boolean} includePublic - Da li uključiti javne dokumente (podrazumevano: true)
+   * @param {number} contextLimit - Broj dokumenata koji će biti korišćeni za kontekst (podrazumevano: 5)
+   * @param {Array<{role: string, content: string}>} history - Istorija prethodnih poruka (opciono)
+   */
+  router.post('/chat', async (req: Request, res: Response) => {
+    try {
+      const { query, userId, includePublic, contextLimit, history } = req.body;
+      
+      if (!query || typeof query !== 'string' || query.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Nedostaje obavezni parametar: query (pitanje)'
+        });
+      }
+      
+      // Provera autorizacije (opciono, zavisno od poslovnih zahteva)
+      // Ako korisnik nije prijavljen, možda treba ograničiti funkcionalnost
+      /*
+      if (!req.isAuthenticated() && userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Niste autorizovani za pristup dokumentima drugih korisnika'
+        });
+      }
+      */
+      
+      // Poziv AI agenta
+      const aiResponse = await aiAgentService.generateAnswer(query, {
+        userId: userId || (req.user ? (req.user as any).id : undefined),
+        includePublic: includePublic !== false, // podrazumevano true
+        contextLimit,
+        history
+      });
+      
+      // Provera da li je došlo do greške
+      if (aiResponse.error) {
+        return res.status(500).json({
+          success: false,
+          message: aiResponse.error,
+          answer: aiResponse.answer
+        });
+      }
+      
+      // Uspešan odgovor
+      return res.status(200).json({
+        success: true,
+        answer: aiResponse.answer,
+        sourceDocuments: aiResponse.sourceDocuments
+      });
+    } catch (error: any) {
+      console.error('Greška pri komunikaciji sa AI agentom:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Nedostaje pitanje (query parametar)'
+        message: error.message || 'Došlo je do greške pri generisanju odgovora'
       });
     }
-    
-    // Dobijanje odgovora od AI agenta
-    const userId = req.user?.id; // ako imamo autentifikaciju
-    const aiResponse = await aiAgentService.getResponse({
-      query,
-      context,
-      userId: userId?.toString(),
-      maxTokens
-    });
-    
-    return res.status(200).json({
-      success: true,
-      ...aiResponse
-    });
-  } catch (error: any) {
-    console.error('Greška pri chat komunikaciji sa AI agentom:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Greška pri komunikaciji sa AI agentom'
-    });
-  }
-});
-
-/**
- * Endpoint za proveru preostalih besplatnih pitanja za FREE korisnike
- * 
- * @route GET /api/ai-agent/quota
- */
-router.get('/quota', async (req: Request, res: Response) => {
-  try {
-    // TODO: Implementirati proveru kvote i limita
-    // Za sad vraćamo hardkodirane vrednosti
-    const isPro = false; // TODO: proveriti iz korisničkog profila
-    
-    return res.status(200).json({
-      success: true,
-      quota: {
-        isPro,
-        dailyLimit: isPro ? null : 3, // null znači da nema limita za PRO korisnike
-        usedToday: 0,    // TODO: implementirati stvarno brojanje
-        remaining: 3,    // TODO: izračunati stvarni preostali broj
-        resetTime: new Date(new Date().setHours(24, 0, 0, 0)).toISOString() // Sledeća ponoć
+  });
+  
+  /**
+   * Endpoint za dobijanje relevantnog konteksta za pitanje
+   * (Koristi se za predobijanje konteksta pre slanja upita, kada je to potrebno)
+   * 
+   * @route POST /api/ai-agent/context
+   * @param {string} query - Pitanje korisnika
+   * @param {string} userId - ID korisnika (opciono)
+   * @param {boolean} includePublic - Da li uključiti javne dokumente (podrazumevano: true)
+   * @param {number} limit - Broj dokumenata koji će biti vraćeni (podrazumevano: 5)
+   */
+  router.post('/context', async (req: Request, res: Response) => {
+    try {
+      const { query, userId, includePublic, limit } = req.body;
+      
+      if (!query || typeof query !== 'string' || query.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Nedostaje obavezni parametar: query (pitanje)'
+        });
       }
-    });
-  } catch (error: any) {
-    console.error('Greška pri dobijanju kvote za AI agenta:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Greška pri dobijanju informacija o kvoti'
-    });
-  }
-});
-
-export default router;
+      
+      // Provera autorizacije (opciono, zavisno od poslovnih zahteva)
+      /*
+      if (!req.isAuthenticated() && userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Niste autorizovani za pristup dokumentima drugih korisnika'
+        });
+      }
+      */
+      
+      // Dobavljanje relevantnog konteksta
+      const contextDocs = await aiAgentService.getRelevantContext(query, {
+        userId: userId || (req.user ? (req.user as any).id : undefined),
+        includePublic: includePublic !== false, // podrazumevano true
+        limit: limit || 5
+      });
+      
+      // Uspešan odgovor
+      return res.status(200).json({
+        success: true,
+        contextDocuments: contextDocs
+      });
+    } catch (error: any) {
+      console.error('Greška pri dobavljanju konteksta:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Došlo je do greške pri dobavljanju konteksta'
+      });
+    }
+  });
+  
+  app.use('/api/ai-agent', router);
+}

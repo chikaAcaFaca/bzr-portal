@@ -1,105 +1,97 @@
 import { createClient } from '@supabase/supabase-js';
-import { config } from '../config';
 
-// Definišemo interfejs za podatke vektorske baze
-export interface VectorEntry {
-  id?: string;          // UUID dokumenta
-  content: string;      // Tekstualni sadržaj
-  embedding?: number[]; // Vektorska reprezentacija (generisana na Supabase strani)
+// Provera Supabase kredencijala
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+interface VectorDocument {
+  content: string;
   metadata: {
-    filename: string;   // Naziv originalnog fajla
-    filePath: string;   // Putanja na Wasabi
-    fileType: string;   // Tip dokumenta
-    bucket: string;     // Bucket u kojem se nalazi
-    addedAt: string;    // Datum dodavanja
-    fileSize?: number;  // Veličina fajla
-    userType?: string;  // Admin ili korisnik
-    userId?: string;    // ID korisnika koji je postavio dokument
-    folder?: string;    // Folder u kojem se nalazi dokument
-    isPublic?: boolean; // Da li je javno dostupan
-    category?: string;  // Kategorija dokumenta (npr. 'BZR', 'Zakon', itd.)
-    tags?: string[];    // Tagovi za pretragu
-  };
-}
-
-export interface SearchOptions {
-  query: string;
-  matchThreshold?: number;
-  limit?: number;
-  userFilters?: {
-    userId?: string;
+    filename: string;
+    fileType: string;
+    bucket?: string;
+    filePath?: string;
+    extractionDate?: string;
+    addedAt?: string;
+    userId?: string; 
     isPublic?: boolean;
     category?: string;
     folder?: string;
     tags?: string[];
+    [key: string]: any;
   };
 }
 
+interface DocumentQuery {
+  query: string;
+  limit?: number;
+  userId?: string;
+  includePublic?: boolean;
+  category?: string;
+  folder?: string;
+  fileTypes?: string[];
+  tags?: string[];
+  similarityThreshold?: number;
+}
+
+/**
+ * Servis za rad sa vektorskim skladištem dokumenata u Supabase-u
+ */
 export class VectorStorageService {
   private supabase;
-  private readonly vectorCollection = 'bzr_document_vectors';
-  
+  private isReady = false;
+  private readonly collectionName = 'documents';
+
   constructor() {
-    const supabaseUrl = process.env.SUPABASE_URL || '';
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('Nedostaju Supabase kredencijali. Vektorska baza neće biti dostupna.');
+    if (supabaseUrl && supabaseKey) {
+      this.supabase = createClient(supabaseUrl, supabaseKey);
+      this.isReady = true;
+    } else {
+      console.warn('Nedostaju Supabase kredencijali. Vector storage neće biti dostupan.');
     }
-    
-    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
-  
+
   /**
    * Provera da li je vektorska baza dostupna
    */
   public async isAvailable(): Promise<boolean> {
+    if (!this.isReady) return false;
+    
     try {
-      const { data, error } = await this.supabase.from(this.vectorCollection).select('id').limit(1);
+      // Testiramo konekciju sa jednostavnim upitom
+      const { data, error } = await this.supabase
+        .from('vector_documents')
+        .select('id')
+        .limit(1);
       
       if (error) {
-        console.error('Greška pri proveri vektorske baze:', error);
+        console.error('Greška pri proveri dostupnosti vektorske baze:', error);
         return false;
       }
       
       return true;
-    } catch (error) {
-      console.error('Greška pri proveri vektorske baze:', error);
+    } catch (e) {
+      console.error('Izuzetak pri proveri dostupnosti vektorske baze:', e);
       return false;
     }
   }
-  
+
   /**
-   * Dodavanje dokumenta u vektorsku bazu
-   * Napomena: Embedding se automatski generiše na Supabase strani
+   * Dodaje dokument u vektorsku bazu
    */
-  public async addDocument(document: VectorEntry): Promise<string | null> {
+  public async addDocument(document: VectorDocument): Promise<string | null> {
+    if (!this.isReady) {
+      console.warn('Vector storage nije dostupan. Dokument neće biti sačuvan.');
+      return null;
+    }
+    
     try {
-      // Provera da li je dokument već u bazi
-      if (document.metadata.filePath) {
-        const { data: existingDocs } = await this.supabase
-          .from(this.vectorCollection)
-          .select('id')
-          .eq('metadata->>filePath', document.metadata.filePath)
-          .limit(1);
-        
-        if (existingDocs && existingDocs.length > 0) {
-          console.log(`Dokument već postoji u vektorskoj bazi: ${document.metadata.filePath}`);
-          return existingDocs[0].id;
-        }
-      }
-      
-      // Postavimo datum dodavanja ako nije već postavljen
-      if (!document.metadata.addedAt) {
-        document.metadata.addedAt = new Date().toISOString();
-      }
-      
-      // Dodajemo dokument u vektorsku bazu
       const { data, error } = await this.supabase
-        .from(this.vectorCollection)
+        .from('vector_documents')
         .insert({
           content: document.content,
-          metadata: document.metadata
+          metadata: document.metadata,
+          embedding: await this.generateEmbedding(document.content)
         })
         .select('id')
         .single();
@@ -109,188 +101,171 @@ export class VectorStorageService {
         return null;
       }
       
-      console.log(`Dokument uspešno dodat u vektorsku bazu sa ID: ${data.id}`);
       return data.id;
-    } catch (error) {
-      console.error('Greška pri dodavanju dokumenta u vektorsku bazu:', error);
+    } catch (e) {
+      console.error('Izuzetak pri dodavanju dokumenta u vektorsku bazu:', e);
       return null;
     }
   }
-  
+
   /**
-   * Pretraga dokumenata u vektorskoj bazi
+   * Pretražuje dokumente u vektorskoj bazi na osnovu semantičke sličnosti
    */
-  public async searchDocuments(options: SearchOptions): Promise<VectorEntry[]> {
+  public async searchDocuments(query: DocumentQuery): Promise<VectorDocument[]> {
+    if (!this.isReady) {
+      console.warn('Vector storage nije dostupan. Pretraga neće biti izvršena.');
+      return [];
+    }
+    
     try {
-      const { query, matchThreshold = 0.3, limit = 5, userFilters } = options;
+      const embedding = await this.generateEmbedding(query.query);
+      const limit = query.limit || 5;
+      const threshold = query.similarityThreshold || 0.7;
       
-      // Pripremamo search upit za Supabase
-      let vectorQuery = this.supabase.rpc('match_documents', {
-        query_text: query,
-        match_threshold: matchThreshold,
-        match_count: limit
-      });
+      // Kreiramo upit sa filterima
+      let queryBuilder = this.supabase
+        .rpc('match_documents', {
+          query_embedding: embedding,
+          match_threshold: threshold,
+          match_count: limit
+        });
       
-      // Dodajemo filtriranje po metapodacima ako je potrebno
-      if (userFilters) {
-        if (userFilters.userId) {
-          vectorQuery = vectorQuery.filter('metadata->>userId', 'eq', userFilters.userId);
+      // Primena filtera za pristup (privatni/javni dokumenti)
+      if (query.userId) {
+        if (query.includePublic) {
+          queryBuilder = queryBuilder.or(`metadata->>'userId'.eq.${query.userId},metadata->>'isPublic'.eq.true`);
+        } else {
+          queryBuilder = queryBuilder.eq('metadata->userId', query.userId);
         }
-        
-        if (userFilters.isPublic !== undefined) {
-          vectorQuery = vectorQuery.filter('metadata->>isPublic', 'eq', userFilters.isPublic.toString());
-        }
-        
-        if (userFilters.category) {
-          vectorQuery = vectorQuery.filter('metadata->>category', 'eq', userFilters.category);
-        }
-        
-        if (userFilters.folder) {
-          vectorQuery = vectorQuery.filter('metadata->>folder', 'eq', userFilters.folder);
-        }
-        
-        if (userFilters.tags && userFilters.tags.length > 0) {
-          // Za tagove koristimo contains operator za JSON niz
-          vectorQuery = vectorQuery.filter('metadata->>tags', 'cs', JSON.stringify(userFilters.tags));
-        }
+      } else if (!query.includePublic) {
+        queryBuilder = queryBuilder.eq('metadata->isPublic', true);
       }
       
-      // Izvršavamo upit
-      const { data, error } = await vectorQuery;
+      // Filtriranje po kategoriji
+      if (query.category) {
+        queryBuilder = queryBuilder.eq('metadata->category', query.category);
+      }
+      
+      // Filtriranje po folderu
+      if (query.folder) {
+        queryBuilder = queryBuilder.eq('metadata->folder', query.folder);
+      }
+      
+      // Filtriranje po tipu fajla
+      if (query.fileTypes && query.fileTypes.length > 0) {
+        queryBuilder = queryBuilder.in('metadata->fileType', query.fileTypes);
+      }
+      
+      // Filtriranje po tagovima (ako postoje)
+      if (query.tags && query.tags.length > 0) {
+        // Ovo je složeniji filter koji bi trebalo implementirati posebno
+        // za svaki tip baze (Postgres/Supabase handle JSON arrays differently)
+      }
+      
+      const { data, error } = await queryBuilder;
       
       if (error) {
-        console.error('Greška pri pretrazi vektorske baze:', error);
+        console.error('Greška pri pretrazi dokumenata:', error);
         return [];
       }
       
-      // Transformišemo rezultate u VectorEntry format
-      return (data || []).map((item: any) => ({
-        id: item.id,
+      return data.map(item => ({
         content: item.content,
-        embedding: item.embedding,
         metadata: item.metadata
       }));
-    } catch (error) {
-      console.error('Greška pri pretrazi vektorske baze:', error);
+    } catch (e) {
+      console.error('Izuzetak pri pretrazi dokumenata:', e);
       return [];
     }
   }
-  
+
   /**
-   * Pretraga relevantnog konteksta za prosleđeni upit
+   * Generiše embedding za tekst koristeći Supabase funkciju
    */
-  public async getRelevantContext(query: string, userId?: string): Promise<string[]> {
+  private async generateEmbedding(text: string): Promise<number[]> {
+    if (!this.isReady) {
+      throw new Error('Vector storage nije dostupan. Embedding ne može biti generisan.');
+    }
+    
     try {
-      // Podrazumevani filteri - javni dokumenti ili dokumenti korisnika
-      const userFilters: SearchOptions['userFilters'] = {
-        isPublic: true
-      };
+      const { data, error } = await this.supabase
+        .rpc('generate_embeddings', { text });
       
-      // Ako je prosleđen userId, dodajemo i njegove dokumente
-      if (userId) {
-        // Ovde je potrebna promena u logici upita, jer želimo SVE javne dokumente
-        // I dodatno dokumente koje je kreirao sam korisnik
-        // Ovo ne možemo jednostavno uraditi sa postojećim filterima
-        // Za sad ćemo samo koristiti javne dokumente
+      if (error) {
+        console.error('Greška pri generisanju embeddinga:', error);
+        throw new Error(`Nije moguće generisati embedding: ${error.message}`);
       }
       
-      // Tražimo relevantne dokumente
-      const results = await this.searchDocuments({
-        query,
-        matchThreshold: 0.3,
-        limit: 5,
-        userFilters
-      });
-      
-      // Izvlačimo samo tekstualni sadržaj
-      return results.map(result => result.content);
-    } catch (error) {
-      console.error('Greška pri dobavljanju relevantnog konteksta:', error);
+      return data;
+    } catch (e) {
+      console.error('Izuzetak pri generisanju embeddinga:', e);
+      // Vraćamo prazan niz kao fallback (neće biti koristan za pretragu)
       return [];
     }
   }
-  
+
   /**
-   * Brisanje dokumenta iz vektorske baze
+   * Briše dokument iz vektorske baze
    */
-  public async deleteDocument(id: string): Promise<boolean> {
+  public async deleteDocument(documentId: string): Promise<boolean> {
+    if (!this.isReady) {
+      console.warn('Vector storage nije dostupan. Dokument neće biti obrisan.');
+      return false;
+    }
+    
     try {
       const { error } = await this.supabase
-        .from(this.vectorCollection)
+        .from('vector_documents')
         .delete()
-        .eq('id', id);
+        .eq('id', documentId);
       
       if (error) {
-        console.error('Greška pri brisanju dokumenta iz vektorske baze:', error);
+        console.error('Greška pri brisanju dokumenta:', error);
         return false;
       }
       
       return true;
-    } catch (error) {
-      console.error('Greška pri brisanju dokumenta iz vektorske baze:', error);
+    } catch (e) {
+      console.error('Izuzetak pri brisanju dokumenta:', e);
       return false;
     }
   }
-  
+
   /**
-   * Brisanje dokumenata po putanji
+   * Ažurira dokument u vektorskoj bazi
    */
-  public async deleteDocumentByPath(filePath: string): Promise<boolean> {
-    try {
-      const { error } = await this.supabase
-        .from(this.vectorCollection)
-        .delete()
-        .eq('metadata->>filePath', filePath);
-      
-      if (error) {
-        console.error('Greška pri brisanju dokumenta iz vektorske baze:', error);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Greška pri brisanju dokumenta iz vektorske baze:', error);
+  public async updateDocument(documentId: string, document: Partial<VectorDocument>): Promise<boolean> {
+    if (!this.isReady) {
+      console.warn('Vector storage nije dostupan. Dokument neće biti ažuriran.');
       return false;
     }
-  }
-  
-  /**
-   * Ažuriranje metapodataka dokumenta
-   */
-  public async updateDocumentMetadata(id: string, metadata: Partial<VectorEntry['metadata']>): Promise<boolean> {
+    
     try {
-      // Prvo dobavljamo postojeći dokument
-      const { data: existingDoc, error: fetchError } = await this.supabase
-        .from(this.vectorCollection)
-        .select('metadata')
-        .eq('id', id)
-        .single();
+      // Pripremamo podatke za ažuriranje
+      const updateData: any = {};
       
-      if (fetchError || !existingDoc) {
-        console.error('Dokument nije pronađen:', fetchError);
-        return false;
+      if (document.metadata) {
+        updateData.metadata = document.metadata;
       }
       
-      // Spajamo postojeće i nove metapodatke
-      const updatedMetadata = {
-        ...existingDoc.metadata,
-        ...metadata
-      };
+      if (document.content) {
+        updateData.content = document.content;
+        updateData.embedding = await this.generateEmbedding(document.content);
+      }
       
-      // Ažuriramo dokument
       const { error } = await this.supabase
-        .from(this.vectorCollection)
-        .update({ metadata: updatedMetadata })
-        .eq('id', id);
+        .from('vector_documents')
+        .update(updateData)
+        .eq('id', documentId);
       
       if (error) {
-        console.error('Greška pri ažuriranju metapodataka dokumenta:', error);
+        console.error('Greška pri ažuriranju dokumenta:', error);
         return false;
       }
       
       return true;
-    } catch (error) {
-      console.error('Greška pri ažuriranju metapodataka dokumenta:', error);
+    } catch (e) {
+      console.error('Izuzetak pri ažuriranju dokumenta:', e);
       return false;
     }
   }

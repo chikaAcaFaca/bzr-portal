@@ -284,6 +284,7 @@ export class DocumentExtractorService {
             ? `${additionalMetadata.folder}/${documentContent.metadata.filename}`
             : documentContent.metadata.filename,
           addedAt: new Date().toISOString(),
+          extractionDate: documentContent.metadata.extractionDate.toISOString(),
           ...additionalMetadata
         }
       };
@@ -298,7 +299,7 @@ export class DocumentExtractorService {
       }
       
       return documentId;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Greška pri čuvanju dokumenta u vektorskoj bazi:', error);
       return null;
     }
