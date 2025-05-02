@@ -228,9 +228,6 @@ class WasabiStorageService {
         Bucket: bucketName,
         Key: key
       });
-
-      // Import dynamically to avoid issues with ESM/CJS 
-      const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
       
       // Kreiraj potpisani URL koji će važiti određeno vreme
       const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });

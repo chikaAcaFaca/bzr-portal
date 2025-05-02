@@ -222,25 +222,42 @@ export function UserDocumentsViewer() {
   };
   
   // Funkcija za preuzimanje dokumenta
-  const handleDownloadDocument = (document: UserDocument) => {
-    if (!document.url) {
+  const handleDownloadDocument = async (document: UserDocument) => {
+    try {
+      if (!document.path) {
+        toast({
+          title: 'Greška',
+          description: 'Putanja dokumenta nije dostupna',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Dobavljanje potpisanog URL-a za preuzimanje
+      const response = await fetch(`/api/storage/signed-url?key=${encodeURIComponent(document.path)}`);
+      const data = await response.json();
+      
+      if (!data.success || !data.url) {
+        throw new Error(data.message || 'Nije moguće dobiti URL za preuzimanje');
+      }
+      
+      // Kreiranje linka za preuzimanje
+      const a = window.document.createElement('a');
+      a.href = data.url;
+      a.download = document.name;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+    } catch (error: any) {
+      console.error('Greška pri preuzimanju dokumenta:', error);
       toast({
-        title: 'Greška',
-        description: 'URL dokumenta nije dostupan',
+        title: 'Greška pri preuzimanju',
+        description: error.message || 'Došlo je do greške prilikom preuzimanja dokumenta',
         variant: 'destructive'
       });
-      return;
     }
-    
-    // Kreiranje linka za preuzimanje
-    const a = window.document.createElement('a');
-    a.href = document.url;
-    a.download = document.name;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    window.document.body.appendChild(a);
-    a.click();
-    window.document.body.removeChild(a);
   };
   
   // Funkcija za prikaz ikone na osnovu tipa dokumenta

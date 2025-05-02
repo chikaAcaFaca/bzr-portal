@@ -98,7 +98,7 @@ export function registerDocumentStorageRoutes(app: Express) {
       });
       
       // Kreiraj listu dokumenata
-      const documents = documentItems.map(({item, key, relativePath}) => {
+      const documents = await Promise.all(documentItems.map(async ({item, key, relativePath}) => {
         const parts = relativePath.split('/');
           
           // Folder je sve osim poslednjeg dela puta
@@ -122,8 +122,7 @@ export function registerDocumentStorageRoutes(app: Express) {
           }
           
           // Generisanje potpisanog URL-a za preuzimanje koji će trajati 1 sat
-          // Koristićemo Promise.all za paralelno procesiranje kasnije
-          let url = `${process.env.WASABI_ENDPOINT}/${process.env.WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+          let url = await wasabiStorageService.getSignedUrl(key);
           
           return {
             id: item.ETag?.replace(/"/g, '') || key,
@@ -135,7 +134,7 @@ export function registerDocumentStorageRoutes(app: Express) {
             createdAt: item.LastModified || new Date().toISOString(),
             url: url
           };
-        });
+        }));
       
       // Merge dokumenata i foldera u jedan odgovor
       const mergedItems = [...folders, ...documents];
@@ -319,6 +318,48 @@ export function registerDocumentStorageRoutes(app: Express) {
       res.status(500).json({
         success: false,
         message: 'Došlo je do greške pri kreiranju foldera',
+        error: error.message
+      });
+    }
+  });
+
+  // Endpoint za dobijanje potpisanog URL-a za preuzimanje fajla
+  app.get('/api/storage/signed-url', async (req: Request, res: Response) => {
+    try {
+      // Provera autentikacije
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Niste prijavljeni' });
+      }
+
+      const userId = req.user.id;
+      const { key } = req.query;
+      
+      if (!key || typeof key !== 'string') {
+        return res.status(400).json({ success: false, message: 'Nedostaje ključ fajla' });
+      }
+      
+      // Provera da li je putanja fajla u korisničkom direktorijumu
+      const userPrefix = `user_${userId}/`;
+      if (!key.startsWith(userPrefix)) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Pristup odbijen - nemate pristup ovom fajlu' 
+        });
+      }
+      
+      // Generisanje potpisanog URL-a sa rokom od 1 sata
+      const signedUrl = await wasabiStorageService.getSignedUrl(key as string);
+      
+      res.json({
+        success: true,
+        url: signedUrl
+      });
+      
+    } catch (error: any) {
+      console.error('Greška pri generisanju potpisanog URL-a:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Došlo je do greške pri generisanju potpisanog URL-a',
         error: error.message
       });
     }
