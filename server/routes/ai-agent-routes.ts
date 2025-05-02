@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { aiAgentService } from '../services/ai-agent-service';
 import { blogCreationService } from '../services/blog-creation-service';
+import { notificationService } from '../services/notification-service';
 
 /**
  * Postavljanje ruta za AI agenta
@@ -83,6 +84,15 @@ export async function setupAIAgentRoutes(app: any) {
           });
           
           console.log(`Blog post kreiran! ID: ${blogPost.id}, Naslov: ${blogPost.title}`);
+          
+          // Pošalji notifikaciju administratorima o novom blog postu za odobrenje
+          try {
+            await notificationService.notifyBlogApproval(blogPost.id, blogPost.title);
+            console.log(`Notifikacija za odobrenje blog posta ${blogPost.id} poslata administratorima`);
+          } catch (notificationError) {
+            console.error('Greška pri slanju notifikacije:', notificationError);
+            // Nastavljamo sa izvršavanjem iako slanje notifikacije nije uspelo
+          }
         } catch (blogError) {
           console.error('Greška pri kreiranju blog posta:', blogError);
           // Nastavljamo sa izvršavanjem iako je kreiranje bloga neuspelo

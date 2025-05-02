@@ -1,7 +1,6 @@
 import { storage } from '../storage';
-import axios from 'axios';
-import { notificationService } from './notification-service';
 import { InsertBlogPost } from '@shared/schema';
+import { transliterate } from '../utils/transliterate';
 
 interface CreateBlogFromAIParams {
   originalQuestion: string;
@@ -18,55 +17,66 @@ class BlogCreationService {
   private readonly imageSearchApi = 'https://serpapi.com/search'; // Možemo koristiti Serpapi ili Unsplash API
 
   /**
-   * Kreira blog post od odgovora AI asistenta
+   * Kreira blog post iz AI odgovora i šalje notifikaciju admin korisnicima
    */
   public async createBlogFromAIResponse({
     originalQuestion,
     aiResponse,
-    userId,
+    userId = null,
     category = 'general',
     tags = []
   }: CreateBlogFromAIParams) {
     try {
-      // 1. Generisanje naslova
+      // 1. Generisanje naslova na osnovu pitanja i odgovora
       const title = await this.generateBlogTitle(originalQuestion, aiResponse);
       
-      // 2. Kreiranje sluga
+      // 2. Kreiranje excerpta (kratkog opisa)
+      const excerpt = this.createExcerpt(aiResponse);
+      
+      // 3. Kreiranje slug-a
       const baseSlug = this.createSlug(title);
-      const existingBlogPosts = await storage.getAllBlogPosts();
-      const existingSlugs = existingBlogPosts.map(post => post.slug);
-      const uniqueSlug = this.generateUniqueSlug(baseSlug, existingSlugs);
       
-      // 3. Kreiranje excerpta
-      const excerpt = this.createExcerpt(aiResponse, 150);
+      // 4. Provera da li slug već postoji
+      const existingPosts = await storage.getAllBlogPosts();
+      const existingSlugs = existingPosts.map(post => post.slug);
+      const slug = this.generateUniqueSlug(baseSlug, existingSlugs);
       
-      // 4. Dobavljanje relevantne slike
-      const imageUrl = await this.getImageForBlogPost(title, category);
-
-      // 5. Kreiranje blog posta
+      // 5. Dobavljanje relevantne slike za blog
+      let imageUrl = null;
+      try {
+        imageUrl = await this.getImageForBlogPost(title, category);
+      } catch (imageError) {
+        console.warn('Nije moguće dobaviti sliku za blog post:', imageError);
+        // Nastavljamo bez slike ako je došlo do greške
+      }
+      
+      // 6. Kreiranje blog posta
+      const now = new Date();
+      
       const blogData: InsertBlogPost = {
         title,
-        slug: uniqueSlug,
         content: aiResponse,
+        slug,
         excerpt,
         imageUrl,
         category,
-        tags: [...tags, 'bezbednost', 'bzr', 'zaštita'], // Dodajemo defaultne tagove
-        authorId: userId || null, // Koristimo null ako nemamo ID korisnika
-        originalQuestion, // Čuvamo originalno pitanje
-        status: "pending_approval", // Zahteva ručno odobrenje pre objavljivanja
-        callToAction: "Želite li više informacija o bezbednosti i zdravlju na radu? Kontaktirajte nas!"
+        tags: tags || [],
+        status: 'pending_approval', // Čeka odobrenje administratora
+        authorId: userId,
+        originalQuestion,
+        createdAt: now,
+        updatedAt: now,
+        viewCount: 0,
+        publishedAt: null,
+        adminFeedback: null
       };
       
-      // 6. Čuvanje u bazi
-      const newPost = await storage.createBlogPost(blogData);
+      // Kreiranje blog posta u storage-u
+      const blogPost = await storage.createBlogPost(blogData);
       
-      // 7. Obaveštavanje administratora
-      await notificationService.notifyBlogApproval(newPost.id, title);
-      
-      return newPost;
+      return blogPost;
     } catch (error) {
-      console.error("Greška pri kreiranju bloga iz AI odgovora:", error);
+      console.error('Greška pri kreiranju blog posta iz AI odgovora:', error);
       throw error;
     }
   }
@@ -75,39 +85,49 @@ class BlogCreationService {
    * Kreira excerpt od sadržaja (kratak opis)
    */
   private createExcerpt(text: string, maxLength = 150): string {
-    if (text.length <= maxLength) return text;
+    // Ukloni eventualne HTML tagove
+    let cleanText = text.replace(/<[^>]*>/g, '');
     
-    // Prvo probamo da nađemo prirodnu tačku prekida
-    const sentences = text.split(/(?<=[.!?])\s+/);
-    let excerpt = sentences[0];
+    // Smanji na prvu rečenicu ili prvi pasus
+    let excerpt = '';
     
-    let i = 1;
-    while (excerpt.length < 100 && i < sentences.length) {
-      excerpt += ' ' + sentences[i];
-      i++;
+    const sentenceEnd = cleanText.search(/[.!?]\s/);
+    if (sentenceEnd > 0 && sentenceEnd < maxLength) {
+      excerpt = cleanText.substring(0, sentenceEnd + 1);
+    } else {
+      excerpt = cleanText.substring(0, maxLength);
+      // Izbegavaj prekid reči
+      const lastSpace = excerpt.lastIndexOf(' ');
+      if (lastSpace > 0) {
+        excerpt = excerpt.substring(0, lastSpace) + '...';
+      } else {
+        excerpt = excerpt + '...';
+      }
     }
     
-    // Ako je i dalje prekratko ili predugačko
-    if (excerpt.length < 50) {
-      return text.substring(0, maxLength) + '...';
-    } else if (excerpt.length > maxLength) {
-      return excerpt.substring(0, maxLength) + '...';
-    }
-    
-    return excerpt + '...';
+    return excerpt;
   }
 
   /**
    * Generiše jedinstveni slug baziran na naslovu
    */
   private createSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-\-+/g, '-')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '');
+    // Transliteracija ćirilice i dijakritičkih znakova
+    let slug = transliterate(title);
+    
+    // Prebaci u mala slova i zameni sve razmake sa crticama
+    slug = slug.toLowerCase().trim();
+    
+    // Ukloni sve specijalne karaktere osim slova, brojeva, crtica i razmaka
+    slug = slug.replace(/[^a-z0-9\s-]/g, '');
+    
+    // Zameni razmake sa crticama
+    slug = slug.replace(/\s+/g, '-');
+    
+    // Ukloni višestruke crtice
+    slug = slug.replace(/-+/g, '-');
+    
+    return slug;
   }
 
   /**
@@ -117,75 +137,99 @@ class BlogCreationService {
     if (!existingSlugs.includes(baseSlug)) {
       return baseSlug;
     }
-
-    let uniqueSlug: string;
+    
     let counter = 1;
-
-    do {
-      uniqueSlug = `${baseSlug}-${counter}`;
+    let newSlug = `${baseSlug}-${counter}`;
+    
+    while (existingSlugs.includes(newSlug)) {
       counter++;
-    } while (existingSlugs.includes(uniqueSlug));
-
-    return uniqueSlug;
+      newSlug = `${baseSlug}-${counter}`;
+    }
+    
+    return newSlug;
   }
 
   /**
    * Generiše optimizovani naslov za blog post na osnovu pitanja
    */
   private async generateBlogTitle(question: string, answer: string): Promise<string> {
-    // Pojednostavljena verzija - u realnoj implementaciji, ovde bi bio poziv ka AI servisu
-    const wordsInQuestion = question.split(' ');
+    // Za sada, koristimo jednostavan pristup kreiranja naslova
+    // U budućnosti možemo koristiti AI za generisanje naslova
     
-    // Ako je pitanje kratko, koristimo ga kao naslov
-    if (wordsInQuestion.length <= 8) {
-      // Samo popravimo prvo slovo da bude veliko
-      return question.charAt(0).toUpperCase() + question.slice(1);
+    // Ako je pitanje već formulisano kao naslov, koristi ga
+    if (question.length < 100 && !question.endsWith('?')) {
+      return this.capitalizeFirstLetter(question);
     }
     
-    // Ako je pitanje dugo, kreirajmo sažetu verziju
-    const keyWords = wordsInQuestion
-      .filter(word => word.length > 3)
-      .slice(0, 5)
-      .join(' ');
-    
-    let title = keyWords.charAt(0).toUpperCase() + keyWords.slice(1);
-    
-    // Dodajemo upečatljiv prefiks ako naslov deluje previše generički
-    if (title.length < 20) {
-      const prefixes = [
-        "Vodič: ", 
-        "Ključno za znati: ", 
-        "Stručni savet: ", 
-        "Važno za bezbednost: ",
-        "Kako pravilno: "
-      ];
-      const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-      title = randomPrefix + title;
+    // Ako je pitanje kratko, preformulišemo ga u naslov
+    if (question.length < 100) {
+      // Ukloni upitnik i trim
+      let title = question.replace(/\?/g, '').trim();
+      
+      // Za pitanja koja počinju sa "Kako", "Šta", "Kada", itd. - reformulisati
+      title = title
+        .replace(/^kako\s/i, '')
+        .replace(/^šta\s/i, '')
+        .replace(/^kada\s/i, '')
+        .replace(/^gde\s/i, '')
+        .replace(/^zašto\s/i, '')
+        .replace(/^zbog čega\s/i, '')
+        .replace(/^koji\s/i, '')
+        .replace(/^kakva\s/i, '')
+        .replace(/^ko\s/i, '');
+      
+      // Prvo slovo veliko, ostala mala, i dodaj relevantnu reč na početak
+      title = this.capitalizeFirstLetter(title);
+      
+      if (title.toLowerCase().includes('rizik') || title.toLowerCase().includes('opasnost')) {
+        return `Procena rizika: ${title}`;
+      } else if (title.toLowerCase().includes('zakon') || title.toLowerCase().includes('propis')) {
+        return `Zakonske odredbe: ${title}`;
+      } else if (title.toLowerCase().includes('obuka') || title.toLowerCase().includes('trening')) {
+        return `Vodiči za obuku: ${title}`;
+      } else {
+        return `Vodič za ${title}`;
+      }
     }
     
-    return title;
+    // Ako je pitanje dugo, izvuci glavne ključne reči i napravi kraći naslov
+    // Ovo bi idealno bilo urađeno sa AI, ali za sada koristimo jednostavan pristup
+    const words = question.split(' ');
+    if (words.length > 10) {
+      const firstTenWords = words.slice(0, 10).join(' ');
+      return this.capitalizeFirstLetter(firstTenWords) + '...';
+    }
+    
+    return this.capitalizeFirstLetter(question);
   }
 
   /**
    * Dobavlja relevantnu sliku za blog post
    */
   private async getImageForBlogPost(title: string, category: string): Promise<string> {
-    // Privremeno rešenje - koristimo predefinisane slike za kategorije
-    // U realnoj implementaciji, koristiti Unsplash, Pexels ili drugi servis za pretragu slika
+    // Ova funkcija bi trebala da koristi neki servis za dobavljanje slika
+    // poput Unsplash API ili Pixabay API
+    // Za sada vraćamo neki default URL
+    
+    // Mapiranje kategorija na predefinisane slike
     const categoryImages: Record<string, string> = {
-      'bezbednost': 'https://images.unsplash.com/photo-1599059813005-11265ba4b4ce?q=80&w=800',
-      'regulative': 'https://images.unsplash.com/photo-1589391886645-d51941baf7fb?q=80&w=800',
-      'zaštita-zdravlja': 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=800',
-      'procedure': 'https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?q=80&w=800',
-      'procena-rizika': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800',
-      'obuke-zaposlenih': 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=800',
-      'novosti': 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=800',
-      'saveti': 'https://images.unsplash.com/photo-1521790361543-f645cf042ec4?q=80&w=800',
-      'propisi': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=800',
-      'general': 'https://images.unsplash.com/photo-1590402494610-2c378a9114c6?q=80&w=800'
+      'general': 'https://images.unsplash.com/photo-1618044733300-9472054094ee?q=80&w=1000',
+      'regulative': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=1000',
+      'procena-rizika': 'https://images.unsplash.com/photo-1512758017271-d7b84c2113f1?q=80&w=1000',
+      'obuke-zaposlenih': 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=1000',
+      'zaštita-zdravlja': 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1000'
     };
     
+    // Vrati sliku za kategoriju, ili default sliku ako kategorija ne postoji
     return categoryImages[category] || categoryImages['general'];
+  }
+  
+  /**
+   * Pomoćna funkcija za kapitalizaciju prvog slova
+   */
+  private capitalizeFirstLetter(text: string): string {
+    if (!text || text.length === 0) return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 }
 
