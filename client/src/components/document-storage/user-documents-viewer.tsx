@@ -528,43 +528,17 @@ export function UserDocumentsViewer() {
     );
   }
   
-  // Funkcija za dobijanje CSS klasa za prikaz veličine dokumenata
+  // Uvek koristimo samo prikaz liste
   const getDocumentViewClass = () => {
-    switch (viewMode) {
-      case "list":
-        return "grid grid-cols-1 gap-4";
-      case "grid-small":
-        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4";
-      case "grid-medium":
-        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4";
-      case "grid-large":
-        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4";
-      case "grid-extra-large":
-        return "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4";
-      default:
-        return "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4";
-    }
+    return "mt-2 space-y-1";
   };
 
-  // Funkcija za dobijanje veličine ikone dokumenata
+  // Uvek koristimo fiksnu veličinu ikone
   const getIconSize = () => {
-    switch (viewMode) {
-      case "list":
-        return "h-6 w-6";
-      case "grid-small":
-        return "h-8 w-8";
-      case "grid-medium":
-        return "h-12 w-12";
-      case "grid-large":
-        return "h-16 w-16";
-      case "grid-extra-large":
-        return "h-24 w-24";
-      default:
-        return "h-8 w-8";
-    }
+    return "h-6 w-6";
   };
 
-  // Funkcija za prikaz dokumenata u različitim veličinama
+  // Funkcija za prikaz dokumenata u jednoobraznom prikazu liste
   const renderDocumentCard = (document: UserDocument) => {
     // Specijalni slučaj za "Sanitarni" - tretiramo ga kao folder
     const isSanitarniFolder = document.name === "Sanitarni" || document.name.toLowerCase().includes("sanitarni");
@@ -577,111 +551,27 @@ export function UserDocumentsViewer() {
     // Određivanje klase
     const specialClass = isFolder ? folderClass : fileClass;
     
-    if (viewMode === "list") {
-      // List prikaz
-      return (
-        <Card key={document.id} className={`overflow-hidden ${specialClass}`}>
-          <div className="flex items-center p-4">
-            <div className="flex-shrink-0">
-              {isFolder ? <Folder className="h-6 w-6 text-amber-500" /> : getFileIcon(document)}
-            </div>
-            <div className="ml-4 flex-grow overflow-hidden">
-              <h3 className="text-sm font-medium truncate">{document.name}</h3>
-              {!isFolder && (
-                <p className="text-xs text-muted-foreground">
-                  {formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
-                </p>
-              )}
-              {isFolder && (
-                <p className="text-xs text-muted-foreground">
-                  Folder
-                </p>
-              )}
-            </div>
-            <div className="flex-shrink-0 ml-4 space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleDeleteDocument(document)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              {!isFolder && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleDownloadDocument(document)}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              )}
-              {isFolder && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleOpenFolder(document)}
-                >
-                  <FolderOpen className="h-4 w-4" />
-                </Button>
-              )}
-              {!isFolder && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleViewDocument(document)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+    // Uvek koristimo samo prikaz liste
+    return (
+      <Card key={document.id} className={`overflow-hidden ${specialClass}`}>
+        <div className="flex items-center p-4">
+          <div className="flex-shrink-0">
+            {isFolder ? <Folder className="h-6 w-6 text-amber-500" /> : getFileIcon(document)}
           </div>
-        </Card>
-      );
-    } else {
-      // Grid prikaz (mala, srednja, velika, ogromna)
-      const iconSizeClass = getIconSize();
-      const isExtraLarge = viewMode === "grid-extra-large";
-      const isLarge = viewMode === "grid-large";
-      const isMedium = viewMode === "grid-medium";
-      
-      return (
-        <Card key={document.id} className={`overflow-hidden flex flex-col ${specialClass}`}>
-          <div className={`p-4 flex ${isExtraLarge || isLarge ? 'justify-center' : ''} items-center`}>
-            <div className={`${isExtraLarge || isLarge ? 'text-center' : 'flex-shrink-0'}`}>
-              <div className={iconSizeClass}>
-                {isFolder ? <Folder className={`${iconSizeClass} text-amber-500`} /> : getFileIcon(document)}
-              </div>
-            </div>
-            {isExtraLarge && (
-              <div className="mt-2 text-center w-full">
-                <h3 className="text-sm font-medium break-words">{document.name}</h3>
-                {!isFolder && (
-                  <>
-                    <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(new Date(document.createdAt))}</p>
-                  </>
-                )}
-                {isFolder && (
-                  <p className="text-xs text-muted-foreground">Folder</p>
-                )}
-              </div>
+          <div className="ml-4 flex-grow overflow-hidden">
+            <h3 className="text-sm font-medium truncate">{decodeURIComponent(document.name)}</h3>
+            {!isFolder && (
+              <p className="text-xs text-muted-foreground">
+                {formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
+              </p>
             )}
-            {!isExtraLarge && (
-              <div className={`${isLarge ? 'mt-2 text-center w-full' : 'ml-3 flex-grow overflow-hidden'}`}>
-                <h3 className={`${isLarge || isMedium ? 'text-sm' : 'text-xs'} font-medium truncate`}>{document.name}</h3>
-                {!isFolder && (
-                  <p className="text-xs text-muted-foreground">{formatBytes(document.size, 2)}</p>
-                )}
-                {isFolder && (
-                  <p className="text-xs text-muted-foreground">Folder</p>
-                )}
-                {!isFolder && !isLarge && !isMedium && (
-                  <p className="text-xs text-muted-foreground hidden sm:block">{formatDate(new Date(document.createdAt))}</p>
-                )}
-              </div>
+            {isFolder && (
+              <p className="text-xs text-muted-foreground">
+                Folder
+              </p>
             )}
           </div>
-          <div className="mt-auto p-2 flex justify-center space-x-2">
+          <div className="flex-shrink-0 ml-4 space-x-2">
             <Button 
               variant="outline" 
               size="sm" 
@@ -717,9 +607,9 @@ export function UserDocumentsViewer() {
               </Button>
             )}
           </div>
-        </Card>
-      );
-    }
+        </div>
+      </Card>
+    );
   };
 
   // Funkcija za generisanje breadcrumb za trenutnu putanju
@@ -1052,8 +942,43 @@ export function UserDocumentsViewer() {
           {/* Prikaz dokumenata za svaki folder */}
           {folders.map(folder => (
             <TabsContent key={folder} value={folder} className="mt-4">
-              <div className={getDocumentViewClass()}>
-                {getFilteredDocuments().map(document => renderDocumentCard(document))}
+              <div className="mt-2 space-y-1">
+                {getFilteredDocuments().map(document => (
+                  <div key={document.id} className="flex items-center p-2 hover:bg-gray-100 rounded-sm border-b">
+                    <div className="mr-2 flex-shrink-0">
+                      {getFileIcon(document)}
+                    </div>
+                    <div className="flex-grow min-w-0 mr-4" onClick={() => document.isFolder ? handleOpenFolder(document) : handleViewDocument(document)}>
+                      <div className="cursor-pointer">
+                        <div className="font-medium truncate" title={document.name}>
+                          {decodeURIComponent(document.name)}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {!document.isFolder && formatBytes(document.size, 2)} • {formatDate(new Date(document.createdAt))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      {document.isFolder ? (
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenFolder(document)}>
+                          <FolderOpen className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => handleViewDocument(document)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(document)}>
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteDocument(document)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </TabsContent>
           ))}
@@ -1068,42 +993,7 @@ export function UserDocumentsViewer() {
               {currentPath.split('/').pop()}
             </h2>
             <div className="flex items-center space-x-2">
-              {/* Dugmad za promenu prikaza */}
-              <RadioGroup
-                value={viewMode}
-                onValueChange={(value) => setViewMode(value as any)}
-                className="flex"
-              >
-                <div className="flex space-x-1 border rounded-md p-1">
-                  <div className="rounded hover:bg-secondary p-1">
-                    <RadioGroupItem value="list" id="list-folder" className="hidden" />
-                    <Label htmlFor="list-folder" className="cursor-pointer">
-                      <List className="h-5 w-5" />
-                    </Label>
-                  </div>
-                  
-                  <div className="rounded hover:bg-secondary p-1">
-                    <RadioGroupItem value="grid-small" id="grid-small-folder" className="hidden" />
-                    <Label htmlFor="grid-small-folder" className="cursor-pointer">
-                      <Grid3X3 className="h-5 w-5" />
-                    </Label>
-                  </div>
-                  
-                  <div className="rounded hover:bg-secondary p-1">
-                    <RadioGroupItem value="grid-medium" id="grid-medium-folder" className="hidden" />
-                    <Label htmlFor="grid-medium-folder" className="cursor-pointer">
-                      <Grid2X2 className="h-5 w-5" />
-                    </Label>
-                  </div>
-                  
-                  <div className="rounded hover:bg-secondary p-1">
-                    <RadioGroupItem value="grid-large" id="grid-large-folder" className="hidden" />
-                    <Label htmlFor="grid-large-folder" className="cursor-pointer">
-                      <LayoutGrid className="h-5 w-5" />
-                    </Label>
-                  </div>
-                </div>
-              </RadioGroup>
+              {/* Uklonjena dugmad za promenu prikaza */}
               
               {/* Dugme za kreiranje novog foldera */}
               <Button 
