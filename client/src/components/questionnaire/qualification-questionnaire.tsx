@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Button,
   Card, 
   CardContent, 
   CardFooter,
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Form, 
   FormControl, 
@@ -197,9 +197,9 @@ export default function QualificationQuestionnaire({
       // Slanje rezultata na email
       try {
         const response = await apiRequest("POST", "/api/questionnaire/send-results", {
-          email: completeFormData.email,
-          companyName: completeFormData.companyName,
-          fullName: completeFormData.fullName,
+          email: completeFormData.email || "",
+          companyName: completeFormData.companyName || "",
+          fullName: completeFormData.fullName || "",
           result
         });
         

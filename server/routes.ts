@@ -23,6 +23,7 @@ import { setupDocumentExtractionRoutes } from "./routes/document-extraction-rout
 import { setupDocumentRoutes } from './routes/document-routes';
 import { setupDocumentScraperRoutes } from './routes/document-scraper';
 import { setupBlogRoutes } from './routes/blog-routes';
+import { setupQuestionnaireRoutes } from './routes/questionnaire-routes';
 import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
@@ -1131,6 +1132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register document storage routes
   registerDocumentStorageRoutes(app);
+  
+  // Registracija ruta za upitnik
+  setupQuestionnaireRoutes(app);
   
   // Registracija admin ruta
   app.use('/api/admin', adminRouter);

@@ -139,7 +139,7 @@ export default function LandingPage() {
                   toast({
                     title: "Upitnik uspešno popunjen",
                     description: "Rezultati su poslati na vašu e-mail adresu.",
-                    variant: "success",
+                    variant: "default",
                   });
                 }} 
               />
