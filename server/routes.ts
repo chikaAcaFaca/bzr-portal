@@ -19,6 +19,7 @@ import { fromZodError } from "zod-validation-error";
 import { setupDocumentProcessingRoutes } from "./routes/document-processing";
 import { setupFileProcessingRoutes } from "./routes/file-processing";
 import { setupAIAgentRoutes } from "./routes/ai-agent-routes";
+import { setupDocumentExtractionRoutes } from "./routes/document-extraction-routes";
 import { setupDocumentRoutes } from './routes/document-routes';
 import { setupDocumentScraperRoutes } from './routes/document-scraper';
 import { blogRouter } from './routes/blog-routes';

@@ -1,0 +1,94 @@
+praviš AI koji će čitati razne dokumente sa Wasabi storage-a, izvući informacije i "učiti" da postane stručnjak za bezbednost i zdravlje na radu (BZR).
+
+Evo ti predlog arhitekture i primera koda u Pythonu za prvi korak: preuzimanje, čitanje i ekstrakciju sadržaja iz dokumenata. Učenje (fine-tuning ili vektorska baza) dolazi posle.
+
+✅ 1. Povezivanje sa Wasabi (kompatibilno sa S3)
+Wasabi koristi S3 API, pa koristiš boto3:
+
+python
+Copy
+Edit
+import boto3
+from io import BytesIO
+
+session = boto3.session.Session()
+s3 = session.client(
+    service_name='s3',
+    aws_access_key_id='YOUR_ACCESS_KEY',
+    aws_secret_access_key='YOUR_SECRET_KEY',
+    endpoint_url='https://s3.eu-central-1.wasabisys.com'  # primer regiona
+)
+
+def get_file(bucket_name, key):
+    obj = s3.get_object(Bucket=bucket_name, Key=key)
+    return BytesIO(obj['Body'].read())
+✅ 2. Ekstrakcija teksta iz različitih tipova fajlova
+Koristi sledeće biblioteke:
+
+python-docx, openpyxl, odfpy, PyPDF2, pytesseract, PIL, pdf2image
+
+bash
+Copy
+Edit
+pip install python-docx openpyxl odfpy PyPDF2 pytesseract pillow pdf2image
+Čitanje primera:
+python
+Copy
+Edit
+from docx import Document
+from openpyxl import load_workbook
+from odf.opendocument import load as load_odf
+from odf.text import P
+from PyPDF2 import PdfReader
+from PIL import Image
+import pytesseract
+import mimetypes
+
+def extract_text(file_stream, filename):
+    mime_type, _ = mimetypes.guess_type(filename)
+    
+    if filename.endswith(".docx"):
+        doc = Document(file_stream)
+        return "\n".join([p.text for p in doc.paragraphs])
+    
+    elif filename.endswith(".xlsx"):
+        wb = load_workbook(file_stream, data_only=True)
+        text = ""
+        for sheet in wb:
+            for row in sheet.iter_rows(values_only=True):
+                text += " ".join([str(cell) if cell else "" for cell in row]) + "\n"
+        return text
+
+    elif filename.endswith(".pdf"):
+        reader = PdfReader(file_stream)
+        return "\n".join([page.extract_text() or "" for page in reader.pages])
+    
+    elif filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+        image = Image.open(file_stream)
+        return pytesseract.image_to_string(image)
+    
+    elif filename.endswith(".odt") or filename.endswith(".ods"):
+        doc = load_odf(file_stream)
+        text = ""
+        for elem in doc.getElementsByType(P):
+            text += str(elem) + "\n"
+        return text
+
+    else:
+        return "[Nepodržan format]"
+
+# Primer poziva:
+stream = get_file("tvoj-bucket", "putanja/do/fajla.pdf")
+tekst = extract_text(stream, "fajl.pdf")
+print(tekst)
+✅ 3. Šta dalje?
+Nakon što pročitaš i ekstrahuješ sadržaj iz dokumenata:
+
+Preprocesiranje teksta (čišćenje, segmentacija po temama).
+
+Spremanje u vektorsku bazu (npr. FAISS, Pinecone, Weaviate) radi semantičkog pretraživanja.
+
+Treniranje prilagođenog modela (ako ideš na fine-tuning, koristi OpenAI, Llama, Mistral ili neki drugi model).
+
+Postaviš Chat sučelje gde AI odgovara kao BZR stručnjak na osnovu dokumenata.
+
