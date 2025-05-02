@@ -33,6 +33,7 @@ import aiUsageRoutes from './routes/ai-usage-routes';
 import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
+import { knowledgeReferenceService } from './services/knowledge-reference-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Inicijalizacija cookie-parser middleware-a
@@ -961,7 +962,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertKnowledgeReferenceSchema.parse(data);
       console.log("Validiran podatak:", validatedData);
       
+      // 1. Sačuvaj referencu znanja u bazi podataka
       const reference = await storage.createKnowledgeReference(validatedData);
+      
+      // 2. Asinhorno preuzmi dokument sa URL-a i prebaci ga na Wasabi bucket
+      // Ovo se izvršava asinhorno, bez čekanja na odgovor, jer može trajati duže
+      // U produkciji bi moglo biti u pozadinskom job queue
+      knowledgeReferenceService.downloadAndUploadToWasabi(reference)
+        .then(result => {
+          console.log(`Dokument prebačen na Wasabi: ${result.success ? 'Uspešno' : 'Neuspešno'}`);
+          console.log(`Wasabi ključ: ${result.wasabiKey || 'N/A'}`);
+          console.log(`Document ID u vektorskoj bazi: ${result.documentId || 'N/A'}`);
+        })
+        .catch(err => {
+          console.error(`Greška pri prebacivanju dokumenta na Wasabi: ${err.message}`);
+        });
+      
+      // 3. Vrati uspešan odgovor sa referencom
       res.status(201).json(reference);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1051,6 +1068,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register referral routes
   app.use('/api/referrals', referralRoutes);
   app.use('/api/ai/usage', aiUsageRoutes);
+  
+  // Ruta za migraciju svih referenci znanja na Wasabi
+  app.post('/api/knowledge-references/migrate-to-wasabi', async (req: Request, res: Response) => {
+    try {
+      // Provera da li je korisnik admin
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Samo administratori mogu pokrenuti migraciju dokumenata' 
+        });
+      }
+      
+      // Pokretanje migracije
+      console.log('Pokretanje migracije dokumenata na Wasabi...');
+      const result = await knowledgeReferenceService.migrateAllReferencesToWasabi();
+      
+      // Vraćanje rezultata
+      return res.status(200).json({
+        success: result.success,
+        message: `Migracija dokumenata završena: ${result.successfulUploads} uspešno, ${result.failedUploads} neuspešno`,
+        details: result
+      });
+    } catch (error: any) {
+      console.error('Greška pri migraciji dokumenata:', error);
+      return res.status(500).json({
+        success: false,
+        message: `Greška pri migraciji dokumenata: ${error.message}`,
+      });
+    }
+  });
   
   // Register document storage routes
   registerDocumentStorageRoutes(app);

@@ -3,6 +3,7 @@ import path from 'path';
 import { KnowledgeReference } from '@shared/schema';
 import { wasabiStorageService } from './wasabi-storage-service';
 import { documentExtractorService } from './document-extractor-service';
+import { storage } from '../storage';
 
 /**
  * Servis za rad sa referencama znanja i njihovim prenosom na Wasabi
@@ -169,6 +170,84 @@ class KnowledgeReferenceService {
     };
     
     return mimeTypes[extension] || 'application/octet-stream';
+  }
+  
+  /**
+   * Prebacuje sve postojeće reference znanja na Wasabi bucket
+   * 
+   * @returns Rezultat operacije sa statistikom
+   */
+  public async migrateAllReferencesToWasabi(): Promise<{
+    success: boolean;
+    totalReferences: number;
+    processedReferences: number;
+    successfulUploads: number;
+    failedUploads: number;
+    errors: Array<{ title: string; error: string }>;
+  }> {
+    try {
+      console.log('Započinjem prebacivanje svih referenci znanja na Wasabi...');
+      
+      // 1. Dobavi sve reference znanja iz baze
+      const references = await storage.getAllKnowledgeReferences();
+      
+      console.log(`Pronađeno ${references.length} referenci znanja za prebacivanje`);
+      
+      // 2. Inicijalizacija brojača za statistiku
+      const stats = {
+        totalReferences: references.length,
+        processedReferences: 0,
+        successfulUploads: 0,
+        failedUploads: 0,
+        errors: [] as Array<{ title: string; error: string }>
+      };
+      
+      // 3. Asinhorno prebacivanje svakog dokumenta
+      for (const reference of references) {
+        try {
+          console.log(`Obrađujem referencu: ${reference.title}`);
+          
+          const result = await this.downloadAndUploadToWasabi(reference);
+          
+          stats.processedReferences++;
+          
+          if (result.success) {
+            stats.successfulUploads++;
+            console.log(`Uspešno prebačen dokument: ${reference.title}`);
+          } else {
+            stats.failedUploads++;
+            stats.errors.push({
+              title: reference.title,
+              error: result.message
+            });
+            console.error(`Neuspešno prebačen dokument: ${reference.title} - ${result.message}`);
+          }
+        } catch (error: any) {
+          stats.processedReferences++;
+          stats.failedUploads++;
+          stats.errors.push({
+            title: reference.title,
+            error: error.message || 'Nepoznata greška'
+          });
+          console.error(`Greška pri prebacivanju dokumenta ${reference.title}:`, error);
+        }
+      }
+      
+      return {
+        success: stats.failedUploads === 0,
+        ...stats
+      };
+    } catch (error: any) {
+      console.error('Greška pri prebacivanju referenci znanja:', error);
+      return {
+        success: false,
+        totalReferences: 0,
+        processedReferences: 0,
+        successfulUploads: 0,
+        failedUploads: 0,
+        errors: [{ title: 'Globalna greška', error: error.message || 'Nepoznata greška' }]
+      };
+    }
   }
 }
 
