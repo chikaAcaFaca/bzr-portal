@@ -17,10 +17,7 @@ import {
   FolderOpen,
   Loader,
   Info,
-  Grid2X2,
-  Grid3X3,
-  LayoutGrid,
-  List,
+  
   FolderPlus,
   ChevronLeft,
   Eye,
@@ -32,7 +29,7 @@ import {
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { formatBytes, formatDate } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+// import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { 
   Dialog,
@@ -888,42 +885,7 @@ export function UserDocumentsViewer() {
               </TabsList>
               
               <div className="flex items-center space-x-2">
-                {/* Dugmad za promenu prikaza */}
-                <RadioGroup
-                  value={viewMode}
-                  onValueChange={(value) => setViewMode(value as any)}
-                  className="flex"
-                >
-                  <div className="flex space-x-1 border rounded-md p-1">
-                    <div className="rounded hover:bg-secondary p-1">
-                      <RadioGroupItem value="list" id="list" className="hidden" />
-                      <Label htmlFor="list" className="cursor-pointer">
-                        <List className="h-5 w-5" />
-                      </Label>
-                    </div>
-                    
-                    <div className="rounded hover:bg-secondary p-1">
-                      <RadioGroupItem value="grid-small" id="grid-small" className="hidden" />
-                      <Label htmlFor="grid-small" className="cursor-pointer">
-                        <Grid3X3 className="h-5 w-5" />
-                      </Label>
-                    </div>
-                    
-                    <div className="rounded hover:bg-secondary p-1">
-                      <RadioGroupItem value="grid-medium" id="grid-medium" className="hidden" />
-                      <Label htmlFor="grid-medium" className="cursor-pointer">
-                        <Grid2X2 className="h-5 w-5" />
-                      </Label>
-                    </div>
-                    
-                    <div className="rounded hover:bg-secondary p-1">
-                      <RadioGroupItem value="grid-large" id="grid-large" className="hidden" />
-                      <Label htmlFor="grid-large" className="cursor-pointer">
-                        <LayoutGrid className="h-5 w-5" />
-                      </Label>
-                    </div>
-                  </div>
-                </RadioGroup>
+                {/* Uklonjena dugmad za promenu prikaza */}
                 
                 {/* Dugme za kreiranje novog foldera */}
                 <Button 
