@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Транслитератор имена фајлова</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3e8e41;
+        }
+        .result {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .file-drop {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+            transition: all 0.3s;
+        }
+        .file-drop.active {
+            border-color: #4CAF50;
+            background-color: #e8f5e9;
+        }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        .file-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        .instructions {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .copy-button {
+            background-color: #2196F3;
+        }
+        .copy-button:hover {
+            background-color: #0b7dda;
+        }
+        .download-button {
+            background-color: #ff9800;
+        }
+        .download-button:hover {
+            background-color: #e68a00;
+        }
+        .batch-section {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Транслитератор имена фајлова</h1>
+    <div class="instructions">
+        <h3>Упутство:</h3>
+        <p>Овај алат вам помаже да конвертујете имена фајлова са ћирилице/латинице на енглеску латиницу како бисте избегли проблеме при отпремању на веб портал.</p>
+        <p>Можете:</p>
+        <ul>
+            <li>Унети текст директно и транслитерисати га</li>
+            <li>Превући фајлове и добити њихова транслитерисана имена</li>
+            <li>Преузети команду за терминал која ће вам помоћи да преименујете фајлове пре отпремања</li>
+        </ul>
+    </div>
+
+    <div class="container">
+        <h2>Транслитерација текста</h2>
+        <textarea id="input-text" placeholder="Унесите текст који желите да транслитеришете (пример: Опис послова.pdf)"></textarea>
+        <button onclick="transliterateText()">Транслитериши</button>
+        <button class="copy-button" onclick="copyTransliteratedText()">Копирај резултат</button>
+        
+        <div id="result" class="result" style="margin-top: 15px; display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Транслитерација имена фајлова</h2>
+        <div id="file-drop" class="file-drop">
+            <p>Превуците фајлове овде или кликните да додате фајлове</p>
+            <input type="file" id="file-input" multiple style="display: none;">
+        </div>
+        
+        <div id="file-list" class="file-list" style="display: none;"></div>
+    </div>
+
+    <div class="container batch-section">
+        <h2>Скрипте за преименовање</h2>
+        <p>Преузмите скрипте које можете користити за аутоматско преименовање фајлова пре отпремања:</p>
+        
+        <button class="download-button" onclick="downloadScript('node')">Преузми Node.js скрипту</button>
+        <button class="download-button" onclick="downloadScript('batch')">Преузми Windows batch скрипту</button>
+    </div>
+
+    <div class="container">
+        <h2>Табела за конверзију</h2>
+        <table>
+            <tr>
+                <th>Оригинал</th>
+                <th>Транслитерација</th>
+            </tr>
+            <tr><td>А, а</td><td>A, a</td></tr>
+            <tr><td>Б, б</td><td>B, b</td></tr>
+            <tr><td>В, в</td><td>V, v</td></tr>
+            <tr><td>Г, г</td><td>G, g</td></tr>
+            <tr><td>Д, д</td><td>D, d</td></tr>
+            <tr><td>Ђ, ђ</td><td>DJ, dj</td></tr>
+            <tr><td>Е, е</td><td>E, e</td></tr>
+            <tr><td>Ж, ж</td><td>Z, z</td></tr>
+            <tr><td>З, з</td><td>Z, z</td></tr>
+            <tr><td>И, и</td><td>I, i</td></tr>
+            <tr><td>Ј, ј</td><td>J, j</td></tr>
+            <tr><td>К, к</td><td>K, k</td></tr>
+            <tr><td>Л, л</td><td>L, l</td></tr>
+            <tr><td>Љ, љ</td><td>LJ, lj</td></tr>
+            <tr><td>М, м</td><td>M, m</td></tr>
+            <tr><td>Н, н</td><td>N, n</td></tr>
+            <tr><td>Њ, њ</td><td>NJ, nj</td></tr>
+            <tr><td>О, о</td><td>O, o</td></tr>
+            <tr><td>П, п</td><td>P, p</td></tr>
+            <tr><td>Р, р</td><td>R, r</td></tr>
+            <tr><td>С, с</td><td>S, s</td></tr>
+            <tr><td>Т, т</td><td>T, t</td></tr>
+            <tr><td>Ћ, ћ</td><td>C, c</td></tr>
+            <tr><td>У, у</td><td>U, u</td></tr>
+            <tr><td>Ф, ф</td><td>F, f</td></tr>
+            <tr><td>Х, х</td><td>H, h</td></tr>
+            <tr><td>Ц, ц</td><td>C, c</td></tr>
+            <tr><td>Ч, ч</td><td>C, c</td></tr>
+            <tr><td>Џ, џ</td><td>DZ, dz</td></tr>
+            <tr><td>Ш, ш</td><td>S, s</td></tr>
+            <tr><td>Č, č</td><td>C, c</td></tr>
+            <tr><td>Ć, ć</td><td>C, c</td></tr>
+            <tr><td>Đ, đ</td><td>DJ, dj</td></tr>
+            <tr><td>Š, š</td><td>S, s</td></tr>
+            <tr><td>Ž, ž</td><td>Z, z</td></tr>
+        </table>
+    </div>
+
+    <script>
+        // Мапа за конверзију ћириличних и латиничних карактера
+        const characterMap = {
+            // Ћирилична слова
+            'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'DJ', 'Е': 'E', 'Ж': 'Z', 
+            'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'LJ', 'М': 'M', 'Н': 'N', 
+            'Њ': 'NJ', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U', 
+            'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'DZ', 'Ш': 'S',
+
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z', 
+            'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n', 
+            'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c', 'у': 'u', 
+            'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
+
+            // Латинична слова са дијакритичким знаковима
+            'Č': 'C', 'Ć': 'C', 'Đ': 'DJ', 'Š': 'S', 'Ž': 'Z', 
+            'č': 'c', 'ć': 'c', 'đ': 'dj', 'š': 's', 'ž': 'z',
+
+            // Додатни дијакритички знакови који се могу појавити
+            'Ä': 'A', 'Ö': 'O', 'Ü': 'U', 'ß': 'ss',
+            'ä': 'a', 'ö': 'o', 'ü': 'u',
+            'Å': 'A', 'å': 'a',
+            'Æ': 'AE', 'æ': 'ae',
+            'Ø': 'O', 'ø': 'o',
+            'Ñ': 'N', 'ñ': 'n',
+            'Ç': 'C', 'ç': 'c',
+            'Ë': 'E', 'ë': 'e',
+            'Ï': 'I', 'ï': 'i',
+            'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Å': 'A',
+            'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'å': 'a',
+            'È': 'E', 'É': 'E', 'Ê': 'E',
+            'è': 'e', 'é': 'e', 'ê': 'e',
+            'Ì': 'I', 'Í': 'I', 'Î': 'I',
+            'ì': 'i', 'í': 'i', 'î': 'i',
+            'Ò': 'O', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O',
+            'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o',
+            'Ù': 'U', 'Ú': 'U', 'Û': 'U',
+            'ù': 'u', 'ú': 'u', 'û': 'u',
+        };
+
+        // Функција за транслитерацију текста
+        function transliterate(text) {
+            return text
+                .split('')
+                .map(char => characterMap[char] || char)
+                .join('');
+        }
+
+        // Функција за транслитерацију имена фајла
+        function transliterateFileName(fileName) {
+            const lastDotIndex = fileName.lastIndexOf('.');
+            
+            if (lastDotIndex === -1) {
+                // Нема екстензије
+                return transliterate(fileName);
+            }
+            
+            const name = fileName.substring(0, lastDotIndex);
+            const extension = fileName.substring(lastDotIndex);
+            
+            return transliterate(name) + extension;
+        }
+
+        // Функција за транслитерацију текста из поља за унос
+        function transliterateText() {
+            const inputText = document.getElementById('input-text').value;
+            const transliteratedText = transliterate(inputText);
+            const resultElement = document.getElementById('result');
+            
+            resultElement.textContent = transliteratedText;
+            resultElement.style.display = 'block';
+        }
+
+        // Функција за копирање транслитерисаног текста
+        function copyTransliteratedText() {
+            const resultElement = document.getElementById('result');
+            
+            if (resultElement.style.display === 'none') {
+                transliterateText();
+            }
+            
+            const text = resultElement.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Текст је копиран у клипборд!');
+            }).catch(err => {
+                console.error('Грешка при копирању текста:', err);
+            });
+        }
+
+        // Функција за обраду фајлова
+        function handleFiles(files) {
+            const fileListElement = document.getElementById('file-list');
+            fileListElement.innerHTML = '';
+            fileListElement.style.display = 'block';
+            
+            for (const file of files) {
+                const fileName = file.name;
+                const transliteratedFileName = transliterateFileName(fileName);
+                
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div><strong>Оригинално име:</strong> ${fileName}</div>
+                    <div><strong>Транслитерисано име:</strong> ${transliteratedFileName}</div>
+                `;
+                
+                fileListElement.appendChild(fileItem);
+            }
+        }
+
+        // Функција за преузимање скрипте
+        function downloadScript(type) {
+            let content = '';
+            let filename = '';
+            
+            if (type === 'node') {
+                filename = 'transliterate-files.js';
+                content = `#!/usr/bin/env node
+
+/**
+ * Скрипта за транслитерацију имена фајлова са ћирилице/латинице на енглеску латиницу
+ * 
+ * Употреба:
+ * node transliterate-files.js <путања-до-директоријума>
+ * 
+ * Пример:
+ * node transliterate-files.js ./dokumenti
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Мапа за конверзију ћириличних и латиничних карактера
+const characterMap = {
+  // Ћирилична слова
+  'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'DJ', 'Е': 'E', 'Ж': 'Z', 
+  'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'LJ', 'М': 'M', 'Н': 'N', 
+  'Њ': 'NJ', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'C', 'У': 'U', 
+  'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'C', 'Џ': 'DZ', 'Ш': 'S',
+
+  'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'dj', 'е': 'e', 'ж': 'z', 
+  'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n', 
+  'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'c', 'у': 'u', 
+  'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'c', 'џ': 'dz', 'ш': 's',
+
+  // Латинична слова са дијакритичким знаковима
+  'Č': 'C', 'Ć': 'C', 'Đ': 'DJ', 'Š': 'S', 'Ž': 'Z', 
+  'č': 'c', 'ć': 'c', 'đ': 'dj', 'š': 's', 'ž': 'z',
+
+  // Додатни дијакритички знакови који се могу појавити
+  'Ä': 'A', 'Ö': 'O', 'Ü': 'U', 'ß': 'ss',
+  'ä': 'a', 'ö': 'o', 'ü': 'u',
+  'Å': 'A', 'å': 'a',
+  'Æ': 'AE', 'æ': 'ae',
+  'Ø': 'O', 'ø': 'o',
+  'Ñ': 'N', 'ñ': 'n',
+  'Ç': 'C', 'ç': 'c'
+};
+
+/**
+ * Функција за транслитерацију текста из ћирилице/латинице са дијакритиком у енглеску латиницу
+ * @param {string} text Улазни текст за транслитерацију
+ * @returns {string} Транслитерисани текст
+ */
+function transliterate(text) {
+  return text
+    .split('')
+    .map(char => characterMap[char] || char)
+    .join('');
+}
+
+/**
+ * Функција за проверу да ли име фајла садржи ћириличне или специјалне латиничне карактере
+ * @param {string} fileName Име фајла за проверу
+ * @returns {boolean} true ако име фајла садржи специјалне карактере који би требало транслитерисати
+ */
+function needsTransliteration(fileName) {
+  for (const char of fileName) {
+    if (characterMap[char]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Рекурзивно преименовање свих фајлова у директоријуму и поддиректоријумима
+ * @param {string} directoryPath Путања до директоријума
+ * @param {boolean} recursive Да ли да се рекурзивно обрађују поддиректоријуми
+ */
+function processDirectory(directoryPath, recursive = true) {
+  if (!fs.existsSync(directoryPath)) {
+    console.error(\`Директоријум не постоји: \${directoryPath}\`);
+    return;
+  }
+
+  const files = fs.readdirSync(directoryPath);
+  let filesTransliterated = 0;
+
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    const stats = fs.statSync(filePath);
+
+    if (stats.isDirectory() && recursive) {
+      // Рекурзивно обради поддиректоријуме
+      const dirName = path.basename(filePath);
+      
+      if (needsTransliteration(dirName)) {
+        const newDirName = transliterate(dirName);
+        const newDirPath = path.join(directoryPath, newDirName);
+        
+        if (dirName !== newDirName && !fs.existsSync(newDirPath)) {
+          fs.renameSync(filePath, newDirPath);
+          console.log(\`Директоријум преименован: \${dirName} -> \${newDirName}\`);
+          filesTransliterated++;
+          // Настави обраду са новим именом директоријума
+          processDirectory(newDirPath, recursive);
+        } else {
+          // Настави обраду са оригиналним именом директоријума
+          processDirectory(filePath, recursive);
+        }
+      } else {
+        // Настави обраду са оригиналним именом директоријума
+        processDirectory(filePath, recursive);
+      }
+    } else if (stats.isFile()) {
+      // Обради фајл
+      const fileName = path.basename(filePath);
+      
+      if (needsTransliteration(fileName)) {
+        const newFileName = transliterate(fileName);
+        const newFilePath = path.join(directoryPath, newFileName);
+        
+        if (fileName !== newFileName && !fs.existsSync(newFilePath)) {
+          fs.renameSync(filePath, newFilePath);
+          console.log(\`Фајл преименован: \${fileName} -> \${newFileName}\`);
+          filesTransliterated++;
+        }
+      }
+    }
+  }
+
+  return filesTransliterated;
+}
+
+// Главна функција
+function main() {
+  const args = process.argv.slice(2);
+  
+  if (args.length === 0) {
+    console.log('Употреба: node transliterate-files.js <путања-до-директоријума> [--no-recursive]');
+    console.log('Опције:');
+    console.log('  --no-recursive    Не обрађуј поддиректоријуме рекурзивно');
+    return;
+  }
+  
+  const directoryPath = args[0];
+  const recursive = !args.includes('--no-recursive');
+  
+  console.log(\`Започињем транслитерацију имена фајлова у директоријуму: \${directoryPath}\`);
+  console.log(\`Рекурзивна обрада: \${recursive ? 'Да' : 'Не'}\`);
+  
+  try {
+    const filesTransliterated = processDirectory(directoryPath, recursive);
+    console.log(\`Завршено! Укупно преименовано фајлова: \${filesTransliterated}\`);
+  } catch (error) {
+    console.error('Дошло је до грешке:', error.message);
+  }
+}
+
+main();`;
+            } else if (type === 'batch') {
+                filename = 'transliterate-files.bat';
+                content = `@echo off
+setlocal enabledelayedexpansion
+
+:: Скрипта за транслитерацију имена фајлова са ћирилице и латинице са дијакритиком на енглеску латиницу
+:: Коришћење: transliterate-files.bat путања_до_директоријума
+
+echo Транслитерација имена фајлова из ћирилице и латинице са дијакритиком на енглеску латиницу
+echo ===============================================================================
+
+if "%~1"=="" (
+    echo Грешка: Недостаје путања до директоријума.
+    echo Употреба: transliterate-files.bat путања_до_директоријума
+    exit /b 1
+)
+
+set "DIR=%~1"
+
+if not exist "%DIR%" (
+    echo Грешка: Директоријум "%DIR%" не постоји.
+    exit /b 1
+)
+
+echo Обрађујем фајлове у: %DIR%
+echo.
+
+:: Променљиве за чување броја преименованих фајлова
+set "renamed_files=0"
+
+:: Обрада фајлова у директоријуму
+for /r "%DIR%" %%f in (*) do (
+    set "filename=%%~nxf"
+    set "filepath=%%~dpf"
+    set "newname=!filename!"
+    
+    :: Замена знакова - ћирилица
+    set "newname=!newname:А=A!"
+    set "newname=!newname:Б=B!"
+    set "newname=!newname:В=V!"
+    set "newname=!newname:Г=G!"
+    set "newname=!newname:Д=D!"
+    set "newname=!newname:Ђ=DJ!"
+    set "newname=!newname:Е=E!"
+    set "newname=!newname:Ж=Z!"
+    set "newname=!newname:З=Z!"
+    set "newname=!newname:И=I!"
+    set "newname=!newname:Ј=J!"
+    set "newname=!newname:К=K!"
+    set "newname=!newname:Л=L!"
+    set "newname=!newname:Љ=LJ!"
+    set "newname=!newname:М=M!"
+    set "newname=!newname:Н=N!"
+    set "newname=!newname:Њ=NJ!"
+    set "newname=!newname:О=O!"
+    set "newname=!newname:П=P!"
+    set "newname=!newname:Р=R!"
+    set "newname=!newname:С=S!"
+    set "newname=!newname:Т=T!"
+    set "newname=!newname:Ћ=C!"
+    set "newname=!newname:У=U!"
+    set "newname=!newname:Ф=F!"
+    set "newname=!newname:Х=H!"
+    set "newname=!newname:Ц=C!"
+    set "newname=!newname:Ч=C!"
+    set "newname=!newname:Џ=DZ!"
+    set "newname=!newname:Ш=S!"
+    
+    set "newname=!newname:а=a!"
+    set "newname=!newname:б=b!"
+    set "newname=!newname:в=v!"
+    set "newname=!newname:г=g!"
+    set "newname=!newname:д=d!"
+    set "newname=!newname:ђ=dj!"
+    set "newname=!newname:е=e!"
+    set "newname=!newname:ж=z!"
+    set "newname=!newname:з=z!"
+    set "newname=!newname:и=i!"
+    set "newname=!newname:ј=j!"
+    set "newname=!newname:к=k!"
+    set "newname=!newname:л=l!"
+    set "newname=!newname:љ=lj!"
+    set "newname=!newname:м=m!"
+    set "newname=!newname:н=n!"
+    set "newname=!newname:њ=nj!"
+    set "newname=!newname:о=o!"
+    set "newname=!newname:п=p!"
+    set "newname=!newname:р=r!"
+    set "newname=!newname:с=s!"
+    set "newname=!newname:т=t!"
+    set "newname=!newname:ћ=c!"
+    set "newname=!newname:у=u!"
+    set "newname=!newname:ф=f!"
+    set "newname=!newname:х=h!"
+    set "newname=!newname:ц=c!"
+    set "newname=!newname:ч=c!"
+    set "newname=!newname:џ=dz!"
+    set "newname=!newname:ш=s!"
+    
+    :: Замена знакова - латиница са дијакритиком
+    set "newname=!newname:Č=C!"
+    set "newname=!newname:Ć=C!"
+    set "newname=!newname:Đ=DJ!"
+    set "newname=!newname:Š=S!"
+    set "newname=!newname:Ž=Z!"
+    
+    set "newname=!newname:č=c!"
+    set "newname=!newname:ć=c!"
+    set "newname=!newname:đ=dj!"
+    set "newname=!newname:š=s!"
+    set "newname=!newname:ž=z!"
+    
+    :: Ако је име промењено, преименуј фајл
+    if not "!filename!"=="!newname!" (
+        echo Преименовање: "!filename!" -^> "!newname!"
+        ren "%%f" "!newname!"
+        set /a "renamed_files+=1"
+    )
+)
+
+echo.
+echo Завршено! Укупно преименовано фајлова: %renamed_files%
+
+endlocal
+exit /b 0`;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Иницијализација
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('file-drop');
+            const fileInput = document.getElementById('file-input');
+            
+            // Клик на зону за превлачење отвара дијалог за избор фајлова
+            dropArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Обрада догађаја за превлачење
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, function() {
+                    dropArea.classList.add('active');
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, function() {
+                    dropArea.classList.remove('active');
+                }, false);
+            });
+            
+            // Обрада догађаја за отпуштање фајлова
+            dropArea.addEventListener('drop', function(e) {
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            }, false);
+            
+            // Обрада догађаја за избор фајлова
+            fileInput.addEventListener('change', function() {
+                handleFiles(this.files);
+            }, false);
+        });
+    </script>
+</body>
+</html>
