@@ -1,16 +1,9 @@
 import { Router, Request, Response } from 'express';
-import sgMail from '@sendgrid/mail';
 import fs from 'fs';
 import path from 'path';
 import { sendEmail, sendEmailViaEdgeFunction } from '../services/email-service';
 
-// Inicijalizacija SendGrid klijenta
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log('SendGrid klijent je inicijalizovan');
-} else {
-  console.warn('SENDGRID_API_KEY nije postavljen, koristiće se alternativni metodi slanja e-mailova');
-}
+console.log('Email servis inicijalizovan - koristi se Supabase');
 
 // Direktorijum za čuvanje rezultata upitnika
 const RESULTS_DIR = path.join(process.cwd(), 'questionnaireResults');
@@ -121,34 +114,12 @@ router.post('/send-results', async (req: Request, res: Response) => {
     </html>
     `;
 
-    // Pokušaj slanja emaila - prvo SendGrid, zatim Supabase, na kraju lokalno čuvanje
+    // Pokušaj slanja emaila - prvo Supabase, ako ne uspe lokalno čuvanje
     let emailSent = false;
     let emailError = null;
     
-    // 1. Pokušaj slanja preko SendGrid-a
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        const msg = {
-          to: email,
-          from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
-          subject: `Rezultati kvalifikacije prema članu 47 - ${companyName}`,
-          html: emailTemplate,
-        };
-
-        await sgMail.send(msg);
-        emailSent = true;
-        console.log(`Email uspešno poslat preko SendGrid na adresu: ${email}`);
-      } catch (error: any) {
-        console.error('Greška pri slanju emaila preko SendGrid:', error);
-        if (error.response) {
-          console.error('SendGrid odgovor:', error.response.body);
-        }
-        emailError = error;
-      }
-    }
-    
-    // 2. Ako SendGrid nije uspeo, pokušaj preko Supabase-a
-    if (!emailSent && process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    // 1. Pokušaj slanja preko Supabase-a
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
       try {
         const subject = `Rezultati kvalifikacije prema članu 47 - ${companyName}`;
         const success = await sendEmail(email, subject, emailTemplate);
@@ -210,58 +181,7 @@ router.post('/send-results', async (req: Request, res: Response) => {
   }
 });
 
-// Test ruta za proveru SendGrid konfiguracije
-router.get('/test-sendgrid', async (req: Request, res: Response) => {
-  try {
-    if (!process.env.SENDGRID_API_KEY) {
-      return res.status(500).json({
-        success: false,
-        message: 'SENDGRID_API_KEY nije postavljen',
-      });
-    }
-
-    const testEmail = 'test@example.com';
-    
-    try {
-      const msg = {
-        to: testEmail,
-        from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
-        subject: 'Test poruka iz BZR Portala',
-        text: 'Ovo je testna poruka za proveru SendGrid konfiguracije.',
-        html: '<p>Ovo je testna poruka za proveru SendGrid konfiguracije.</p>',
-      };
-
-      const result = await sgMail.send(msg);
-      console.log('SendGrid test rezultat:', result);
-      
-      return res.status(200).json({
-        success: true,
-        message: 'Test email poslat uspešno',
-        result: result
-      });
-    } catch (emailError: any) {
-      console.error('SendGrid test greška:', emailError);
-      
-      if (emailError.response) {
-        console.error('SendGrid odgovor:', emailError.response.body);
-      }
-      
-      return res.status(500).json({
-        success: false,
-        message: 'Greška pri slanju test emaila',
-        error: emailError.message,
-        details: emailError.response?.body || 'Nema detalja'
-      });
-    }
-  } catch (error: any) {
-    console.error('Opšta greška:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Opšta greška pri testu',
-      error: error.message
-    });
-  }
-});
+// Test ruta je uklonjena - koristimo samo Supabase
 
 // Ruta za pregled rezultata upitnika
 router.get('/results/:resultId', (req: Request, res: Response) => {

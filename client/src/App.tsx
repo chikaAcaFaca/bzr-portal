@@ -32,6 +32,7 @@ import ReferralProgram from "./pages/referral-program";
 import ResetPassword from "./pages/reset-password";
 import FileUtils from "./pages/file-utils";
 import LandingPage from "./pages/landing-page";
+import TestEmail from "./pages/test-email";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -201,6 +202,14 @@ function Router() {
       
       <Route path="/reset-password">
         <ResetPassword />
+      </Route>
+      
+      <Route path="/test-email">
+        <RequireAdmin>
+          <MainLayout>
+            <TestEmail />
+          </MainLayout>
+        </RequireAdmin>
       </Route>
       
       <Route path="/file-utils">
