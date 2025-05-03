@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
   CardFooter,
   CardHeader,
-  CardTitle 
+  CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { AlertCircle, CheckCircle, Info, Mail } from 'lucide-react';
 
 export default function TestEmail() {
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -19,7 +23,34 @@ export default function TestEmail() {
   const [testResult, setTestResult] = useState<any>(null);
   const [localResults, setLocalResults] = useState<any[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
+  const [emailServices, setEmailServices] = useState<{
+    resend: boolean;
+    supabase: boolean;
+    active: string;
+    activeWithFallback: boolean;
+  } | null>(null);
+  const [loadingServices, setLoadingServices] = useState(false);
   const { toast } = useToast();
+  
+  // Učitavanje statusa email servisa
+  useEffect(() => {
+    const fetchEmailServices = async () => {
+      setLoadingServices(true);
+      try {
+        const response = await apiRequest('GET', '/api/questionnaire/test-email?checkOnly=true');
+        if (response.ok) {
+          const data = await response.json();
+          setEmailServices(data.emailServices || null);
+        }
+      } catch (error) {
+        console.error('Greška pri učitavanju statusa email servisa:', error);
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+    
+    fetchEmailServices();
+  }, []);
 
   const handleTestEmail = async () => {
     if (!emailAddress) {
@@ -153,9 +184,111 @@ export default function TestEmail() {
     }
   };
 
+  // Komponenta za prikaz statusa email servisa
+  const EmailServiceStatus = () => {
+    if (loadingServices) {
+      return (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              <span>Učitavanje informacija o email servisu...</span>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!emailServices) {
+      return (
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span>Nije moguće dobiti informacije o email servisu.</span>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Status Email Servisa
+          </CardTitle>
+          <CardDescription>
+            Pregled dostupnih servisa za slanje emailova
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold">Resend</h3>
+              <div className="flex items-center gap-2">
+                {emailServices.resend ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" /> Dostupan
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    <AlertCircle className="h-3 w-3 mr-1" /> Nije dostupan
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <h3 className="text-sm font-semibold">Supabase</h3>
+              <div className="flex items-center gap-2">
+                {emailServices.supabase ? (
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <CheckCircle className="h-3 w-3 mr-1" /> Dostupan
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    <AlertCircle className="h-3 w-3 mr-1" /> Nije dostupan
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">Aktivni servis:</h3>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                {emailServices.active}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold">Fallback mehanizam:</h3>
+              {emailServices.activeWithFallback ? (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <CheckCircle className="h-3 w-3 mr-1" /> Aktivan
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                  <Info className="h-3 w-3 mr-1" /> Neaktivan
+                </Badge>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="container py-10">
       <h1 className="text-3xl font-bold mb-6">Test Email Funkcionalnosti</h1>
+      
+      <EmailServiceStatus />
       
       <Tabs defaultValue="send" className="w-full">
         <TabsList className="grid w-full grid-cols-2">

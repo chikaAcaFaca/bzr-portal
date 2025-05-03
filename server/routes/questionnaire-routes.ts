@@ -255,6 +255,15 @@ router.get('/test-email', async (req: Request, res: Response) => {
   try {
     const emailServiceInfo = getEmailServiceInfo();
     
+    // Ako je postavljen checkOnly parametar, vraćamo samo informacije o email servisima
+    if (req.query.checkOnly === 'true') {
+      return res.status(200).json({
+        success: true,
+        message: 'Informacije o dostupnim email servisima',
+        emailServices: emailServiceInfo
+      });
+    }
+    
     if (emailServiceInfo.active === 'none') {
       return res.status(500).json({
         success: false,
@@ -263,7 +272,14 @@ router.get('/test-email', async (req: Request, res: Response) => {
       });
     }
 
-    const testEmail = req.query.email as string || 'test@example.com';
+    const testEmail = req.query.email as string;
+    if (!testEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email adresa nije dostavljena',
+        emailServices: emailServiceInfo
+      });
+    }
     
     // Testiramo slanje emaila koristeći dostupne servise
     const success = await sendEmail(
@@ -271,7 +287,8 @@ router.get('/test-email', async (req: Request, res: Response) => {
       `Test poruka iz BZR Portala (preko ${emailServiceInfo.active} servisa)`,
       `<p>Ovo je testna poruka za proveru email konfiguracije.</p>
        <p>Poslata preko: <strong>${emailServiceInfo.active}</strong> servisa.</p>
-       <p>Vreme slanja: ${new Date().toLocaleString()}</p>`
+       <p>Vreme slanja: ${new Date().toLocaleString()}</p>
+       <p>Fallback mehanizam: ${emailServiceInfo.activeWithFallback ? 'Aktivan' : 'Neaktivan'}</p>`
     );
     
     if (success) {

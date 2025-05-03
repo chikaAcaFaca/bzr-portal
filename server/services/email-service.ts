@@ -145,7 +145,13 @@ class EmailServiceManager {
 const emailService = new EmailServiceManager();
 
 /**
- * Funkcija za slanje emaila preko dostupnih servisa sa fallback mehanizmom
+ * Funkcija za slanje emaila preko dostupnih servisa sa automatskim fallback mehanizmom
+ * @param to Email primaoca
+ * @param subject Naslov emaila
+ * @param htmlContent HTML sadržaj emaila
+ * @param fromName Ime pošiljaoca (opciono)
+ * @param fromEmail Email pošiljaoca (opciono)
+ * @returns Promise<boolean> Da li je slanje uspešno
  */
 export async function sendEmail(
   to: string,
@@ -155,88 +161,10 @@ export async function sendEmail(
   fromEmail: string = 'noreply@bzr-portal.com'
 ): Promise<boolean> {
   try {
-    if (!emailService.hasResend && !emailService.hasSupabase) {
-      console.error('Ni Resend ni Supabase servis nisu konfigurisani');
-      return false;
-    }
-    
-    // 1. Pokušaj slanja preko Resend-a (primarni servis)
-    if (emailService.hasResend && emailService.resend) {
-      try {
-        const { data, error } = await emailService.resend.emails.send({
-          from: `${fromName} <${fromEmail}>`,
-          to: [to],
-          subject: subject,
-          html: htmlContent,
-        });
-        
-        if (!error) {
-          console.log('Email uspešno poslat preko Resend, ID:', data?.id);
-          return true;
-        }
-        
-        console.error('Greška pri slanju emaila preko Resend:', error);
-        // Ako Resend nije uspeo, nastavljamo na Supabase kao fallback
-      } catch (resendError) {
-        console.error('Neočekivana greška pri slanju preko Resend:', resendError);
-        // Nastavljamo na Supabase kao fallback
-      }
-    }
-    
-    // 2. Pokušaj slanje preko Supabase-a kao fallback
-    if (emailService.hasSupabase && emailService.supabase) {
-      try {
-        const result = await sendEmailViaEdgeFunction(to, subject, htmlContent);
-        if (result) {
-          console.log('Email uspešno poslat preko Supabase (fallback)');
-          return true;
-        }
-        console.error('Greška pri slanju emaila preko Supabase (fallback)');
-      } catch (supabaseError) {
-        console.error('Neočekivana greška pri slanju preko Supabase (fallback):', supabaseError);
-      }
-    }
-    
-    // Ako smo stigli dovde, nijedan servis nije uspeo da pošalje email
-    return false;
+    // Koristimo objedinjenu metodu iz EmailServiceManager klase
+    return await emailService.sendEmail(to, subject, htmlContent, fromName, fromEmail);
   } catch (error) {
     console.error('Neočekivana greška pri slanju emaila:', error);
-    return false;
-  }
-}
-
-/**
- * Funkcija za slanje emaila preko Supabase Edge funkcije
- * (koristi se samo kao fallback ako Resend nije dostupan)
- */
-export async function sendEmailViaEdgeFunction(
-  to: string,
-  subject: string,
-  htmlContent: string,
-): Promise<boolean> {
-  try {
-    if (!emailService.hasSupabase || !emailService.supabase) {
-      console.error('Supabase konfiguracija nije dostupna');
-      return false;
-    }
-
-    const { error } = await emailService.supabase.functions.invoke('send-email', {
-      body: {
-        to,
-        subject,
-        html: htmlContent,
-      },
-    });
-
-    if (error) {
-      console.error('Greška pri slanju emaila preko Supabase:', error);
-      return false;
-    }
-
-    console.log('Email uspešno poslat preko Supabase');
-    return true;
-  } catch (error) {
-    console.error('Neočekivana greška pri slanju emaila preko Supabase:', error);
     return false;
   }
 }
