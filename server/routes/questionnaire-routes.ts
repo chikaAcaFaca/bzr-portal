@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { sendEmail, sendEmailViaEdgeFunction } from '../services/email-service';
+import { sendEmail, getEmailServiceInfo } from '../services/email-service';
 
-console.log('Email servis inicijalizovan - koristi se Supabase');
+const emailServiceInfo = getEmailServiceInfo();
+console.log(`Email servis inicijalizovan - aktivni servis: ${emailServiceInfo.active}`);
+console.log(`Dostupni email servisi: ${emailServiceInfo.resend ? 'Resend, ' : ''}${emailServiceInfo.supabase ? 'Supabase' : ''}`);
 
 // Direktorijum za čuvanje rezultata upitnika
 const RESULTS_DIR = path.join(process.cwd(), 'questionnaireResults');
@@ -114,26 +116,24 @@ router.post('/send-results', async (req: Request, res: Response) => {
     </html>
     `;
 
-    // Pokušaj slanja emaila - prvo Supabase, ako ne uspe lokalno čuvanje
+    // Pokušaj slanja emaila - prvo Resend/Supabase, ako ne uspe lokalno čuvanje
     let emailSent = false;
     let emailError = null;
     
-    // 1. Pokušaj slanja preko Supabase-a
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-      try {
-        const subject = `Rezultati kvalifikacije prema članu 47 - ${companyName}`;
-        const success = await sendEmail(email, subject, emailTemplate);
-        
-        if (success) {
-          emailSent = true;
-          console.log(`Email uspešno poslat preko Supabase na adresu: ${email}`);
-        } else {
-          console.warn('Neuspešan pokušaj slanja preko Supabase-a');
-        }
-      } catch (error: any) {
-        console.error('Greška pri slanju emaila preko Supabase:', error);
-        emailError = error;
+    // 1. Pokušaj slanja preko email servisa (Resend ili Supabase)
+    try {
+      const subject = `Rezultati kvalifikacije prema članu 47 - ${companyName}`;
+      const success = await sendEmail(email, subject, emailTemplate);
+      
+      if (success) {
+        emailSent = true;
+        console.log(`Email uspešno poslat na adresu: ${email}`);
+      } else {
+        console.warn('Neuspešan pokušaj slanja emaila');
       }
+    } catch (error: any) {
+      console.error('Greška pri slanju emaila:', error);
+      emailError = error;
     }
     
     // 3. Ako je email uspešno poslat, vraćamo uspešan odgovor
@@ -253,10 +253,13 @@ router.get('/results', (req: Request, res: Response) => {
 // Test ruta za proveru email funkcionalnosti 
 router.get('/test-email', async (req: Request, res: Response) => {
   try {
-    if (!process.env.RESEND_API_KEY && (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)) {
+    const emailServiceInfo = getEmailServiceInfo();
+    
+    if (emailServiceInfo.active === 'none') {
       return res.status(500).json({
         success: false,
-        message: 'Ni Resend ni Supabase kredencijali nisu postavljeni'
+        message: 'Ni Resend ni Supabase kredencijali nisu postavljeni',
+        emailServices: emailServiceInfo
       });
     }
 
@@ -265,19 +268,23 @@ router.get('/test-email', async (req: Request, res: Response) => {
     // Testiramo slanje emaila koristeći dostupne servise
     const success = await sendEmail(
       testEmail,
-      'Test poruka iz BZR Portala',
-      '<p>Ovo je testna poruka za proveru email konfiguracije.</p>'
+      `Test poruka iz BZR Portala (preko ${emailServiceInfo.active} servisa)`,
+      `<p>Ovo je testna poruka za proveru email konfiguracije.</p>
+       <p>Poslata preko: <strong>${emailServiceInfo.active}</strong> servisa.</p>
+       <p>Vreme slanja: ${new Date().toLocaleString()}</p>`
     );
     
     if (success) {
       return res.status(200).json({
         success: true,
-        message: 'Test email uspešno poslat'
+        message: `Test email uspešno poslat (korišćen servis: ${emailServiceInfo.active})`,
+        emailServices: emailServiceInfo
       });
     } else {
       return res.status(500).json({
         success: false,
-        message: 'Neuspešno slanje test emaila'
+        message: `Neuspešno slanje test emaila (pokušan servis: ${emailServiceInfo.active})`,
+        emailServices: emailServiceInfo
       });
     }
   } catch (error: any) {
@@ -285,7 +292,8 @@ router.get('/test-email', async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Greška pri testiranju email funkcije',
-      error: error.message
+      error: error.message,
+      emailServices: getEmailServiceInfo()
     });
   }
 });

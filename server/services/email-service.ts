@@ -92,3 +92,17 @@ export async function sendEmailViaEdgeFunction(
 export function isEmailServiceAvailable(): boolean {
   return Boolean(resend) || (Boolean(supabaseUrl) && Boolean(supabaseKey));
 }
+
+/**
+ * Funkcija koja vraća informacije o dostupnim email servisima
+ */
+export function getEmailServiceInfo(): { resend: boolean, supabase: boolean, active: string } {
+  const hasResend = Boolean(resend);
+  const hasSupabase = Boolean(supabaseUrl) && Boolean(supabaseKey);
+  
+  return {
+    resend: hasResend,
+    supabase: hasSupabase,
+    active: hasResend ? 'resend' : hasSupabase ? 'supabase' : 'none'
+  };
+}

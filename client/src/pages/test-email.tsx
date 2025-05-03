@@ -21,7 +21,7 @@ export default function TestEmail() {
   const [loadingResults, setLoadingResults] = useState(false);
   const { toast } = useToast();
 
-  const handleTestSupabase = async () => {
+  const handleTestEmail = async () => {
     if (!emailAddress) {
       toast({
         title: "Greška",
@@ -33,10 +33,10 @@ export default function TestEmail() {
 
     setSendingEmail(true);
     try {
-      const response = await apiRequest('GET', `/api/questionnaire/test-supabase-email?email=${emailAddress}`);
+      const response = await apiRequest('GET', `/api/questionnaire/test-email?email=${emailAddress}`);
       
       setTestResult({
-        provider: 'Supabase',
+        provider: 'Email',
         success: response.ok,
         data: await response.json()
       });
@@ -44,21 +44,21 @@ export default function TestEmail() {
       toast({
         title: response.ok ? "Uspeh" : "Greška",
         description: response.ok 
-          ? `Test email uspešno poslat na ${emailAddress} preko Supabase-a` 
-          : `Greška pri slanju test emaila preko Supabase-a`,
+          ? `Test email uspešno poslat na ${emailAddress}` 
+          : `Greška pri slanju test emaila`,
         variant: response.ok ? "default" : "destructive",
       });
     } catch (error: any) {
-      console.error('Greška pri testiranju Supabase-a:', error);
+      console.error('Greška pri testiranju email servisa:', error);
       setTestResult({
-        provider: 'Supabase',
+        provider: 'Email',
         success: false,
         error: error.message
       });
       
       toast({
         title: "Greška",
-        description: `Greška pri testiranju Supabase-a: ${error.message}`,
+        description: `Greška pri testiranju email servisa: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -181,11 +181,11 @@ export default function TestEmail() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <Button 
-                  onClick={handleTestSupabase} 
+                  onClick={handleTestEmail} 
                   disabled={sendingEmail}
                   variant="outline"
                 >
-                  Test Supabase Email
+                  Test Email API
                 </Button>
                 <Button 
                   onClick={handleTestQuestionnaire} 
