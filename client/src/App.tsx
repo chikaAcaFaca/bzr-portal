@@ -55,12 +55,7 @@ function Router() {
     <Switch>
       {/* Javna stranica - Landing Page */}
       <Route path="/">
-        {({ match }) => {
-          if (match) {
-            return <LandingPage />;
-          }
-          return null;
-        }}
+        <LandingPage />
       </Route>
       
       {/* Javna stranica - autentifikacija */}
