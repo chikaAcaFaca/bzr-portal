@@ -1,11 +1,19 @@
 import { Router, Request, Response } from 'express';
 import sgMail from '@sendgrid/mail';
+import fs from 'fs';
+import path from 'path';
 
 // Inicijalizacija SendGrid klijenta
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 } else {
   console.warn('SENDGRID_API_KEY nije postavljen, slanje e-mailova neće raditi');
+}
+
+// Direktorijum za čuvanje rezultata upitnika
+const RESULTS_DIR = path.join(process.cwd(), 'questionnaireResults');
+if (!fs.existsSync(RESULTS_DIR)) {
+  fs.mkdirSync(RESULTS_DIR, { recursive: true });
 }
 
 const router = Router();
@@ -124,7 +132,7 @@ router.post('/send-results', async (req: Request, res: Response) => {
       // Kreiranje e-mail poruke
       const msg = {
         to: email,
-        from: 'info@bzr-portal.com', // Mora biti verifikovani sender u SendGrid-u
+        from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
         subject: `Rezultati kvalifikacije prema članu 47 - ${companyName}`,
         html: emailTemplate,
       };
@@ -146,11 +154,28 @@ router.post('/send-results', async (req: Request, res: Response) => {
         console.error('SendGrid odgovor:', emailError.response.body);
       }
       
-      res.status(500).json({
-        success: false,
-        message: 'Došlo je do greške pri slanju rezultata na email',
-        error: emailError.message,
-      });
+      // Čuvamo rezultate lokalno za alternativni pregled
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `${timestamp}-${email.replace('@', '_at_')}.html`;
+      const filePath = path.join(RESULTS_DIR, filename);
+      
+      try {
+        fs.writeFileSync(filePath, emailTemplate);
+        console.log(`Rezultati upitnika sačuvani u: ${filePath}`);
+        
+        res.status(200).json({
+          success: true,
+          message: 'Rezultati su generisani i sačuvani. Nije moguće poslati email zbog neispravne konfiguracije.',
+          resultId: filename
+        });
+      } catch (saveError) {
+        console.error('Greška pri čuvanju rezultata:', saveError);
+        res.status(500).json({
+          success: false,
+          message: 'Došlo je do greške pri slanju rezultata na email i čuvanju rezultata',
+          error: emailError.message,
+        });
+      }
     }
     
   } catch (error: any) {
@@ -159,6 +184,126 @@ router.post('/send-results', async (req: Request, res: Response) => {
       success: false, 
       message: 'Došlo je do greške pri slanju rezultata upitnika',
       error: error.message 
+    });
+  }
+});
+
+// Test ruta za proveru SendGrid konfiguracije
+router.get('/test-sendgrid', async (req: Request, res: Response) => {
+  try {
+    if (!process.env.SENDGRID_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'SENDGRID_API_KEY nije postavljen',
+      });
+    }
+
+    const testEmail = 'test@example.com';
+    
+    try {
+      const msg = {
+        to: testEmail,
+        from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
+        subject: 'Test poruka iz BZR Portala',
+        text: 'Ovo je testna poruka za proveru SendGrid konfiguracije.',
+        html: '<p>Ovo je testna poruka za proveru SendGrid konfiguracije.</p>',
+      };
+
+      const result = await sgMail.send(msg);
+      console.log('SendGrid test rezultat:', result);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Test email poslat uspešno',
+        result: result
+      });
+    } catch (emailError: any) {
+      console.error('SendGrid test greška:', emailError);
+      
+      if (emailError.response) {
+        console.error('SendGrid odgovor:', emailError.response.body);
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Greška pri slanju test emaila',
+        error: emailError.message,
+        details: emailError.response?.body || 'Nema detalja'
+      });
+    }
+  } catch (error: any) {
+    console.error('Opšta greška:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Opšta greška pri testu',
+      error: error.message
+    });
+  }
+});
+
+// Ruta za pregled rezultata upitnika
+router.get('/results/:resultId', (req: Request, res: Response) => {
+  try {
+    const { resultId } = req.params;
+    
+    // Provera da li je resultId bezbedan (bez ../ i sličnih opasnih putanja)
+    if (!resultId || resultId.includes('..') || !resultId.endsWith('.html')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Neispravan ID rezultata'
+      });
+    }
+    
+    const filePath = path.join(RESULTS_DIR, resultId);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Rezultati nisu pronađeni'
+      });
+    }
+    
+    const content = fs.readFileSync(filePath, 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.send(content);
+    
+  } catch (error: any) {
+    console.error('Greška pri pregledu rezultata:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Greška pri pregledu rezultata',
+      error: error.message
+    });
+  }
+});
+
+// Ruta za listu svih rezultata (za administratore)
+router.get('/results', (req: Request, res: Response) => {
+  try {
+    if (!fs.existsSync(RESULTS_DIR)) {
+      return res.status(200).json({ results: [] });
+    }
+    
+    const files = fs.readdirSync(RESULTS_DIR)
+      .filter(file => file.endsWith('.html'))
+      .map(file => {
+        const stats = fs.statSync(path.join(RESULTS_DIR, file));
+        return {
+          id: file,
+          createdAt: stats.ctime,
+          size: stats.size
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    res.status(200).json({ results: files });
+    
+  } catch (error: any) {
+    console.error('Greška pri listanju rezultata:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Greška pri listanju rezultata',
+      error: error.message
     });
   }
 });
