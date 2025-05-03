@@ -308,10 +308,32 @@ export default function QualificationQuestionnaire({
             <div className="space-y-6 mt-6">
               <div className="bg-blue-50 p-4 rounded-md">
                 <h4 className="font-medium text-blue-800 mb-2">Šta dalje?</h4>
-                <p className="text-blue-700">
-                  Detaljan izveštaj o kvalifikaciji je poslat na vašu email adresu: <strong>{formData.email}</strong>. 
-                  Registrujte se besplatno kao FREE korisnik i dobićete pristup našem osnovnom AI asistentu za bezbednost i zdravlje na radu.
-                </p>
+                {emailSent ? (
+                  <p className="text-blue-700">
+                    Detaljan izveštaj o kvalifikaciji je poslat na vašu email adresu: <strong>{formData.email}</strong>. 
+                    Registrujte se besplatno kao FREE korisnik i dobićete pristup našem osnovnom AI asistentu za bezbednost i zdravlje na radu.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-blue-700">
+                      Izveštaj o kvalifikaciji je generisan, ali slanje na vašu email adresu <strong>{formData.email}</strong> nije uspelo.
+                    </p>
+                    {resultId && (
+                      <div className="p-3 bg-white rounded-md border border-blue-200">
+                        <p className="text-sm text-gray-600 mb-2">Možete pregledati izveštaj direktno u pretraživaču klikom na dugme ispod:</p>
+                        <a 
+                          href={`/api/questionnaire/results/${resultId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+                        >
+                          <span>Pregledaj izveštaj</span>
+                          <HelpCircle className="ml-2 h-4 w-4" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-md border border-indigo-200">

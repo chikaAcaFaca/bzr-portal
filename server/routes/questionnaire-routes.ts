@@ -170,6 +170,7 @@ router.post('/send-results', async (req: Request, res: Response) => {
       return res.status(200).json({
         success: true,
         message: 'Rezultati uspešno poslati na email',
+        emailSent: true
       });
     }
     
@@ -188,7 +189,8 @@ router.post('/send-results', async (req: Request, res: Response) => {
       res.status(200).json({
         success: true,
         message: 'Rezultati su generisani i sačuvani. Nije moguće poslati email zbog neispravne konfiguracije.',
-        resultId: filename
+        resultId: filename,
+        emailSent: false
       });
     } catch (saveError) {
       console.error('Greška pri čuvanju rezultata:', saveError);
