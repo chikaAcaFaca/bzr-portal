@@ -2,12 +2,14 @@ import { Router, Request, Response } from 'express';
 import sgMail from '@sendgrid/mail';
 import fs from 'fs';
 import path from 'path';
+import { sendEmail, sendEmailViaEdgeFunction } from '../services/email-service';
 
 // Inicijalizacija SendGrid klijenta
 if (process.env.SENDGRID_API_KEY) {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('SendGrid klijent je inicijalizovan');
 } else {
-  console.warn('SENDGRID_API_KEY nije postavljen, slanje e-mailova neće raditi');
+  console.warn('SENDGRID_API_KEY nije postavljen, koristiće se alternativni metodi slanja e-mailova');
 }
 
 // Direktorijum za čuvanje rezultata upitnika
@@ -119,65 +121,83 @@ router.post('/send-results', async (req: Request, res: Response) => {
     </html>
     `;
 
-    // Slanje emaila putem SendGrid
-    if (!process.env.SENDGRID_API_KEY) {
-      console.warn('SENDGRID_API_KEY nije postavljen, ne može se poslati email');
-      return res.status(500).json({
-        success: false,
-        message: 'Slanje e-maila nije konfigurisano na serveru',
-      });
-    }
-
-    try {
-      // Kreiranje e-mail poruke
-      const msg = {
-        to: email,
-        from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
-        subject: `Rezultati kvalifikacije prema članu 47 - ${companyName}`,
-        html: emailTemplate,
-      };
-
-      // Slanje poruke
-      await sgMail.send(msg);
-
-      console.log(`Email uspešno poslat na adresu: ${email}`);
-      
-      // Vraćanje uspešnog odgovora
-      res.status(200).json({
-        success: true,
-        message: 'Rezultati uspešno poslati na email',
-      });
-    } catch (emailError: any) {
-      console.error('Greška pri slanju emaila:', emailError);
-      
-      if (emailError.response) {
-        console.error('SendGrid odgovor:', emailError.response.body);
-      }
-      
-      // Čuvamo rezultate lokalno za alternativni pregled
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `${timestamp}-${email.replace('@', '_at_')}.html`;
-      const filePath = path.join(RESULTS_DIR, filename);
-      
+    // Pokušaj slanja emaila - prvo SendGrid, zatim Supabase, na kraju lokalno čuvanje
+    let emailSent = false;
+    let emailError = null;
+    
+    // 1. Pokušaj slanja preko SendGrid-a
+    if (process.env.SENDGRID_API_KEY) {
       try {
-        fs.writeFileSync(filePath, emailTemplate);
-        console.log(`Rezultati upitnika sačuvani u: ${filePath}`);
-        
-        res.status(200).json({
-          success: true,
-          message: 'Rezultati su generisani i sačuvani. Nije moguće poslati email zbog neispravne konfiguracije.',
-          resultId: filename
-        });
-      } catch (saveError) {
-        console.error('Greška pri čuvanju rezultata:', saveError);
-        res.status(500).json({
-          success: false,
-          message: 'Došlo je do greške pri slanju rezultata na email i čuvanju rezultata',
-          error: emailError.message,
-        });
+        const msg = {
+          to: email,
+          from: 'noreply@example.com', // NAPOMENA: Ovo mora biti verifikovana email adresa u SendGrid-u
+          subject: `Rezultati kvalifikacije prema članu 47 - ${companyName}`,
+          html: emailTemplate,
+        };
+
+        await sgMail.send(msg);
+        emailSent = true;
+        console.log(`Email uspešno poslat preko SendGrid na adresu: ${email}`);
+      } catch (error: any) {
+        console.error('Greška pri slanju emaila preko SendGrid:', error);
+        if (error.response) {
+          console.error('SendGrid odgovor:', error.response.body);
+        }
+        emailError = error;
       }
     }
     
+    // 2. Ako SendGrid nije uspeo, pokušaj preko Supabase-a
+    if (!emailSent && process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+      try {
+        const subject = `Rezultati kvalifikacije prema članu 47 - ${companyName}`;
+        const success = await sendEmail(email, subject, emailTemplate);
+        
+        if (success) {
+          emailSent = true;
+          console.log(`Email uspešno poslat preko Supabase na adresu: ${email}`);
+        } else {
+          console.warn('Neuspešan pokušaj slanja preko Supabase-a');
+        }
+      } catch (error: any) {
+        console.error('Greška pri slanju emaila preko Supabase:', error);
+        emailError = error;
+      }
+    }
+    
+    // 3. Ako je email uspešno poslat, vraćamo uspešan odgovor
+    if (emailSent) {
+      return res.status(200).json({
+        success: true,
+        message: 'Rezultati uspešno poslati na email',
+      });
+    }
+    
+    // 4. Ako nijedan način nije uspeo, čuvamo rezultate lokalno
+    console.warn('Svi pokušaji slanja emaila su neuspešni, čuvamo rezultate lokalno');
+    
+    // Čuvamo rezultate lokalno za alternativni pregled
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `${timestamp}-${email.replace('@', '_at_')}.html`;
+    const filePath = path.join(RESULTS_DIR, filename);
+    
+    try {
+      fs.writeFileSync(filePath, emailTemplate);
+      console.log(`Rezultati upitnika sačuvani u: ${filePath}`);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Rezultati su generisani i sačuvani. Nije moguće poslati email zbog neispravne konfiguracije.',
+        resultId: filename
+      });
+    } catch (saveError) {
+      console.error('Greška pri čuvanju rezultata:', saveError);
+      res.status(500).json({
+        success: false,
+        message: 'Došlo je do greške pri slanju rezultata na email i čuvanju rezultata',
+        error: emailError ? emailError.message : 'Nepoznata greška',
+      });
+    }
   } catch (error: any) {
     console.error('Greška pri slanju rezultata upitnika:', error);
     res.status(500).json({ 
@@ -303,6 +323,46 @@ router.get('/results', (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Greška pri listanju rezultata',
+      error: error.message
+    });
+  }
+});
+
+// Test ruta za proveru Supabase email funkcije
+router.get('/test-supabase-email', async (req: Request, res: Response) => {
+  try {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase kredencijali nisu postavljeni'
+      });
+    }
+
+    const testEmail = req.query.email as string || 'test@example.com';
+    
+    // Testiramo slanje emaila koristeći Supabase
+    const success = await sendEmail(
+      testEmail,
+      'Test poruka iz BZR Portala preko Supabase-a',
+      '<p>Ovo je testna poruka za proveru Supabase email konfiguracije.</p>'
+    );
+    
+    if (success) {
+      return res.status(200).json({
+        success: true,
+        message: 'Test email uspešno poslat preko Supabase-a'
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'Neuspešno slanje emaila preko Supabase-a'
+      });
+    }
+  } catch (error: any) {
+    console.error('Greška pri testiranju Supabase emaila:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri testiranju Supabase emaila',
       error: error.message
     });
   }

@@ -8,19 +8,24 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest<T = any>(
+  method: string,
   url: string,
+  body?: any,
   options?: RequestInit
-): Promise<T> {
+): Promise<Response> {
   const headers: Record<string, string> = {};
   
-  if (options?.body && options.body instanceof FormData) {
+  let requestBody = body;
+  if (body && body instanceof FormData) {
     // Za FormData ne postavljamo Content-Type, browser će automatski postaviti
-  } else if (options?.body && typeof options.body !== 'string') {
+  } else if (body && typeof body !== 'string') {
     headers["Content-Type"] = "application/json";
-    options.body = JSON.stringify(options.body);
+    requestBody = JSON.stringify(body);
   }
   
   const res = await fetch(url, {
+    method,
+    body: requestBody,
     ...options,
     headers: {
       ...headers,
@@ -29,6 +34,17 @@ export async function apiRequest<T = any>(
     credentials: "include",
   });
   
+  return res;
+}
+
+// Pomoćna funkcija koja obavlja API zahtev i vraća podatke
+export async function apiRequestWithData<T = any>(
+  method: string,
+  url: string,
+  body?: any,
+  options?: RequestInit
+): Promise<T> {
+  const res = await apiRequest(method, url, body, options);
   await throwIfResNotOk(res);
   return await res.json();
 }

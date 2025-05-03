@@ -114,6 +114,8 @@ export default function QualificationQuestionnaire({
     message: string;
     recommendations: string[];
   } | null>(null);
+  const [resultId, setResultId] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState<boolean>(false);
 
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
@@ -210,13 +212,23 @@ export default function QualificationQuestionnaire({
           result
         });
         
+        const responseData = await response.json();
+        
         if (!response.ok) {
           throw new Error("Greška prilikom slanja rezultata na email");
+        }
+        
+        // Proveravamo da li je email zaista poslat ili je sačuvan lokalno
+        setEmailSent(responseData.emailSent !== false);
+        
+        // Ako imamo resultId u odgovoru, čuvamo ga za kasnije preuzimanje
+        if (responseData.resultId) {
+          setResultId(responseData.resultId);
         }
       } catch (error) {
         toast({
           title: "Upozorenje",
-          description: "Rezultati su generisani, ali nismo uspeli da ih pošaljemo na email. Proverite da li imate ispravnu email adresu.",
+          description: "Rezultati su generisani, ali nismo uspeli da ih pošaljemo na email. Možete ih pregledati direktno.",
           variant: "destructive",
         });
       }
