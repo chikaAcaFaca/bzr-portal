@@ -250,41 +250,41 @@ router.get('/results', (req: Request, res: Response) => {
   }
 });
 
-// Test ruta za proveru Supabase email funkcije
-router.get('/test-supabase-email', async (req: Request, res: Response) => {
+// Test ruta za proveru email funkcionalnosti 
+router.get('/test-email', async (req: Request, res: Response) => {
   try {
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+    if (!process.env.RESEND_API_KEY && (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)) {
       return res.status(500).json({
         success: false,
-        message: 'Supabase kredencijali nisu postavljeni'
+        message: 'Ni Resend ni Supabase kredencijali nisu postavljeni'
       });
     }
 
     const testEmail = req.query.email as string || 'test@example.com';
     
-    // Testiramo slanje emaila koristeći Supabase
+    // Testiramo slanje emaila koristeći dostupne servise
     const success = await sendEmail(
       testEmail,
-      'Test poruka iz BZR Portala preko Supabase-a',
-      '<p>Ovo je testna poruka za proveru Supabase email konfiguracije.</p>'
+      'Test poruka iz BZR Portala',
+      '<p>Ovo je testna poruka za proveru email konfiguracije.</p>'
     );
     
     if (success) {
       return res.status(200).json({
         success: true,
-        message: 'Test email uspešno poslat preko Supabase-a'
+        message: 'Test email uspešno poslat'
       });
     } else {
       return res.status(500).json({
         success: false,
-        message: 'Neuspešno slanje emaila preko Supabase-a'
+        message: 'Neuspešno slanje test emaila'
       });
     }
   } catch (error: any) {
-    console.error('Greška pri testiranju Supabase emaila:', error);
+    console.error('Greška pri testiranju email funkcije:', error);
     return res.status(500).json({
       success: false,
-      message: 'Greška pri testiranju Supabase emaila',
+      message: 'Greška pri testiranju email funkcije',
       error: error.message
     });
   }
