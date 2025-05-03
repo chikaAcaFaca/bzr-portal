@@ -1,5 +1,12 @@
 import { Router, Request, Response } from 'express';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
+
+// Inicijalizacija SendGrid klijenta
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.warn('SENDGRID_API_KEY nije postavljen, slanje e-mailova neće raditi');
+}
 
 const router = Router();
 
@@ -104,15 +111,47 @@ router.post('/send-results', async (req: Request, res: Response) => {
     </html>
     `;
 
-    // Slanje emaila (simulacija)
-    console.log(`[SIMULACIJA EMAIL] Slanje rezultata upitnika na adresu: ${email}`);
-    console.log(`[SIMULACIJA EMAIL] Sadržaj: Kvalifikacija za ${companyName}`);
-    
-    // Vraćanje uspešnog odgovora
-    res.status(200).json({
-      success: true,
-      message: 'Rezultati uspešno poslati na email',
-    });
+    // Slanje emaila putem SendGrid
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn('SENDGRID_API_KEY nije postavljen, ne može se poslati email');
+      return res.status(500).json({
+        success: false,
+        message: 'Slanje e-maila nije konfigurisano na serveru',
+      });
+    }
+
+    try {
+      // Kreiranje e-mail poruke
+      const msg = {
+        to: email,
+        from: 'info@bzr-portal.com', // Mora biti verifikovani sender u SendGrid-u
+        subject: `Rezultati kvalifikacije prema članu 47 - ${companyName}`,
+        html: emailTemplate,
+      };
+
+      // Slanje poruke
+      await sgMail.send(msg);
+
+      console.log(`Email uspešno poslat na adresu: ${email}`);
+      
+      // Vraćanje uspešnog odgovora
+      res.status(200).json({
+        success: true,
+        message: 'Rezultati uspešno poslati na email',
+      });
+    } catch (emailError: any) {
+      console.error('Greška pri slanju emaila:', emailError);
+      
+      if (emailError.response) {
+        console.error('SendGrid odgovor:', emailError.response.body);
+      }
+      
+      res.status(500).json({
+        success: false,
+        message: 'Došlo je do greške pri slanju rezultata na email',
+        error: emailError.message,
+      });
+    }
     
   } catch (error: any) {
     console.error('Greška pri slanju rezultata upitnika:', error);
