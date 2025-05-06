@@ -1,13 +1,62 @@
 import { storage } from '../storage';
 import fs from 'fs';
 import path from 'path';
-import { formatISO } from 'date-fns';
+import { formatISO, differenceInDays } from 'date-fns';
 
 interface SitemapEntry {
   url: string;
   lastmod?: string;
   changefreq?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: number;
+}
+
+/**
+ * Određuje učestalost promene (changefreq) za sitemap na osnovu poslednjeg ažuriranja
+ * @param lastModified Datum poslednjeg ažuriranja
+ * @returns Učestalost promene za sitemap
+ */
+function determineChangeFrequency(lastModified: Date | null): 'daily' | 'weekly' | 'monthly' | 'yearly' {
+  if (!lastModified) return 'monthly';
+  
+  const daysSinceModified = differenceInDays(new Date(), lastModified);
+  
+  if (daysSinceModified < 7) {
+    return 'daily';
+  } else if (daysSinceModified < 30) {
+    return 'weekly';
+  } else if (daysSinceModified < 365) {
+    return 'monthly';
+  } else {
+    return 'yearly';
+  }
+}
+
+/**
+ * Određuje prioritet URL-a za sitemap
+ * @param type Tip URL-a ('home', 'blog-index', 'blog-post', 'category', 'auth')
+ * @param viewCount Broj pregleda (samo za blog postove)
+ * @returns Prioritet od 0.0 do 1.0
+ */
+function determinePriority(type: string, viewCount?: number): number {
+  switch (type) {
+    case 'home':
+      return 1.0;
+    case 'blog-index':
+      return 0.9;
+    case 'blog-post':
+      // Ako imamo broj pregleda, koristimo ga za određivanje prioriteta (popularni članci imaju veći prioritet)
+      if (viewCount !== undefined && viewCount > 0) {
+        // Normalizujemo broj pregleda u opseg od 0.7 do 0.9
+        const viewBonus = Math.min(0.2, viewCount / 1000 * 0.2);
+        return 0.7 + viewBonus;
+      }
+      return 0.8;
+    case 'category':
+      return 0.8;
+    case 'auth':
+    default:
+      return 0.5;
+  }
 }
 
 /**
@@ -21,31 +70,60 @@ export async function generateSitemap(domain: string): Promise<string> {
     entries.push({
       url: `${domain}/`,
       changefreq: 'weekly',
-      priority: 1.0
+      priority: determinePriority('home')
     });
     
     entries.push({
       url: `${domain}/blog`,
       changefreq: 'daily',
-      priority: 0.9
+      priority: determinePriority('blog-index')
     });
     
     entries.push({
       url: `${domain}/auth`,
       changefreq: 'monthly',
-      priority: 0.5
+      priority: determinePriority('auth')
     });
 
     // Dodaj blog postove
     const blogs = await storage.getAllBlogPosts();
+    
+    // Pratimo kategorije blogova
+    const categories = new Set<string>();
+    
     for (const blog of blogs) {
+      // Preskoci blog postove koji nisu objavljeni
+      if (blog.status !== 'published') continue;
+      
+      // Dodaj kategoriju ako postoji
+      if (blog.category) {
+        categories.add(blog.category);
+      }
+      
+      // Odredi učestalost promene na osnovu datuma ažuriranja
+      const changefreq = determineChangeFrequency(blog.updatedAt);
+      
+      // Odredi prioritet na osnovu broja pregleda
+      const priority = determinePriority('blog-post', blog.viewCount || 0);
+      
       entries.push({
         url: `${domain}/blog/${blog.slug}`,
         lastmod: blog.updatedAt ? formatISO(blog.updatedAt, { representation: 'date' }) : undefined,
-        changefreq: 'weekly',
-        priority: 0.8
+        changefreq,
+        priority
       });
     }
+    
+    // Dodaj stranice kategorija
+    Array.from(categories).forEach(category => {
+      const categoryUrl = category.toLowerCase().replace(/\s+/g, '-');
+      
+      entries.push({
+        url: `${domain}/blog/category/${categoryUrl}`,
+        changefreq: 'weekly',
+        priority: determinePriority('category')
+      });
+    });
     
     // Generiši XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -106,5 +184,12 @@ export class SitemapService {
    */
   getSitemapPath(): string {
     return path.join(process.cwd(), 'public', 'sitemap.xml');
+  }
+  
+  /**
+   * Vraća URL do sitemap.xml fajla
+   */
+  getSitemapUrl(): string {
+    return `${this.domain}/sitemap.xml`;
   }
 }

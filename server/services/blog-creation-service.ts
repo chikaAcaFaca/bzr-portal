@@ -2,6 +2,7 @@ import { storage } from '../storage';
 import { InsertBlogPost } from '@shared/schema';
 import { transliterate } from '../utils/transliterate';
 import { notificationService } from './notification-service';
+import { SitemapService } from './sitemap-service';
 
 interface CreateBlogFromAIParams {
   originalQuestion: string;
