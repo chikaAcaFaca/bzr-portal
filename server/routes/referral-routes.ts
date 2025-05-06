@@ -34,7 +34,14 @@ router.get('/code', async (req: Request, res: Response) => {
         referralCode = existingCode.code;
         
         // Generišemo URL sa postojećim kodom
-        const baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+        // Koristimo repl.co domane za testni link kako bi se izbegao 'This site can't be reached' error
+        let baseUrl = 'https://bzr-portal.replit.app';
+        
+        // Ako je u produkciji, koristimo pravu domenu
+        if (process.env.NODE_ENV === 'production') {
+          baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+        }
+        
         referralUrl = `${baseUrl}/auth?ref=${referralCode}`;
       } else {
         // Ako kod ne postoji, generišemo novi

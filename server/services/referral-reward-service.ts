@@ -106,9 +106,9 @@ class ReferralRewardServiceClass {
       if (initialCheckError) {
         console.error('Tabela referral_codes ne postoji:', initialCheckError);
         
-        // Umesto da bacimo grešku, vratimo neki privremeni kod
-        // Ovo će omogućiti rad funkcionalnosti čak i ako baza nije spremna
-        return `TEST-${user_id.substring(0, 4)}`;
+        // Generišemo 8-karakterni kod umesto test prefiksa
+        const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+        return randomCode;
       }
       
       // Proveriti da li korisnik već ima referalni kod
@@ -136,9 +136,9 @@ class ReferralRewardServiceClass {
         .select('count')
         .limit(1);
       
-      // Ako tabela ne postoji, vraćamo privremeni kod
+      // Ako tabela ne postoji, vraćamo generisani kod bez prefiksa
       if (tableInsertError) {
-        return `TEMP-${code}`;
+        return code;
       }
       
       try {
@@ -151,12 +151,12 @@ class ReferralRewardServiceClass {
   
         if (error) {
           console.error('Detaljna greška pri čuvanju koda:', error);
-          // Ako ne možemo da sačuvamo, vraćamo privremeni kod
-          return `TEMP-${code}`;
+          // Ako ne možemo da sačuvamo, vraćamo generisani kod bez prefiksa
+          return code;
         }
       } catch (insertError) {
         console.error('Greška pri INSERT operaciji:', insertError);
-        return `TEMP-${code}`;
+        return code;
       }
 
       // Ako je sve u redu, vratimo pravi kod
@@ -183,8 +183,9 @@ class ReferralRewardServiceClass {
         
       if (tableCheckError) {
         console.error('Tabela referral_codes ne postoji u getReferralCode:', tableCheckError);
-        // Generišemo privremeni kod ako tabela ne postoji
-        return `TEST-${user_id.substring(0, 4)}`;
+        // Generišemo pravi kod umesto test prefiksa
+        const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+        return randomCode;
       }
       
       const { data, error } = await supabase
@@ -205,7 +206,9 @@ class ReferralRewardServiceClass {
       return await this.generateReferralCode(user_id);
     } catch (error) {
       console.error('Neočekivana greška pri dobavljanju referalnog koda:', error);
-      return `FALLBACK-${user_id.substring(0, 4)}`;
+      // Generišemo pravi kod umesto placeholdera za greške
+      const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      return randomCode;
     }
   }
 
@@ -223,8 +226,14 @@ class ReferralRewardServiceClass {
       }
       
       // Generisanje URL-a sa referalnim kodom
-      // U produkciji, koristićemo pravu URL adresu sajta
-      const baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+      // Koristimo repl.co domane za testni link kako bi se izbegao 'This site can't be reached' error
+      let baseUrl = 'https://bzr-portal.replit.app';
+      
+      // Ako je u produkciji, koristimo pravu domenu
+      if (process.env.NODE_ENV === 'production') {
+        baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+      }
+      
       return `${baseUrl}/auth?ref=${code}`;
     } catch (error) {
       console.error('Greška pri generisanju referalnog URL-a:', error);
