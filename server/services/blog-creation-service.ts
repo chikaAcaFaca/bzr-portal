@@ -4,6 +4,11 @@ import { transliterate } from '../utils/transliterate';
 import { notificationService } from './notification-service';
 import { SitemapService } from './sitemap-service';
 
+// Protokol i host za domen
+const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+const host = process.env.HOST || 'localhost:5000';
+const DOMAIN = `${protocol}://${host}`;
+
 interface CreateBlogFromAIParams {
   originalQuestion: string;
   aiResponse: string;
@@ -74,6 +79,16 @@ class BlogCreationService {
       
       // Slanje notifikacije administratorima za odobrenje
       await notificationService.notifyNewAIBlogPost(blogPost);
+      
+      // Ažuriranje sitemap-a
+      try {
+        const sitemapService = new SitemapService(DOMAIN);
+        await sitemapService.generateSitemap();
+        console.log('Sitemap.xml uspešno ažuriran nakon kreiranja blog posta');
+      } catch (sitemapError) {
+        console.error('Greška pri ažuriranju sitemap-a:', sitemapError);
+        // Nastavljamo bez obzira na grešku u sitemap-u
+      }
       
       console.log(`Blog post ${blogPost.id} kreiran i čeka odobrenje administratora.`);
       

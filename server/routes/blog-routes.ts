@@ -345,6 +345,9 @@ export async function setupBlogRoutes(app: any) {
         await updateSitemap(req);
       }
       
+      // Ažuriranje sitemap-a nakon izmene blog posta
+      await updateSitemap(req);
+      
       return res.status(200).json({
         success: true,
         message: 'Blog post uspešno ažuriran',
