@@ -1,12 +1,33 @@
 import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
 import { transliterate } from '../utils/transliterate';
+import { SitemapService } from '../services/sitemap-service';
 
 /**
  * Postavljanje ruta za blogove
  */
 export async function setupBlogRoutes(app: any) {
   const router = Router();
+  
+  /**
+   * Funkcija za ažuriranje sitemap.xml-a nakon promena blog postova
+   */
+  async function updateSitemap(req: Request) {
+    try {
+      // Dobavljanje host-a iz zahteva za kreiranje apsolutnih URL-ova
+      const protocol = req.protocol;
+      const host = req.get('host') || 'localhost:5000';
+      const domain = `${protocol}://${host}`;
+      
+      // Inicijalizacija sitemap servisa i generisanje sitemap-a
+      const sitemapService = new SitemapService(domain);
+      await sitemapService.generateSitemap();
+      
+      console.log('Sitemap uspešno ažuriran nakon promene blog posta');
+    } catch (error) {
+      console.error('Greška pri ažuriranju sitemap-a:', error);
+    }
+  }
   
   /**
    * Dobija sve objavljene blogove
@@ -225,6 +246,11 @@ export async function setupBlogRoutes(app: any) {
       
       const updatedBlog = await storage.updateBlogPost(blog.id, updateData);
       
+      // Ako je post odobren, ažuriramo sitemap
+      if (action === 'approve') {
+        await updateSitemap(req);
+      }
+      
       return res.status(200).json({
         success: true,
         message: action === 'approve' ? 'Blog post je uspešno objavljen' : 'Blog post je odbijen',
@@ -313,6 +339,11 @@ export async function setupBlogRoutes(app: any) {
       
       // Ažuriranje blog posta u storage-u
       const updatedBlog = await storage.updateBlogPost(blog.id, updateData);
+      
+      // Ažuriramo sitemap samo ako je post objavljen
+      if (updatedBlog && updatedBlog.status === 'published') {
+        await updateSitemap(req);
+      }
       
       return res.status(200).json({
         success: true,

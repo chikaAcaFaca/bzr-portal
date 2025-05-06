@@ -78,5 +78,15 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('Greška pri seed-ovanju blog postova:', error);
     }
+    
+    // Generisanje inicijalnog sitemap-a
+    try {
+      const { SitemapService } = await import('./services/sitemap-service');
+      const sitemapService = new SitemapService(`http://localhost:${port}`);
+      await sitemapService.generateSitemap();
+      log('Inicijalni sitemap.xml uspešno generisan');
+    } catch (error) {
+      console.error('Greška pri generisanju inicijalnog sitemap-a:', error);
+    }
   });
 })();
