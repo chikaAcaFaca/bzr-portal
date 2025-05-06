@@ -394,8 +394,8 @@ class ReferralRewardService {
       const { data } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referrerId', userId)
-        .order('createdAt', { ascending: false });
+        .eq('referrer_id', userId)
+        .order('created_at', { ascending: false });
       
       return data || [];
     } catch (error) {
@@ -468,7 +468,7 @@ class ReferralRewardService {
         const { data: storage } = await supabase
           .from('user_storage')
           .select('*')
-          .eq('userId', userId)
+          .eq('user_id', userId)
           .single();
         
         if (storage) {
@@ -478,7 +478,7 @@ class ReferralRewardService {
               baseStorageBytes: PRO_USER_BASE_STORAGE_BYTES,
               lastUpdated: new Date().toISOString()
             })
-            .eq('userId', userId);
+            .eq('user_id', userId);
         } else {
           // Ako ne postoji zapis, kreiramo novi
           await supabase
@@ -497,12 +497,12 @@ class ReferralRewardService {
       const { data: referrals } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referredId', userId);
+        .eq('referred_id', userId);
       
       if (referrals && referrals.length > 0) {
         const referral = referrals[0];
         
-        if (referral.isProUser !== isProUser) {
+        if (referral.is_pro_user !== isProUser) {
           // Ažuriranje statusa referala
           // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
           const rewardSize = BASE_REFERRAL_REWARD_BYTES + (isProUser ? PRO_REFERRAL_BONUS_BYTES : 0);
@@ -516,10 +516,10 @@ class ReferralRewardService {
           await supabase
             .from('referrals')
             .update({
-              isProUser,
-              rewardSize,
-              expiresAt: expiryDate.toISOString(),
-              isActive: true
+              is_pro_user: isProUser,
+              reward_size: rewardSize,
+              expires_at: expiryDate.toISOString(),
+              is_active: true
             })
             .eq('id', referral.id);
           
