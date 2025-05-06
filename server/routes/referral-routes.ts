@@ -206,4 +206,101 @@ router.post('/check-expired', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Administratorski endpoint za ručno kreiranje referala između dva korisnika
+ * POST /api/referrals/admin/create-referral
+ */
+router.post('/admin/create-referral', async (req: Request, res: Response) => {
+  try {
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Samo administratori mogu izvršiti ovu akciju'
+      });
+    }
+
+    const { referrer_email, referred_email, is_pro_user = false } = req.body;
+
+    if (!referrer_email || !referred_email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Potrebni su email adrese oba korisnika'
+      });
+    }
+
+    // Pronalaženje korisnika po email adresama
+    const { data: referrerData, error: referrerError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', referrer_email)
+      .single();
+
+    if (referrerError || !referrerData) {
+      return res.status(404).json({
+        success: false,
+        message: `Korisnik sa email adresom ${referrer_email} nije pronađen`
+      });
+    }
+
+    const { data: referredData, error: referredError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', referred_email)
+      .single();
+
+    if (referredError || !referredData) {
+      return res.status(404).json({
+        success: false,
+        message: `Korisnik sa email adresom ${referred_email} nije pronađen`
+      });
+    }
+
+    // Dobavljanje ili generisanje referalnog koda za referrer-a
+    const referralCode = await ReferralRewardService.getReferralCode(referrerData.id);
+
+    if (!referralCode) {
+      return res.status(500).json({
+        success: false,
+        message: 'Nije moguće generisati referalni kod'
+      });
+    }
+
+    // Provera da li referral već postoji
+    const { data: existingReferral } = await supabase
+      .from('referrals')
+      .select('*')
+      .eq('referred_id', referredData.id)
+      .single();
+    
+    if (existingReferral) {
+      return res.status(400).json({
+        success: false,
+        message: 'Referral već postoji za korisnika sa ovom email adresom'
+      });
+    }
+
+    // Kreiranje referrala
+    const referral = await ReferralRewardService.createReferral(
+      referrerData.id,
+      referredData.id,
+      referralCode,
+      is_pro_user,
+      'direct_link',
+      'admin_manual'
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Referral uspešno kreiran',
+      referral
+    });
+  } catch (error) {
+    console.error('Greška pri ručnom kreiranju referala:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Greška pri ručnom kreiranju referala'
+    });
+  }
+});
+
 export default router;

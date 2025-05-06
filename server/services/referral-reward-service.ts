@@ -106,9 +106,15 @@ class ReferralRewardServiceClass {
       if (initialCheckError) {
         console.error('Tabela referral_codes ne postoji:', initialCheckError);
         
-        // Generišemo 8-karakterni kod umesto test prefiksa
-        const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-        return randomCode;
+        // Generišemo stabilan kod baziran na ID korisnika umesto random koda
+        const stableCode = crypto
+          .createHash('md5')
+          .update(user_id + '-bzr-portal')
+          .digest('hex')
+          .substring(0, 8)
+          .toUpperCase();
+          
+        return stableCode;
       }
       
       // Proveriti da li korisnik već ima referalni kod
@@ -127,8 +133,14 @@ class ReferralRewardServiceClass {
         return existingCodes.code;
       }
 
-      // Generisanje novog koda
-      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+      // Generisanje stabilnog koda baziranog na ID korisnika
+      // Ovo će uvek generisati isti kod za istog korisnika
+      const stableCode = crypto
+        .createHash('md5')
+        .update(user_id + '-bzr-portal')
+        .digest('hex')
+        .substring(0, 8)
+        .toUpperCase();
 
       // Proverimo da li tabela postoji
       const { error: tableInsertError } = await supabase
@@ -138,7 +150,7 @@ class ReferralRewardServiceClass {
       
       // Ako tabela ne postoji, vraćamo generisani kod bez prefiksa
       if (tableInsertError) {
-        return code;
+        return stableCode;
       }
       
       try {
@@ -146,26 +158,32 @@ class ReferralRewardServiceClass {
         const { error } = await supabase
           .from('referral_codes')
           .insert([
-            { user_id: user_id, code }
+            { user_id: user_id, code: stableCode }
           ]);
   
         if (error) {
           console.error('Detaljna greška pri čuvanju koda:', error);
-          // Ako ne možemo da sačuvamo, vraćamo generisani kod bez prefiksa
-          return code;
+          // Ako ne možemo da sačuvamo, vraćamo ipak stabilan kod
+          return stableCode;
         }
       } catch (insertError) {
         console.error('Greška pri INSERT operaciji:', insertError);
-        return code;
+        return stableCode;
       }
 
-      // Ako je sve u redu, vratimo pravi kod
-      return code;
+      // Ako je sve u redu, vratimo stabilan kod
+      return stableCode;
     } catch (error) {
       console.error('Neočekivana greška pri generisanju referalnog koda:', error);
-      // Generišemo pravi kod umesto placeholdera za greške
-      const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-      return randomCode;
+      // Generišemo stabilan kod umesto random koda
+      const stableCode = crypto
+        .createHash('md5')
+        .update(user_id + '-bzr-portal')
+        .digest('hex')
+        .substring(0, 8)
+        .toUpperCase();
+        
+      return stableCode;
     }
   }
 
@@ -184,9 +202,15 @@ class ReferralRewardServiceClass {
         
       if (tableCheckError) {
         console.error('Tabela referral_codes ne postoji u getReferralCode:', tableCheckError);
-        // Generišemo pravi kod umesto test prefiksa
-        const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-        return randomCode;
+        // Generišemo stabilan kod
+        const stableCode = crypto
+          .createHash('md5')
+          .update(user_id + '-bzr-portal')
+          .digest('hex')
+          .substring(0, 8)
+          .toUpperCase();
+          
+        return stableCode;
       }
       
       const { data, error } = await supabase
@@ -207,9 +231,15 @@ class ReferralRewardServiceClass {
       return await this.generateReferralCode(user_id);
     } catch (error) {
       console.error('Neočekivana greška pri dobavljanju referalnog koda:', error);
-      // Generišemo pravi kod umesto placeholdera za greške
-      const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
-      return randomCode;
+      // Generišemo stabilan kod
+      const stableCode = crypto
+        .createHash('md5')
+        .update(user_id + '-bzr-portal')
+        .digest('hex')
+        .substring(0, 8)
+        .toUpperCase();
+        
+      return stableCode;
     }
   }
 
