@@ -212,23 +212,23 @@ class ReferralRewardService {
    * @param postLink Link na post (opciono)
    */
   async createReferral(
-    referrerId: string,
-    referredId: string,
-    referralCode: string,
-    isProUser: boolean = false,
+    referrer_id: string,
+    referred_id: string,
+    referral_code: string,
+    is_pro_user: boolean = false,
     source: 'blog_post' | 'social_comment' | 'direct_link' | 'unknown' = 'direct_link',
-    socialPlatform?: string,
-    postLink?: string
+    social_platform?: string,
+    post_link?: string
   ): Promise<Referral | null> {
     try {
       // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
-      const rewardSize = BASE_REFERRAL_REWARD_BYTES + (isProUser ? PRO_REFERRAL_BONUS_BYTES : 0);
+      const reward_size = BASE_REFERRAL_REWARD_BYTES + (is_pro_user ? PRO_REFERRAL_BONUS_BYTES : 0);
       
       // Računanje datuma isteka nagrade
       // Za besplatne korisnike, nagrada nikad ne ističe (30 godina u budućnost)
       // Za PRO korisnike, nagrada ističe nakon isteka PRO pretplate + dodatnih 12 meseci
       const now = new Date();
-      const expiryDate = isProUser
+      const expiryDate = is_pro_user
         ? new Date(now.setDate(now.getDate() + REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS))
         : new Date(now.setFullYear(now.getFullYear() + 30));
       
@@ -236,16 +236,16 @@ class ReferralRewardService {
         .from('referrals')
         .insert([
           {
-            referrer_id: referrerId,
-            referred_id: referredId,
-            referral_code: referralCode,
-            is_pro_user: isProUser,
-            reward_size: rewardSize,
+            referrer_id,
+            referred_id,
+            referral_code,
+            is_pro_user,
+            reward_size,
             expires_at: expiryDate.toISOString(),
             is_active: true,
             source,
-            social_platform: socialPlatform,
-            post_link: postLink
+            social_platform,
+            post_link
           }
         ])
         .select();
@@ -255,7 +255,7 @@ class ReferralRewardService {
       }
 
       // Dodavanje nagradnog prostora za skladištenje
-      await this.addReferralRewardStorage(referrerId, rewardSize);
+      await this.addReferralRewardStorage(referrer_id, reward_size);
 
       return data[0] || null;
     } catch (error) {
@@ -525,10 +525,10 @@ class ReferralRewardService {
           
           // Ažuriranje nagrade za referrera
           // Prvo oduzimamo staru nagradu
-          await this.adjustReferralRewardStorage(referral.referrer_id, -referral.rewardSize);
+          await this.adjustReferralRewardStorage(referral.referrer_id, -referral.reward_size);
           
           // Zatim dodajemo novu nagradu
-          await this.adjustReferralRewardStorage(referral.referrerId, rewardSize);
+          await this.adjustReferralRewardStorage(referral.referrer_id, rewardSize);
         }
       }
     } catch (error) {
@@ -595,7 +595,7 @@ class ReferralRewardService {
           .eq('id', referral.id);
         
         // Zatim oduzeti nagradu od skladišta korisnika
-        await this.adjustReferralRewardStorage(referral.referrerId, -referral.rewardSize);
+        await this.adjustReferralRewardStorage(referral.referrer_id, -referral.reward_size);
       }
     } catch (error) {
       console.error('Greška pri proveri isteklih referala:', error);
