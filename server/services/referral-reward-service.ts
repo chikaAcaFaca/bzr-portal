@@ -109,7 +109,7 @@ class ReferralRewardService {
       const { data: existingCodes } = await supabase
         .from('referral_codes')
         .select('*')
-        .eq('userId', userId)
+        .eq('user_id', userId)
         .single();
 
       if (existingCodes) {
@@ -123,7 +123,7 @@ class ReferralRewardService {
       const { data, error } = await supabase
         .from('referral_codes')
         .insert([
-          { userId, code }
+          { user_id: userId, code }
         ])
         .select();
 
