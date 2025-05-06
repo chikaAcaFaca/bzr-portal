@@ -103,6 +103,28 @@ export function ReferralStats({ className }: ReferralStatsProps) {
     });
   };
   
+  // Funkcija za deljenje preko Web Share API-ja (za mobilne uređaje)
+  const nativeShare = () => {
+    if (!referralUrl) return;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Pridružite se BZR portalu',
+        text: 'Pridružite se BZR portalu koristeći moj referalni link!',
+        url: referralUrl,
+      })
+      .then(() => {
+        toast({
+          title: 'Uspešno deljenje',
+          description: 'Link je uspešno deljen.',
+        });
+      })
+      .catch((error) => {
+        console.error('Greška pri deljenju:', error);
+      });
+    }
+  };
+  
   // Mapa izvora referala
   const sourceLabels: Record<string, string> = {
     'blog_post': 'Blog post',
@@ -152,10 +174,59 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                     <Copy className="w-4 h-4" />
                     Kopiraj link
                   </Button>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <ShareIcon className="w-4 h-4" />
-                    Podeli
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          // Pokušaj prvo nativno deljenje ako je dostupno (za mobilne uređaje)
+                          if (navigator.share) {
+                            nativeShare();
+                          }
+                        }}
+                      >
+                        <ShareIcon className="w-4 h-4" />
+                        Podeli
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3" align="end">
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="rounded-full bg-blue-600 hover:bg-blue-700 text-white border-none"
+                          onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralUrl)}`, '_blank')}
+                        >
+                          <Facebook className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="rounded-full bg-sky-500 hover:bg-sky-600 text-white border-none"
+                          onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(referralUrl)}&text=${encodeURIComponent('Pridružite se BZR portalu koristeći moj referalni link!')}`, '_blank')}
+                        >
+                          <Twitter className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="rounded-full bg-blue-700 hover:bg-blue-800 text-white border-none"
+                          onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralUrl)}`, '_blank')}
+                        >
+                          <Linkedin className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="rounded-full bg-green-600 hover:bg-green-700 text-white border-none"
+                          onClick={() => window.open(`mailto:?subject=${encodeURIComponent('Pridružite se BZR portalu')}&body=${encodeURIComponent(`Pridružite se BZR portalu koristeći moj referalni link: ${referralUrl}`)}`, '_blank')}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 {referralInfo && (
