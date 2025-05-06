@@ -227,17 +227,8 @@ class ReferralRewardServiceClass {
       }
       
       // Generisanje URL-a sa referalnim kodom
-      let baseUrl = '';
-      
-      // Za produkciju
-      if (process.env.NODE_ENV === 'production') {
-        baseUrl = process.env.APP_URL || 'https://bzrportal.com';
-      }
-      // Za razvoj/test
-      else {
-        // U razvoju koristimo Replit domene ili window.location ako je dostupan
-        baseUrl = 'https://bzr-portal.replit.app';
-      }
+      // Uvek koristimo bzr-portal.com kao baznu adresu
+      const baseUrl = 'https://bzr-portal.com';
       
       return `${baseUrl}/auth?ref=${code}`;
     } catch (error) {
