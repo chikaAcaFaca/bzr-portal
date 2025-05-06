@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -42,9 +42,23 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, isLoading: authLoading, signIn, signUp, signOut } = useAuth();
+  
+  // Uzimamo referalni kod iz URL-a
+  useEffect(() => {
+    // Dobavljanje referalnog koda iz URL parametra
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      console.log('Pronađen referalni kod:', refCode);
+      setReferralCode(refCode);
+      // Prebacujemo na tab za registraciju
+      setActiveTab("register");
+    }
+  }, []);
 
   // Login forma - definisati pre uslovnih izjava
   const loginForm = useForm<LoginFormValues>({
@@ -114,7 +128,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       // Koristeći Supabase za registraciju korisnika
-      const { error } = await signUp({
+      const { data: userData, error } = await signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -122,12 +136,37 @@ export default function AuthPage() {
             fullName: data.fullName,
             companyName: data.companyName,
             companyPib: data.companyPib,
-            companyRegNumber: data.companyRegNumber
+            companyRegNumber: data.companyRegNumber,
+            referral_code: referralCode || undefined // Dodajemo referalni kod ako postoji
           }
         }
       });
       
       if (error) throw error;
+      
+      // Ako postoji referalni kod, šaljemo ga na server
+      if (referralCode && userData?.user?.id) {
+        try {
+          const response = await fetch('/api/referrals/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              user_id: userData.user.id,
+              referral_code: referralCode
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log('Referalni kod uspešno primenjen!');
+          } else {
+            console.error('Greška pri primeni referalnog koda:', result.error);
+          }
+        } catch (refError) {
+          console.error('Greška pri slanju referalnog koda:', refError);
+        }
+      }
       
       toast({
         title: "Uspešna registracija",
