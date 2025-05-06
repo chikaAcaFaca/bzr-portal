@@ -72,8 +72,8 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true, // Automatski osvežiti nakon vraćanja fokusa na prozor
+      staleTime: 60000, // 1 minut, nakon toga podaci se smatraju zastarelim
       retry: false,
     },
     mutations: {

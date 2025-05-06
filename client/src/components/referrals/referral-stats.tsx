@@ -1,10 +1,10 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Share as ShareIcon, Copy, Users, HardDrive, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Share as ShareIcon, Copy, Users, HardDrive, Facebook, Twitter, Linkedin, Mail, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -51,6 +51,7 @@ interface ReferralStatsProps {
 
 export function ReferralStats({ className }: ReferralStatsProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Definicije tipova za API odgovore
   interface CodeResponse {
@@ -68,16 +69,33 @@ export function ReferralStats({ className }: ReferralStatsProps) {
   }
   
   // Dobavljanje referalnog koda
-  const { data: codeData, isLoading: isCodeLoading } = useQuery<CodeResponse>({
+  const { data: codeData, isLoading: isCodeLoading, refetch: refetchCode } = useQuery<CodeResponse>({
     queryKey: ['/api/referrals/code'],
     retry: false,
   });
   
   // Dobavljanje referalnih informacija
-  const { data: infoData, isLoading: isInfoLoading } = useQuery<InfoResponse>({
+  const { data: infoData, isLoading: isInfoLoading, refetch: refetchInfo } = useQuery<InfoResponse>({
     queryKey: ['/api/referrals/info'],
     retry: false,
   });
+  
+  // Efekat za osvežavanje podataka pri učitavanju komponente
+  useEffect(() => {
+    // Osvežavanje podataka pri svakom montiranju komponente
+    refetchCode();
+    refetchInfo();
+  }, [refetchCode, refetchInfo]);
+  
+  // Funkcija za ručno osvežavanje podataka
+  const refreshReferralData = () => {
+    refetchCode();
+    refetchInfo();
+    toast({
+      title: 'Osvežavanje',
+      description: 'Podaci o referalima su osveženi.',
+    });
+  };
   
   const referralInfo = infoData?.success ? infoData.referral_info : null;
   const referrals = infoData?.success ? infoData.referrals : [];
@@ -148,11 +166,16 @@ export function ReferralStats({ className }: ReferralStatsProps) {
     <div className={className}>
       <div className="mb-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Vaš Referalni Program</CardTitle>
-            <CardDescription>
-              Delite vaš jedinstveni referalni link sa prijateljima i kolegama da bi dobili dodatni prostor za skladištenje
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Vaš Referalni Program</CardTitle>
+              <CardDescription>
+                Delite vaš jedinstveni referalni link sa prijateljima i kolegama da bi dobili dodatni prostor za skladištenje
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={refreshReferralData} className="ml-auto" title="Osveži podatke">
+              <RefreshCcw className="h-5 w-5" />
+            </Button>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -297,9 +320,14 @@ export function ReferralStats({ className }: ReferralStatsProps) {
       {/* Lista referala */}
       {referrals.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle>Vaši referali</CardTitle>
-            <CardDescription>Pregled svih korisnika koji su se registrovali preko vašeg linka</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Vaši referali</CardTitle>
+              <CardDescription>Pregled svih korisnika koji su se registrovali preko vašeg linka</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={refreshReferralData} className="ml-auto" title="Osveži podatke">
+              <RefreshCcw className="h-5 w-5" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="relative overflow-x-auto">
