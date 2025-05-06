@@ -98,6 +98,60 @@ class ReferralRewardServiceClass {
    */
   async generateReferralCode(user_id: string): Promise<string> {
     try {
+      // Posebni kodovi za određene korisnike
+      const specialUsers: Record<string, string> = {
+        '1.nikolina.jovanovic@gmail.com': 'NIKOLINA',
+        'aleksandar.jovanovic@gmail.com': 'ALEXBZR'
+      };
+      
+      // Provera da li je korisnik jedan od posebnih
+      const { data: userData } = await supabase
+        .from('users')
+        .select('email')
+        .eq('id', user_id)
+        .single();
+      
+      const userEmail = userData?.email as string;
+      
+      // Ako je korisnik na listi posebnih, vrati specifičan kod
+      if (userEmail && specialUsers[userEmail]) {
+        const specialCode = specialUsers[userEmail];
+        console.log(`Korišćenje posebnog koda ${specialCode} za korisnika ${userEmail}`);
+        
+        // Proverimo prvo da li tabela referral_codes postoji
+        const { error: tableCheckError } = await supabase
+          .from('referral_codes')
+          .select('count')
+          .limit(1);
+        
+        if (!tableCheckError) {
+          // Proveriti da li korisnik već ima referalni kod
+          const { data: existingCode, error: existingError } = await supabase
+            .from('referral_codes')
+            .select('*')
+            .eq('user_id', user_id)
+            .single();
+          
+          if (existingCode) {
+            // Ako korisnik već ima kod, ažuriramo ga na poseban kod
+            await supabase
+              .from('referral_codes')
+              .update({ code: specialCode })
+              .eq('user_id', user_id);
+          } else {
+            // Ako korisnik nema kod, kreiramo novi sa posebnim kodom
+            await supabase
+              .from('referral_codes')
+              .insert([
+                { user_id: user_id, code: specialCode }
+              ]);
+          }
+        }
+        
+        return specialCode;
+      }
+      
+      // Standardna logika za ostale korisnike
       // Proverimo prvo da li tabela referral_codes postoji
       const { error: initialCheckError } = await supabase
         .from('referral_codes')
@@ -143,17 +197,6 @@ class ReferralRewardServiceClass {
         .substring(0, 8)
         .toUpperCase();
 
-      // Proverimo da li tabela postoji
-      const { error: tableInsertError } = await supabase
-        .from('referral_codes')
-        .select('count')
-        .limit(1);
-      
-      // Ako tabela ne postoji, vraćamo generisani kod bez prefiksa
-      if (tableInsertError) {
-        return stableCode;
-      }
-      
       try {
         // Čuvanje koda u bazi
         const { error } = await supabase

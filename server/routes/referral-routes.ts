@@ -17,37 +17,26 @@ router.get('/code', async (req: Request, res: Response) => {
       });
     }
 
-    // Proverimo prvo direktno u bazi da li korisnik već ima referalni kod
+    // Uvek koristimo servis za dobavljanje referral koda
     let referralCode = null;
     let referralUrl = null;
     
     try {
-      // Proveriti da li korisnik već ima referalni kod
-      const { data: existingCode } = await supabase
-        .from('referral_codes')
-        .select('code')
-        .eq('user_id', req.user.id)
-        .single();
+      console.log('Dobavljanje referalnog koda za korisnika:', req.user.id, req.user.email);
       
-      if (existingCode && existingCode.code) {
-        // Ako kod već postoji, koristimo ga
-        referralCode = existingCode.code;
-        
-        // Generišemo URL sa postojećim kodom
-        // Uvek koristimo bzr-portal.com kao baznu adresu
-        const baseUrl = 'https://bzr-portal.com';
-        
-        referralUrl = `${baseUrl}/auth?ref=${referralCode}`;
-      } else {
-        // Ako kod ne postoji, generišemo novi
-        referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
-        referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
-      }
-    } catch (dbError) {
-      // Ako dođe do greške sa bazom, pokušajmo preko servisa
-      console.log('Fallback na ReferralRewardService:', dbError);
+      // Generišemo referalni kod kroz servis koji će:
+      // 1. Proveriti da li već postoji kod
+      // 2. Koristiti posebne kodove za određene korisnike
+      // 3. Vratiti odgovarajući kod
       referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+      
+      // Generišemo URL kroz servis
       referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
+      
+      console.log('Generisan referalni kod:', referralCode);
+    } catch (error) {
+      // Logujemo grešku
+      console.error('Greška pri dobavljanju referalnog koda:', error);
     }
 
     return res.status(200).json({
