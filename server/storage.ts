@@ -224,6 +224,25 @@ export class MemStorage implements IStorage {
     const id = this.userCurrentId++;
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
+    
+    // Generate a referral code for the user - dynamic import
+    try {
+      import('./services/referral-reward-service').then(module => {
+        const ReferralRewardService = module.default;
+        ReferralRewardService.generateReferralCode(id.toString())
+          .then(() => {
+            console.log('Automatski generisan referral kod za novog korisnika:', id);
+          })
+          .catch(error => {
+            console.error('Greška pri generisanju referalnog koda:', error);
+          });
+      }).catch(error => {
+        console.error('Greška pri učitavanju servisa:', error);
+      });
+    } catch (error) {
+      console.error('Greška pri generisanju referalnog koda za novog korisnika:', error);
+    }
+    
     return user;
   }
 

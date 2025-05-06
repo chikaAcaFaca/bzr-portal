@@ -98,6 +98,18 @@ class ReferralRewardServiceClass {
    */
   async generateReferralCode(user_id: string): Promise<string> {
     try {
+      // Prvo proveri da li korisnik već ima referalni kod
+      const { data: existingCode } = await supabase
+        .from('referral_codes')
+        .select('code')
+        .eq('user_id', user_id)
+        .single();
+        
+      if (existingCode) {
+        console.log(`Korisnik ${user_id} već ima referalni kod:`, existingCode.code);
+        return existingCode.code;
+      }
+      
       // Posebni kodovi za određene korisnike
       const specialUsers: Record<string, string> = {
         '1.nikolina.jovanovic@gmail.com': 'NIKOLINA',
