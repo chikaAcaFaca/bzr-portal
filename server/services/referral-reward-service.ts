@@ -547,7 +547,7 @@ class ReferralRewardService {
       const { data: storage } = await supabase
         .from('user_storage')
         .select('*')
-        .eq('userId', userId)
+        .eq('user_id', userId)
         .single();
       
       if (storage) {
@@ -556,8 +556,8 @@ class ReferralRewardService {
         await supabase
           .from('user_storage')
           .update({
-            additionalStorageBytes: newAdditionalStorage,
-            lastUpdated: new Date().toISOString()
+            additional_storage_bytes: newAdditionalStorage,
+            last_updated: new Date().toISOString()
           })
           .eq('userId', userId);
       }
