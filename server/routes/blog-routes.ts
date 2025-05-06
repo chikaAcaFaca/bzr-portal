@@ -83,8 +83,7 @@ export async function setupBlogRoutes(app: any) {
       }
       
       // Inkrementiranje view count-a
-      blog.viewCount += 1;
-      await storage.updateBlogPost(blog.id, { viewCount: blog.viewCount });
+      await storage.incrementBlogViewCount(blog.id);
       
       return res.status(200).json({
         success: true,

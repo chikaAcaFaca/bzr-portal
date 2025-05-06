@@ -326,7 +326,7 @@ export default function LandingPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recentPosts.map((post) => (
+              {recentPosts.map((post: BlogPost) => (
                 <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
                   {post.imageUrl && (
                     <div className="w-full h-48 overflow-hidden">
