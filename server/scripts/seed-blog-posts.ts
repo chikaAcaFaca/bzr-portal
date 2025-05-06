@@ -703,7 +703,6 @@ export async function createBlogPost(post: SeedBlogPost): Promise<number> {
   try {
     const slug = generateSlug(post.title);
     const imageUrl = post.imageUrl || getRandomImageUrl(post.category);
-    const publishedAt = post.status === 'published' ? new Date() : null;
     
     const blogPost = await storage.createBlogPost({
       title: post.title,
@@ -713,8 +712,7 @@ export async function createBlogPost(post: SeedBlogPost): Promise<number> {
       imageUrl: imageUrl,
       category: post.category,
       tags: post.tags,
-      status: post.status,
-      publishedAt: publishedAt
+      status: post.status
     });
     
     return blogPost.id;

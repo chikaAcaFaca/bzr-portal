@@ -28,6 +28,7 @@ import { adminRouter } from './routes/admin-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
+import { seedBlogPosts } from './scripts/seed-blog-posts';
 import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
@@ -1071,6 +1072,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupBlogRoutes(app);
   setupDocumentScraperRoutes(app);
   setupDocumentExtractionRoutes(app);
+  
+  // Seed blog posts for landing page
+  try {
+    const createdPosts = await seedBlogPosts();
+    if (createdPosts > 0) {
+      console.log(`Successfully seeded ${createdPosts} blog posts for landing page`);
+    }
+  } catch (error) {
+    console.error('Error seeding blog posts:', error);
+  }
   
   // Register OCR service router
   app.use('/api/process', ocrRouter);
