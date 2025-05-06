@@ -221,29 +221,68 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    // Pripremi datum kreiranja i ažuriranja
+    const now = new Date();
+    
+    // Dodaj nedostajuća polja koja zahteva šema korisnika
+    const completeUser: User = {
+      ...insertUser,
+      id: this.userCurrentId++,
+      email: insertUser.email || null,
+      fullName: insertUser.fullName || null,
+      role: insertUser.role || 'user',
+      isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
+      companyId: 1, // Default vrednost
+      subscriptionType: 'free', // Default vrednost
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.users.set(completeUser.id, completeUser);
     
     // Generate a referral code for the user - dynamic import
     try {
-      import('./services/referral-reward-service').then(module => {
-        const ReferralRewardService = module.default;
-        ReferralRewardService.generateReferralCode(id.toString())
-          .then(() => {
-            console.log('Automatski generisan referral kod za novog korisnika:', id);
-          })
-          .catch(error => {
-            console.error('Greška pri generisanju referalnog koda:', error);
-          });
-      }).catch(error => {
-        console.error('Greška pri učitavanju servisa:', error);
-      });
-    } catch (error) {
+      // Posebna logika za administratore
+      if (insertUser.email === '1.nikolina.jovanovic@gmail.com') {
+        // Poseban kod za Nikolinu
+        console.log('Kreiranje posebnog koda NIKOLINA za korisnika:', completeUser.id, insertUser.email);
+        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
+        const ReferralRewardService = new ReferralRewardServiceClass();
+        try {
+          // Direktan upis u bazu
+          await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'NIKOLINA');
+          console.log('Uspešno kreiran poseban kod NIKOLINA za korisnika ID:', completeUser.id);
+        } catch (e: any) {
+          console.error('Greška pri kreiranju posebnog koda NIKOLINA:', e);
+        }
+      } else if (insertUser.email === 'aleksandar.jovanovic@gmail.com') {
+        // Poseban kod za Aleksandra
+        console.log('Kreiranje posebnog koda ALEXBZR za korisnika:', completeUser.id, insertUser.email);
+        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
+        const ReferralRewardService = new ReferralRewardServiceClass();
+        try {
+          // Direktan upis u bazu
+          await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'ALEXBZR');
+          console.log('Uspešno kreiran poseban kod ALEXBZR za korisnika ID:', completeUser.id);
+        } catch (e: any) {
+          console.error('Greška pri kreiranju posebnog koda ALEXBZR:', e);
+        }
+      } else {
+        // Standardni kod za ostale korisnike
+        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
+        const ReferralRewardService = new ReferralRewardServiceClass();
+        try {
+          await ReferralRewardService.generateReferralCode(completeUser.id.toString());
+          console.log('Automatski generisan referral kod za novog korisnika:', completeUser.id);
+        } catch (error: any) {
+          console.error('Greška pri generisanju referalnog koda:', error);
+        }
+      }
+    } catch (error: any) {
       console.error('Greška pri generisanju referalnog koda za novog korisnika:', error);
     }
     
-    return user;
+    return completeUser;
   }
 
   async getAllUsers(): Promise<User[]> {

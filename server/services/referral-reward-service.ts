@@ -2,6 +2,19 @@ import crypto from 'crypto';
 import { db } from '../db';
 import { supabase } from '../lib/supabase';
 
+// Konstante za definisanje nagrade za referal
+export const FREE_REFERRAL_REWARD_BYTES = 52428800; // 50MB za FREE korisnike
+export const PRO_REFERRAL_REWARD_BYTES = 157286400; // 150MB za PRO korisnike
+export const REFERRAL_EXPIRY_DAYS = 365; // Trajanje nagrade 12 meseci
+
+// Fiksne vrednosti za posebne referalne kodove
+export const SPECIAL_CODES = {
+  NIKOLINA: 'NIKOLINA',
+  ALEXBZR: 'ALEXBZR',
+  ADMIN1: 'ADMIN123',
+  ADMIN2: 'ADMIN456'
+};
+
 // Tipovi za Supabase bazu
 interface ReferralCode {
   id: string;
@@ -326,6 +339,59 @@ class ReferralRewardServiceClass {
         .toUpperCase();
         
       return stableCode;
+    }
+  }
+
+  /**
+   * Ručno kreira referalni kod za korisnika (koristi se za administratore)
+   * @param user_id ID korisnika 
+   * @param code Ručno definisan kod
+   * @returns Status operacije
+   */
+  async manuallyCreateReferralCode(user_id: string, code: string): Promise<boolean> {
+    try {
+      console.log(`Ručno kreiranje koda ${code} za korisnika ${user_id}`);
+      
+      // Provera da li korisnik već ima kod
+      const { data: existingCode } = await supabase
+        .from('referral_codes')
+        .select('code')
+        .eq('user_id', user_id)
+        .single();
+      
+      if (existingCode) {
+        console.log(`Korisnik ${user_id} već ima kod ${existingCode.code}, ažuriranje na ${code}`);
+        // Ažuriranje postojećeg koda
+        const { error } = await supabase
+          .from('referral_codes')
+          .update({ code })
+          .eq('user_id', user_id);
+        
+        if (error) {
+          console.error('Greška pri ažuriranju koda:', error);
+          return false;
+        }
+        
+        return true;
+      }
+      
+      // Kreiranje novog koda ako ne postoji
+      const { error } = await supabase
+        .from('referral_codes')
+        .insert([
+          { user_id, code }
+        ]);
+      
+      if (error) {
+        console.error('Greška pri kreiranju koda:', error);
+        return false;
+      }
+      
+      console.log(`Uspešno kreiran poseban kod ${code} za korisnika ${user_id}`);
+      return true;
+    } catch (error) {
+      console.error('Neočekivana greška pri ručnom kreiranju koda:', error);
+      return false;
     }
   }
 
