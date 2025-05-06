@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedBlogPosts } from "./scripts/seed-blog-posts";
 
 const app = express();
 // Povećavamo maksimalne veličine za json i url-encoded zahteve
@@ -65,7 +66,17 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Pokretanje seed skripte za blog postove
+    try {
+      const seededCount = await seedBlogPosts();
+      if (seededCount > 0) {
+        log(`Uspešno dodato ${seededCount} početnih blog postova.`);
+      }
+    } catch (error) {
+      console.error('Greška pri seed-ovanju blog postova:', error);
+    }
   });
 })();
