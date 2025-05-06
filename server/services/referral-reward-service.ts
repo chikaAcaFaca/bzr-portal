@@ -98,6 +98,8 @@ class ReferralRewardServiceClass {
    */
   async generateReferralCode(user_id: string): Promise<string> {
     try {
+      console.log('Generisanje referral koda za korisnika ID:', user_id);
+      
       // Prvo proveri da li korisnik već ima referalni kod
       const { data: existingCode } = await supabase
         .from('referral_codes')
@@ -110,13 +112,41 @@ class ReferralRewardServiceClass {
         return existingCode.code;
       }
       
-      // Posebni kodovi za određene korisnike
+      // Posebni kodovi za određene korisnike - ID-jevi umesto email-ova
+      // U slučaju testiranja sa admin korisnikom u MemStorage, koristimo i ID 1
       const specialUsers: Record<string, string> = {
-        '1.nikolina.jovanovic@gmail.com': 'NIKOLINA',
-        'aleksandar.jovanovic@gmail.com': 'ALEXBZR'
+        // Postavljamo izričite kodove za posebne korisnike
+        '1': 'ADMIN123',                              // Admin u MemStorage
+        'admin@example.com': 'ADMIN456',              // Admin u MemStorage (po email-u)
+        '1.nikolina.jovanovic@gmail.com': 'NIKOLINA', // email
+        'aleksandar.jovanovic@gmail.com': 'ALEXBZR',  // email
+        
+        // UUID-ovi za Supabase (ovo su samo primeri)
+        'f9b5b8b0-5a7b-4a7e-9b0a-5b5b5b5b5b5b': 'NIKOLINA',  // Pretpostavljeni UUID Nikoline
+        'a7c6b8d0-3e7f-4a7e-8c0b-2d5e6f7a8b9c': 'ALEXBZR'    // Pretpostavljeni UUID Aleksandra
       };
       
-      // Provera da li je korisnik jedan od posebnih
+      // Provera direktno da li je korisnik jedan od posebnih po ID-u
+      if (specialUsers[user_id]) {
+        const specialCode = specialUsers[user_id];
+        console.log(`Korišćenje posebnog koda ${specialCode} za korisnika po ID ${user_id}`);
+        
+        // Čuvamo kod u bazi
+        try {
+          await supabase
+            .from('referral_codes')
+            .insert([
+              { user_id: user_id, code: specialCode }
+            ]);
+        } catch (insertError) {
+          console.error('Greška pri čuvanju posebnog koda:', insertError);
+          // Nastavljamo izvršavanje jer želimo da vratimo kod čak i ako insert ne uspe
+        }
+        
+        return specialCode;
+      }
+      
+      // Ako nismo našli po ID-u, probamo po email-u
       const { data: userData } = await supabase
         .from('users')
         .select('email')
