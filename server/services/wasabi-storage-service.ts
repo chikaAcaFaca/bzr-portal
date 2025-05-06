@@ -8,6 +8,7 @@ import {
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
+import { supabase } from '../lib/supabase';
 
 // Tipovi za objekte i rezultate
 interface WasabiFile {
@@ -15,6 +16,15 @@ interface WasabiFile {
   LastModified?: Date;
   Size?: number;
   ETag?: string;
+  IsKnowledgeBase?: boolean;
+}
+
+interface StorageInfo {
+  used: number;
+  base: number;
+  additional: number;
+  total: number;
+  percentage: number;
 }
 
 // Konfiguracija Wasabi servisa
@@ -237,6 +247,135 @@ class WasabiStorageService {
       console.error('Greška pri generisanju potpisanog URL-a:', error);
       // Ako dođe do greške, vraćamo direktni URL koji možda neće raditi
       return `${WASABI_ENDPOINT}/${bucket || WASABI_USER_DOCUMENTS_BUCKET}/${key}`;
+    }
+  }
+
+  /**
+   * Provera da li je fajl deo baze znanja
+   * @param key Ključ/putanja fajla
+   * @returns True ako je deo baze znanja, false inače
+   */
+  isKnowledgeBaseFile(key: string): boolean {
+    // Fajl je deo baze znanja ako:
+    // 1. Nalazi se u bucket-u za bazu znanja
+    // 2. Putanja počinje sa 'knowledge-base/' ili 'kb/'
+    // 3. Putanja sadrži '/knowledge-base/' ili '/kb/'
+    return (
+      key.startsWith('knowledge-base/') ||
+      key.startsWith('kb/') ||
+      key.includes('/knowledge-base/') ||
+      key.includes('/kb/')
+    );
+  }
+
+  /**
+   * Određivanje odgovarajućeg bucket-a na osnovu tipa fajla
+   * @param key Ključ/putanja fajla
+   * @param isKnowledgeBase Opcioni flag da li je fajl deo baze znanja
+   * @returns Ime bucket-a
+   */
+  getAppropriateStorageBucket(key: string, isKnowledgeBase?: boolean): string {
+    // Ako je izričito navedeno da je deo baze znanja, koristi bucket baze znanja
+    if (isKnowledgeBase === true) {
+      return WASABI_KNOWLEDGE_BASE_BUCKET;
+    }
+    
+    // Ako nije izričito navedeno, proveri putanju
+    if (this.isKnowledgeBaseFile(key)) {
+      return WASABI_KNOWLEDGE_BASE_BUCKET;
+    }
+    
+    // U ostalim slučajevima, koristi bucket za korisničke dokumente
+    return WASABI_USER_DOCUMENTS_BUCKET;
+  }
+
+  /**
+   * Računanje ukupne veličine fajlova korisnika (bez fajlova baze znanja)
+   * @param userId ID korisnika
+   * @returns Ukupna veličina u bajtovima
+   */
+  async calculateUserStorageUsage(userId: string): Promise<number> {
+    try {
+      // Dobavi samo korisničke dokumente
+      const userPrefix = `${userId}/`;
+      const userFiles = await this.listFiles(userPrefix);
+      
+      // Izračunaj ukupnu veličinu, isključujući fajlove baze znanja
+      let totalSize = 0;
+      for (const file of userFiles) {
+        if (!this.isKnowledgeBaseFile(file.Key)) {
+          totalSize += file.Size || 0;
+        }
+      }
+      
+      // Ažuriraj user_storage tabelu
+      const { error } = await supabase
+        .from('user_storage')
+        .update({ 
+          total_used_bytes: totalSize,
+          last_updated: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+        
+      if (error) {
+        console.error('Greška pri ažuriranju user_storage tabele:', error);
+      }
+      
+      return totalSize;
+    } catch (error) {
+      console.error('Greška pri računanju iskorišćenosti skladišta:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Dobavljanje informacija o dostupnom i iskorišćenom prostoru za korisnika
+   * @param userId ID korisnika
+   * @returns Informacije o skladištu
+   */
+  async getUserStorageInfo(userId: string): Promise<StorageInfo> {
+    try {
+      // Dobavi informacije o skladištu iz baze
+      const { data, error } = await supabase
+        .from('user_storage')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Ako nema podataka, vrati default vrednosti
+      if (!data) {
+        return {
+          used: 0,
+          base: 104857600, // 100MB default
+          additional: 0,
+          total: 104857600,
+          percentage: 0
+        };
+      }
+      
+      const total = data.base_storage_bytes + data.additional_storage_bytes;
+      const percentage = Math.min(100, Math.round((data.total_used_bytes / total) * 100));
+      
+      return {
+        used: data.total_used_bytes,
+        base: data.base_storage_bytes,
+        additional: data.additional_storage_bytes,
+        total,
+        percentage
+      };
+    } catch (error) {
+      console.error('Greška pri dobavljanju informacija o skladištu:', error);
+      return {
+        used: 0,
+        base: 104857600,
+        additional: 0,
+        total: 104857600,
+        percentage: 0
+      };
     }
   }
 }
