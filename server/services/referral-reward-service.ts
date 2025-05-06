@@ -227,12 +227,16 @@ class ReferralRewardServiceClass {
       }
       
       // Generisanje URL-a sa referalnim kodom
-      // Koristimo repl.co domane za testni link kako bi se izbegao 'This site can't be reached' error
-      let baseUrl = 'https://bzr-portal.replit.app';
+      let baseUrl = '';
       
-      // Ako je u produkciji, koristimo pravu domenu
+      // Za produkciju
       if (process.env.NODE_ENV === 'production') {
         baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+      }
+      // Za razvoj/test
+      else {
+        // U razvoju koristimo Replit domene ili window.location ako je dostupan
+        baseUrl = 'https://bzr-portal.replit.app';
       }
       
       return `${baseUrl}/auth?ref=${code}`;
