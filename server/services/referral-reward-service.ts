@@ -5,33 +5,33 @@ import { createClient } from '@supabase/supabase-js';
 // Tipovi za Supabase bazu
 interface ReferralCode {
   id: string;
-  userId: string;
+  user_id: string;
   code: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface Referral {
   id: string;
-  referrerId: string;
-  referredId: string;
-  referralCode: string;
-  isProUser: boolean;
-  createdAt: string;
-  expiresAt: string;
-  rewardSize: number;
-  isActive: boolean;
+  referrer_id: string;
+  referred_id: string;
+  referral_code: string;
+  is_pro_user: boolean;
+  created_at: string;
+  expires_at: string;
+  reward_size: number;
+  is_active: boolean;
   source: string;
-  socialPlatform?: string;
-  postLink?: string;
+  social_platform?: string;
+  post_link?: string;
 }
 
 interface UserStorage {
   id: string;
-  userId: string;
-  baseStorageBytes: number;
-  additionalStorageBytes: number;
-  totalUsedBytes: number;
-  lastUpdated: string;
+  user_id: string;
+  base_storage_bytes: number;
+  additional_storage_bytes: number;
+  total_used_bytes: number;
+  last_updated: string;
 }
 
 // Konstante za referralni program
@@ -422,19 +422,19 @@ class ReferralRewardService {
       
       // Računanje statistike
       const totalReferrals = referrals.length;
-      const totalProReferrals = referrals.filter(ref => ref.isProUser).length;
+      const totalProReferrals = referrals.filter(ref => ref.is_pro_user).length;
       
       // Računanje zarađenog prostora
-      const earnedSpace = referrals.reduce((total, ref) => total + ref.rewardSize, 0);
+      const earnedSpace = referrals.reduce((total, ref) => total + ref.reward_size, 0);
       
       // Računanje aktivnog prostora
       const now = new Date().toISOString();
-      const activeReferrals = referrals.filter(ref => ref.isActive && ref.expiresAt > now);
-      const activeSpace = activeReferrals.reduce((total, ref) => total + ref.rewardSize, 0);
+      const activeReferrals = referrals.filter(ref => ref.is_active && ref.expires_at > now);
+      const activeSpace = activeReferrals.reduce((total, ref) => total + ref.reward_size, 0);
       
       // Datum prvog referala
       const createdAt = referrals.length > 0 ? 
-        referrals[referrals.length - 1].createdAt : 
+        referrals[referrals.length - 1].created_at : 
         new Date().toISOString();
       
       return {
