@@ -197,5 +197,5 @@ export async function setupBlogRoutes(app: any) {
     }
   });
   
-  app.use('/api/blogs', router);
+  app.use('/api/blog', router);
 }

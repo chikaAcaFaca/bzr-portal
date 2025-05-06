@@ -116,6 +116,7 @@ export interface IStorage {
   getBlogPostsByCategory(category: string): Promise<BlogPost[]>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  incrementBlogViewCount(id: number): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
 }
 
@@ -687,6 +688,18 @@ export class MemStorage implements IStorage {
     return updatedPost;
   }
 
+  async incrementBlogViewCount(id: number): Promise<BlogPost | undefined> {
+    const existingPost = this.blogPosts.get(id);
+    if (!existingPost) return undefined;
+    
+    const updatedPost: BlogPost = {
+      ...existingPost,
+      viewCount: existingPost.viewCount + 1
+    };
+    this.blogPosts.set(id, updatedPost);
+    return updatedPost;
+  }
+  
   async deleteBlogPost(id: number): Promise<boolean> {
     return this.blogPosts.delete(id);
   }

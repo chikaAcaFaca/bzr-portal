@@ -58,16 +58,19 @@ export default function LandingPage() {
   const { toast } = useToast();
 
   // Učitaj najnovije blog postove
-  const { data: recentPosts = [], isLoading } = useQuery<BlogPost[]>({
+  const { data: recentPostsData, isLoading } = useQuery({
     queryKey: ['/api/blog', 'recent'],
     queryFn: async () => {
       const response = await fetch('/api/blog?status=published&limit=3');
       if (!response.ok) {
         throw new Error('Neuspešno učitavanje blog postova');
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
   });
+  
+  const recentPosts = recentPostsData?.blogs || [];
 
   return (
     <div className="flex flex-col min-h-screen">
