@@ -148,7 +148,7 @@ class ReferralRewardService {
       const { data } = await supabase
         .from('referral_codes')
         .select('code')
-        .eq('userId', userId)
+        .eq('user_id', userId)
         .single();
 
       return data?.code || null;
@@ -190,11 +190,11 @@ class ReferralRewardService {
     try {
       const { data } = await supabase
         .from('referral_codes')
-        .select('userId')
+        .select('user_id')
         .eq('code', code)
         .single();
 
-      return data?.userId || null;
+      return data?.user_id || null;
     } catch (error) {
       console.error('Greška pri pronalaženju korisnika po referalnom kodu:', error);
       return null;
@@ -275,7 +275,7 @@ class ReferralRewardService {
       const { data: userStorage } = await supabase
         .from('user_storage')
         .select('*')
-        .eq('userId', userId)
+        .eq('user_id', userId)
         .single();
 
       // Provera da li korisnik ima PRO status
@@ -301,10 +301,10 @@ class ReferralRewardService {
           .from('user_storage')
           .insert([
             {
-              userId,
-              baseStorageBytes: baseStorage,
-              additionalStorageBytes: additionalStorage,
-              totalUsedBytes: 0
+              user_id: userId,
+              base_storage_bytes: baseStorage,
+              additional_storage_bytes: additionalStorage,
+              total_used_bytes: 0
             }
           ]);
       } else {
