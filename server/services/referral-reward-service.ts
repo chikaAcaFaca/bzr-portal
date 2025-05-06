@@ -339,18 +339,18 @@ class ReferralRewardService {
    * @returns true ako je uspešno, false ako ne
    */
   async processReferral(
-    referredUserId: string,
-    referralCode: string,
-    isProUser: boolean = false,
+    referred_user_id: string,
+    referral_code: string,
+    is_pro_user: boolean = false,
     source: 'blog_post' | 'social_comment' | 'direct_link' | 'unknown' = 'direct_link',
-    socialPlatform?: string,
-    postLink?: string
+    social_platform?: string,
+    post_link?: string
   ): Promise<boolean> {
     try {
       // Pronalaženje korisnika koji je dao referral
-      const referrerId = await this.findUserByReferralCode(referralCode);
+      const referrer_id = await this.findUserByReferralCode(referral_code);
       
-      if (!referrerId) {
+      if (!referrer_id) {
         return false;
       }
       
@@ -358,7 +358,7 @@ class ReferralRewardService {
       const { data: existingReferral } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referred_id', referredUserId)
+        .eq('referred_id', referred_user_id)
         .single();
       
       if (existingReferral) {
@@ -368,13 +368,13 @@ class ReferralRewardService {
       
       // Kreiranje novog referrala
       await this.createReferral(
-        referrerId,
-        referredUserId,
-        referralCode,
-        isProUser,
+        referrer_id,
+        referred_user_id,
+        referral_code,
+        is_pro_user,
         source,
-        socialPlatform,
-        postLink
+        social_platform,
+        post_link
       );
       
       return true;
@@ -455,20 +455,20 @@ class ReferralRewardService {
    * @param userId ID korisnika
    * @param isProUser Novi PRO status korisnika
    */
-  async updateUserProStatus(userId: string, isProUser: boolean): Promise<void> {
+  async updateUserProStatus(user_id: string, is_pro_user: boolean): Promise<void> {
     try {
       // Ažuriranje korisnikovog PRO statusa
       await supabase
         .from('users')
-        .update({ is_pro: isProUser })
-        .eq('id', userId);
+        .update({ is_pro: is_pro_user })
+        .eq('id', user_id);
       
       // Ako korisnik postaje PRO, treba da ažuriramo njegovo bazno skladište
-      if (isProUser) {
+      if (is_pro_user) {
         const { data: storage } = await supabase
           .from('user_storage')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', user_id)
           .single();
         
         if (storage) {
@@ -478,13 +478,13 @@ class ReferralRewardService {
               base_storage_bytes: PRO_USER_BASE_STORAGE_BYTES,
               last_updated: new Date().toISOString()
             })
-            .eq('user_id', userId);
+            .eq('user_id', user_id);
         } else {
           // Ako ne postoji zapis, kreiramo novi
           await supabase
             .from('user_storage')
             .insert([{
-              user_id: userId,
+              user_id: user_id,
               base_storage_bytes: PRO_USER_BASE_STORAGE_BYTES,
               additional_storage_bytes: 0,
               total_used_bytes: 0
@@ -493,31 +493,31 @@ class ReferralRewardService {
       }
       
       // Ažuriranje postojećih referala gde je ovaj korisnik referral
-      // Potrebno je ažurirati isProUser status i rewards
+      // Potrebno je ažurirati is_pro_user status i rewards
       const { data: referrals } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referred_id', userId);
+        .eq('referred_id', user_id);
       
       if (referrals && referrals.length > 0) {
         const referral = referrals[0];
         
-        if (referral.is_pro_user !== isProUser) {
+        if (referral.is_pro_user !== is_pro_user) {
           // Ažuriranje statusa referala
           // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
-          const rewardSize = BASE_REFERRAL_REWARD_BYTES + (isProUser ? PRO_REFERRAL_BONUS_BYTES : 0);
+          const reward_size = BASE_REFERRAL_REWARD_BYTES + (is_pro_user ? PRO_REFERRAL_BONUS_BYTES : 0);
           
           // Računanje novog datuma isteka
           const now = new Date();
-          const expiryDate = isProUser
+          const expiryDate = is_pro_user
             ? new Date(now.setDate(now.getDate() + REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS))
             : new Date(now.setFullYear(now.getFullYear() + 30));
           
           await supabase
             .from('referrals')
             .update({
-              is_pro_user: isProUser,
-              reward_size: rewardSize,
+              is_pro_user: is_pro_user,
+              reward_size: reward_size,
               expires_at: expiryDate.toISOString(),
               is_active: true
             })
@@ -528,7 +528,7 @@ class ReferralRewardService {
           await this.adjustReferralRewardStorage(referral.referrer_id, -referral.reward_size);
           
           // Zatim dodajemo novu nagradu
-          await this.adjustReferralRewardStorage(referral.referrer_id, rewardSize);
+          await this.adjustReferralRewardStorage(referral.referrer_id, reward_size);
         }
       }
     } catch (error) {
