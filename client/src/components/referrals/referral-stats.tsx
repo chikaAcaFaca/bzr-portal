@@ -51,20 +51,35 @@ interface ReferralStatsProps {
 export function ReferralStats({ className }: ReferralStatsProps) {
   const { toast } = useToast();
   
+  // Definicije tipova za API odgovore
+  interface CodeResponse {
+    success: boolean;
+    referral_code: string;
+    referral_url: string;
+    message?: string;
+  }
+  
+  interface InfoResponse {
+    success: boolean;
+    referral_info: ReferralInfo;
+    referrals: ReferralEntry[];
+    message?: string;
+  }
+  
   // Dobavljanje referalnog koda
-  const { data: codeData, isLoading: isCodeLoading } = useQuery({
+  const { data: codeData, isLoading: isCodeLoading } = useQuery<CodeResponse>({
     queryKey: ['/api/referrals/code'],
     retry: false,
   });
   
   // Dobavljanje referalnih informacija
-  const { data: infoData, isLoading: isInfoLoading } = useQuery({
+  const { data: infoData, isLoading: isInfoLoading } = useQuery<InfoResponse>({
     queryKey: ['/api/referrals/info'],
     retry: false,
   });
   
-  const referralInfo: ReferralInfo | null = infoData?.success ? infoData.referral_info : null;
-  const referrals: ReferralEntry[] = infoData?.success ? infoData.referrals : [];
+  const referralInfo = infoData?.success ? infoData.referral_info : null;
+  const referrals = infoData?.success ? infoData.referrals : [];
   
   const referralCode = codeData?.success ? codeData.referral_code : '';
   const referralUrl = codeData?.success ? codeData.referral_url : '';
