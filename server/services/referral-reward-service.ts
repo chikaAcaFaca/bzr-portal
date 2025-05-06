@@ -236,16 +236,16 @@ class ReferralRewardService {
         .from('referrals')
         .insert([
           {
-            referrerId,
-            referredId,
-            referralCode,
-            isProUser,
-            rewardSize,
-            expiresAt: expiryDate.toISOString(),
-            isActive: true,
+            referrer_id: referrerId,
+            referred_id: referredId,
+            referral_code: referralCode,
+            is_pro_user: isProUser,
+            reward_size: rewardSize,
+            expires_at: expiryDate.toISOString(),
+            is_active: true,
             source,
-            socialPlatform,
-            postLink
+            social_platform: socialPlatform,
+            post_link: postLink
           }
         ])
         .select();
@@ -310,17 +310,17 @@ class ReferralRewardService {
       } else {
         // Ograničavamo dodatni prostor na maksimum
         const newAdditionalStorage = Math.min(
-          userStorage.additionalStorageBytes + rewardSizeBytes,
+          userStorage.additional_storage_bytes + rewardSizeBytes,
           maxAdditionalStorage
         );
         
         await supabase
           .from('user_storage')
           .update({
-            additionalStorageBytes: newAdditionalStorage,
-            lastUpdated: new Date().toISOString()
+            additional_storage_bytes: newAdditionalStorage,
+            last_updated: new Date().toISOString()
           })
-          .eq('userId', userId);
+          .eq('user_id', userId);
       }
     } catch (error) {
       console.error('Greška pri dodavanju nagradnog prostora:', error);
@@ -358,7 +358,7 @@ class ReferralRewardService {
       const { data: existingReferral } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referredId', referredUserId)
+        .eq('referred_id', referredUserId)
         .single();
       
       if (existingReferral) {
@@ -475,7 +475,7 @@ class ReferralRewardService {
           await supabase
             .from('user_storage')
             .update({
-              baseStorageBytes: PRO_USER_BASE_STORAGE_BYTES,
+              base_storage_bytes: PRO_USER_BASE_STORAGE_BYTES,
               lastUpdated: new Date().toISOString()
             })
             .eq('user_id', userId);
@@ -559,7 +559,7 @@ class ReferralRewardService {
             additional_storage_bytes: newAdditionalStorage,
             last_updated: new Date().toISOString()
           })
-          .eq('userId', userId);
+          .eq('user_id', userId);
       }
     } catch (error) {
       console.error('Greška pri prilagođavanju nagradnog prostora:', error);
