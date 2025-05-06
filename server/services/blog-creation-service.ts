@@ -66,9 +66,7 @@ class BlogCreationService {
         status: 'pending_approval', // Čeka odobrenje administratora
         authorId: userId,
         originalQuestion: originalQuestion || null,
-        publishedAt: null,
-        adminFeedback: null,
-        viewCount: 0
+        adminFeedback: null
       };
       
       // Kreiranje blog posta u storage-u

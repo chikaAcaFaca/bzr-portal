@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { SitemapService } from "./services/sitemap-service";
 import { 
   insertBaseDocumentSchema, 
   insertJobPositionSchema, 
@@ -38,7 +39,6 @@ import path from 'path';
 import fs from 'fs';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
-import { SitemapService } from './services/sitemap-service';
 import { knowledgeReferenceService } from './services/knowledge-reference-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
