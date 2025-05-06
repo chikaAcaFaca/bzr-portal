@@ -68,7 +68,7 @@ export default function BlogPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
-  const { data: posts = [], isLoading, error } = useQuery<BlogPost[]>({
+  const { data: postsData = { blogs: [] }, isLoading, error } = useQuery<{ success: boolean, blogs: BlogPost[] }>({
     queryKey: ['/api/blog', activeTab, filterCategory],
     queryFn: async () => {
       let url = '/api/blog';
@@ -85,20 +85,23 @@ export default function BlogPage() {
       return response.json();
     },
   });
+  
+  // Izvlačimo stvarne postove iz odgovora
+  const posts = postsData.blogs || [];
 
-  const { data: categories = [] } = useQuery<string[]>({
+  const { data: categoriesData = { blogs: [] } } = useQuery<{ success: boolean, blogs: BlogPost[] }>({
     queryKey: ['/api/blog/categories'],
     queryFn: async () => {
-      // Privremeno ekstrahujemo kategorije iz postova
       const response = await fetch('/api/blog');
       if (!response.ok) {
         throw new Error('Neuspešno učitavanje kategorija');
       }
-      const allPosts = await response.json();
-      const categorySet = new Set(allPosts.map((post: BlogPost) => post.category));
-      return Array.from(categorySet);
+      return response.json();
     },
   });
+  
+  // Izvlačimo kategorije iz postova
+  const categories = Array.from(new Set(categoriesData.blogs?.map(post => post.category) || []));
 
   if (isLoading) {
     return (
