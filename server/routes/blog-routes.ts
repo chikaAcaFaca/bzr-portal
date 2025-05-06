@@ -55,10 +55,10 @@ export async function setupBlogRoutes(app: any) {
   /**
    * Dobija blog post po slug-u
    * 
-   * @route GET /api/blog/slug/:slug
+   * @route GET /api/blog/get-by-slug/:slug
    * @param {string} slug - Slug bloga
    */
-  router.get('/slug/:slug', async (req: Request, res: Response) => {
+  router.get('/get-by-slug/:slug', async (req: Request, res: Response) => {
     try {
       const { slug } = req.params;
       
