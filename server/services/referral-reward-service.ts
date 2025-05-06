@@ -62,34 +62,34 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 class ReferralRewardService {
   /**
    * Vraća ukupan raspoloživi prostor za korisnika, uključujući referalni bonus
-   * @param userId ID korisnika
-   * @param isPro Da li je korisnik PRO ili FREE
+   * @param user_id ID korisnika
+   * @param is_pro Da li je korisnik PRO ili FREE
    * @returns Ukupan prostor u bajtovima
    */
-  async getTotalAvailableStorage(userId: string, isPro: boolean): Promise<number> {
+  async getTotalAvailableStorage(user_id: string, is_pro: boolean): Promise<number> {
     // Osnovni prostor
-    const baseStorage = isPro ? PRO_USER_BASE_STORAGE_BYTES : FREE_USER_BASE_STORAGE_BYTES;
+    const base_storage = is_pro ? PRO_USER_BASE_STORAGE_BYTES : FREE_USER_BASE_STORAGE_BYTES;
     
     try {
       // Dobavljamo informacije o referalima
-      const referralStats = await this.getReferralStats(userId);
+      const referral_stats = await this.getReferralStats(user_id);
       
       // Vraćamo ukupan prostor
-      return baseStorage + referralStats.activeSpace;
+      return base_storage + referral_stats.activeSpace;
     } catch (error) {
       console.error('Greška pri dobavljanju ukupno dostupnog prostora:', error);
-      return baseStorage; // U slučaju greške, vraćamo samo osnovni prostor
+      return base_storage; // U slučaju greške, vraćamo samo osnovni prostor
     }
   }
   
   /**
    * Vraća informacije o referalima za interni prikaz
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Informacije o referalima ili null ako ne postoje
    */
-  async getUserReferralInfo(userId: string): Promise<{ activeSpace: number } | null> {
+  async getUserReferralInfo(user_id: string): Promise<{ activeSpace: number } | null> {
     try {
-      const stats = await this.getReferralStats(userId);
+      const stats = await this.getReferralStats(user_id);
       return {
         activeSpace: stats.activeSpace
       };
@@ -100,16 +100,16 @@ class ReferralRewardService {
   }
   /**
    * Generiše referalni kod za korisnika
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Generisani referalni kod
    */
-  async generateReferralCode(userId: string): Promise<string> {
+  async generateReferralCode(user_id: string): Promise<string> {
     try {
       // Proveriti da li korisnik već ima referalni kod
       const { data: existingCodes } = await supabase
         .from('referral_codes')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
 
       if (existingCodes) {
@@ -123,7 +123,7 @@ class ReferralRewardService {
       const { data, error } = await supabase
         .from('referral_codes')
         .insert([
-          { user_id: userId, code }
+          { user_id: user_id, code }
         ])
         .select();
 
@@ -140,15 +140,15 @@ class ReferralRewardService {
 
   /**
    * Vraća referalni kod za korisnika
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Referalni kod ili null ako ne postoji
    */
-  async getReferralCode(userId: string): Promise<string | null> {
+  async getReferralCode(user_id: string): Promise<string | null> {
     try {
       const { data } = await supabase
         .from('referral_codes')
         .select('code')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
 
       return data?.code || null;
@@ -160,12 +160,12 @@ class ReferralRewardService {
 
   /**
    * Vraća referalni URL za korisnika
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Referalni URL sa kodom
    */
-  async getReferralUrl(userId: string): Promise<string | null> {
+  async getReferralUrl(user_id: string): Promise<string | null> {
     try {
-      const code = await this.getReferralCode(userId);
+      const code = await this.getReferralCode(user_id);
       
       if (!code) {
         return null;
@@ -266,61 +266,61 @@ class ReferralRewardService {
 
   /**
    * Dodaje nagradni prostor za skladištenje korisniku
-   * @param userId ID korisnika
-   * @param rewardSizeBytes Veličina nagrade u bajtovima
+   * @param user_id ID korisnika
+   * @param reward_size_bytes Veličina nagrade u bajtovima
    */
-  async addReferralRewardStorage(userId: string, rewardSizeBytes: number): Promise<void> {
+  async addReferralRewardStorage(user_id: string, reward_size_bytes: number): Promise<void> {
     try {
       // Dobavljanje podataka o skladištenju korisnika
       const { data: userStorage } = await supabase
         .from('user_storage')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
 
       // Provera da li korisnik ima PRO status
       const { data: userData } = await supabase
         .from('users')
         .select('is_pro')
-        .eq('id', userId)
+        .eq('id', user_id)
         .single();
 
-      const isPro = userData?.is_pro || false;
-      const maxAdditionalStorage = isPro ? 
+      const is_pro = userData?.is_pro || false;
+      const max_additional_storage = is_pro ? 
         PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES : 
         FREE_USER_MAX_ADDITIONAL_STORAGE_BYTES;
 
       if (!userStorage) {
         // Ako korisnik nema podatke o skladištenju, kreiramo početni zapis
-        const baseStorage = isPro ? PRO_USER_BASE_STORAGE_BYTES : FREE_USER_BASE_STORAGE_BYTES;
+        const base_storage = is_pro ? PRO_USER_BASE_STORAGE_BYTES : FREE_USER_BASE_STORAGE_BYTES;
         
         // Ograničavamo dodatni prostor na maksimum
-        const additionalStorage = Math.min(rewardSizeBytes, maxAdditionalStorage);
+        const additional_storage = Math.min(reward_size_bytes, max_additional_storage);
         
         await supabase
           .from('user_storage')
           .insert([
             {
-              user_id: userId,
-              base_storage_bytes: baseStorage,
-              additional_storage_bytes: additionalStorage,
+              user_id: user_id,
+              base_storage_bytes: base_storage,
+              additional_storage_bytes: additional_storage,
               total_used_bytes: 0
             }
           ]);
       } else {
         // Ograničavamo dodatni prostor na maksimum
-        const newAdditionalStorage = Math.min(
-          userStorage.additional_storage_bytes + rewardSizeBytes,
-          maxAdditionalStorage
+        const new_additional_storage = Math.min(
+          userStorage.additional_storage_bytes + reward_size_bytes,
+          max_additional_storage
         );
         
         await supabase
           .from('user_storage')
           .update({
-            additional_storage_bytes: newAdditionalStorage,
+            additional_storage_bytes: new_additional_storage,
             last_updated: new Date().toISOString()
           })
-          .eq('user_id', userId);
+          .eq('user_id', user_id);
       }
     } catch (error) {
       console.error('Greška pri dodavanju nagradnog prostora:', error);
@@ -386,15 +386,15 @@ class ReferralRewardService {
 
   /**
    * Vraća sve referale za korisnika
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Lista referala
    */
-  async getUserReferrals(userId: string): Promise<Referral[]> {
+  async getUserReferrals(user_id: string): Promise<Referral[]> {
     try {
       const { data } = await supabase
         .from('referrals')
         .select('*')
-        .eq('referrer_id', userId)
+        .eq('referrer_id', user_id)
         .order('created_at', { ascending: false });
       
       return data || [];
@@ -406,10 +406,10 @@ class ReferralRewardService {
 
   /**
    * Vraća statistiku referala za korisnika
-   * @param userId ID korisnika
+   * @param user_id ID korisnika
    * @returns Statistika referala
    */
-  async getReferralStats(userId: string): Promise<{
+  async getReferralStats(user_id: string): Promise<{
     totalReferrals: number;
     totalProReferrals: number;
     earnedSpace: number;
@@ -418,7 +418,7 @@ class ReferralRewardService {
   }> {
     try {
       // Dobavljanje svih referala korisnika
-      const referrals = await this.getUserReferrals(userId);
+      const referrals = await this.getUserReferrals(user_id);
       
       // Računanje statistike
       const totalReferrals = referrals.length;
@@ -539,27 +539,27 @@ class ReferralRewardService {
 
   /**
    * Prilagođava nagradni prostor za skladištenje korisnika
-   * @param userId ID korisnika
-   * @param adjustmentBytes Prilagođavanje u bajtovima (pozitivno za dodavanje, negativno za oduzimanje)
+   * @param user_id ID korisnika
+   * @param adjustment_bytes Prilagođavanje u bajtovima (pozitivno za dodavanje, negativno za oduzimanje)
    */
-  private async adjustReferralRewardStorage(userId: string, adjustmentBytes: number): Promise<void> {
+  private async adjustReferralRewardStorage(user_id: string, adjustment_bytes: number): Promise<void> {
     try {
       const { data: storage } = await supabase
         .from('user_storage')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .single();
       
       if (storage) {
-        const newAdditionalStorage = Math.max(0, storage.additional_storage_bytes + adjustmentBytes);
+        const new_additional_storage = Math.max(0, storage.additional_storage_bytes + adjustment_bytes);
         
         await supabase
           .from('user_storage')
           .update({
-            additional_storage_bytes: newAdditionalStorage,
+            additional_storage_bytes: new_additional_storage,
             last_updated: new Date().toISOString()
           })
-          .eq('user_id', userId);
+          .eq('user_id', user_id);
       }
     } catch (error) {
       console.error('Greška pri prilagođavanju nagradnog prostora:', error);
