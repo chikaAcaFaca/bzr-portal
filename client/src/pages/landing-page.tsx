@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import QualificationQuestionnaire from '@/components/questionnaire/qualification-questionnaire';
+import { FeatureCard } from "@/components/ui/feature-card";
 
 type BlogPost = {
   id: number;
@@ -165,89 +166,101 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-t-4 border-blue-500">
-              <CardHeader>
-                <div className="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <CardTitle>Automatizacija procesa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Automatsko prepoznavanje radnih mesta, procena rizika i kreiranje akata o proceni rizika. Smanjite vreme potrebno za administraciju.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="Automatizacija procesa"
+              description="Automatsko prepoznavanje radnih mesta, procena rizika i kreiranje akata o proceni rizika. Smanjite vreme potrebno za administraciju."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
+              borderColor="border-t-4 border-blue-500"
+              bgColor="bg-blue-100"
+              iconColor="text-blue-600"
+              route="/document-processor"
+              requiresAuth={true}
+              requiresPro={true}
+            />
             
-            <Card className="border-t-4 border-green-500">
-              <CardHeader>
-                <div className="bg-green-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                  </svg>
-                </div>
-                <CardTitle>Usklađenost sa zakonima</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Portal se redovno ažurira u skladu sa najnovijim propisima i zakonima vezanim za bezbednost i zdravlje na radu u Srbiji.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="Usklađenost sa zakonima"
+              description="Portal se redovno ažurira u skladu sa najnovijim propisima i zakonima vezanim za bezbednost i zdravlje na radu u Srbiji."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              }
+              borderColor="border-t-4 border-green-500"
+              bgColor="bg-green-100"
+              iconColor="text-green-600"
+              route="/regulatory-updates"
+              requiresAuth={true}
+              requiresPro={false}
+            />
             
-            <Card className="border-t-4 border-purple-500">
-              <CardHeader>
-                <div className="bg-purple-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <CardTitle>Centralizovana dokumentacija</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Sve važne dokumente možete čuvati na jednom mestu, organizovati ih i pristupiti im u bilo kom trenutku.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="Centralizovana dokumentacija"
+              description="Sve važne dokumente možete čuvati na jednom mestu, organizovati ih i pristupiti im u bilo kom trenutku."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              }
+              borderColor="border-t-4 border-purple-500"
+              bgColor="bg-purple-100"
+              iconColor="text-purple-600"
+              route="/document-storage"
+              requiresAuth={true}
+              requiresPro={true}
+            />
             
-            <Card className="border-t-4 border-yellow-500">
-              <CardHeader>
-                <div className="bg-yellow-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <CardTitle>AI asistent za BZR</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Specijalizovani AI asistent sa znanjem o zakonskoj regulativi i praksi BZR u Srbiji odgovara na vaša pitanja.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="AI asistent za BZR"
+              description="Specijalizovani AI asistent sa znanjem o zakonskoj regulativi i praksi BZR u Srbiji odgovara na vaša pitanja."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              }
+              borderColor="border-t-4 border-yellow-500"
+              bgColor="bg-yellow-100"
+              iconColor="text-yellow-600"
+              route="/ai-assistant"
+              requiresAuth={true}
+              requiresPro={false}
+            />
             
-            <Card className="border-t-4 border-red-500">
-              <CardHeader>
-                <div className="bg-red-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <CardTitle>Upravljanje rizicima</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Identifikujte, procenite i upravljajte rizicima na radnom mestu. Kreirajte mere za smanjenje rizika.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="Upravljanje rizicima"
+              description="Identifikujte, procenite i upravljajte rizicima na radnom mestu. Kreirajte mere za smanjenje rizika."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
+              borderColor="border-t-4 border-red-500"
+              bgColor="bg-red-100"
+              iconColor="text-red-600"
+              route="/risk-categories"
+              requiresAuth={true}
+              requiresPro={true}
+            />
             
-            <Card className="border-t-4 border-indigo-500">
-              <CardHeader>
-                <div className="bg-indigo-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                  </svg>
-                </div>
-                <CardTitle>Referalni program</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>Podelite BZR Portal sa kolegama i partnerima i zaradite dodatni prostor za skladištenje.</p>
-              </CardContent>
-            </Card>
+            <FeatureCard
+              title="Referalni program"
+              description="Podelite BZR Portal sa kolegama i partnerima i zaradite dodatni prostor za skladištenje."
+              icon={
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                </svg>
+              }
+              borderColor="border-t-4 border-indigo-500"
+              bgColor="bg-indigo-100"
+              iconColor="text-indigo-600"
+              route="/referral-program"
+              requiresAuth={true}
+              requiresPro={false}
+            />
           </div>
         </div>
       </section>
