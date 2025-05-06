@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import ReferralRewardService from '../services/referral-reward-service';
+import { supabase } from '../lib/supabase';
 
 const router = Router();
 
@@ -16,11 +17,36 @@ router.get('/code', async (req: Request, res: Response) => {
       });
     }
 
-    // Generišemo referalni kod za korisnika
-    const referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+    // Proverimo prvo direktno u bazi da li korisnik već ima referalni kod
+    let referralCode = null;
+    let referralUrl = null;
     
-    // Dobavljamo referalni URL
-    const referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
+    try {
+      // Proveriti da li korisnik već ima referalni kod
+      const { data: existingCode } = await supabase
+        .from('referral_codes')
+        .select('code')
+        .eq('user_id', req.user.id)
+        .single();
+      
+      if (existingCode && existingCode.code) {
+        // Ako kod već postoji, koristimo ga
+        referralCode = existingCode.code;
+        
+        // Generišemo URL sa postojećim kodom
+        const baseUrl = process.env.APP_URL || 'https://bzrportal.com';
+        referralUrl = `${baseUrl}/auth?ref=${referralCode}`;
+      } else {
+        // Ako kod ne postoji, generišemo novi
+        referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+        referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
+      }
+    } catch (dbError) {
+      // Ako dođe do greške sa bazom, pokušajmo preko servisa
+      console.log('Fallback na ReferralRewardService:', dbError);
+      referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+      referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);
+    }
 
     return res.status(200).json({
       success: true,

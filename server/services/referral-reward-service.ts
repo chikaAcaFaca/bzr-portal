@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { db } from '../db';
-import supabase from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 // Tipovi za Supabase bazu
 interface ReferralCode {
@@ -51,7 +51,7 @@ const REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS = 365; // 12 meseci
 /**
  * Servis za upravljanje referalnim programom
  */
-class ReferralRewardService {
+class ReferralRewardServiceClass {
   /**
    * Vraća ukupan raspoloživi prostor za korisnika, uključujući referalni bonus
    * @param user_id ID korisnika
@@ -596,4 +596,8 @@ class ReferralRewardService {
   }
 }
 
-export default new ReferralRewardService();
+// Kreiramo instancu servisa koju ćemo koristiti u celoj aplikaciji
+const ReferralRewardService = new ReferralRewardServiceClass();
+
+// Exportujemo je kao default
+export default ReferralRewardService;

@@ -107,7 +107,7 @@ export function ReferralStats({ className }: ReferralStatsProps) {
   const nativeShare = () => {
     if (!referralUrl) return;
     
-    if (navigator.share) {
+    if (typeof navigator.share === 'function') {
       navigator.share({
         title: 'Pridružite se BZR portalu',
         text: 'Pridružite se BZR portalu koristeći moj referalni link!',
@@ -181,7 +181,7 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                         className="flex items-center gap-2"
                         onClick={() => {
                           // Pokušaj prvo nativno deljenje ako je dostupno (za mobilne uređaje)
-                          if (navigator.share) {
+                          if (typeof navigator.share === 'function') {
                             nativeShare();
                           }
                         }}
