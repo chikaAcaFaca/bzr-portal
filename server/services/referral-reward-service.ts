@@ -281,11 +281,11 @@ class ReferralRewardService {
       // Provera da li korisnik ima PRO status
       const { data: userData } = await supabase
         .from('users')
-        .select('isPro')
+        .select('is_pro')
         .eq('id', userId)
         .single();
 
-      const isPro = userData?.isPro || false;
+      const isPro = userData?.is_pro || false;
       const maxAdditionalStorage = isPro ? 
         PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES : 
         FREE_USER_MAX_ADDITIONAL_STORAGE_BYTES;
@@ -460,7 +460,7 @@ class ReferralRewardService {
       // Ažuriranje korisnikovog PRO statusa
       await supabase
         .from('users')
-        .update({ isPro: isProUser })
+        .update({ is_pro: isProUser })
         .eq('id', userId);
       
       // Ako korisnik postaje PRO, treba da ažuriramo njegovo bazno skladište
@@ -476,7 +476,7 @@ class ReferralRewardService {
             .from('user_storage')
             .update({
               base_storage_bytes: PRO_USER_BASE_STORAGE_BYTES,
-              lastUpdated: new Date().toISOString()
+              last_updated: new Date().toISOString()
             })
             .eq('user_id', userId);
         } else {
@@ -484,10 +484,10 @@ class ReferralRewardService {
           await supabase
             .from('user_storage')
             .insert([{
-              userId,
-              baseStorageBytes: PRO_USER_BASE_STORAGE_BYTES,
-              additionalStorageBytes: 0,
-              totalUsedBytes: 0
+              user_id: userId,
+              base_storage_bytes: PRO_USER_BASE_STORAGE_BYTES,
+              additional_storage_bytes: 0,
+              total_used_bytes: 0
             }]);
         }
       }
@@ -525,7 +525,7 @@ class ReferralRewardService {
           
           // Ažuriranje nagrade za referrera
           // Prvo oduzimamo staru nagradu
-          await this.adjustReferralRewardStorage(referral.referrerId, -referral.rewardSize);
+          await this.adjustReferralRewardStorage(referral.referrer_id, -referral.rewardSize);
           
           // Zatim dodajemo novu nagradu
           await this.adjustReferralRewardStorage(referral.referrerId, rewardSize);
@@ -551,7 +551,7 @@ class ReferralRewardService {
         .single();
       
       if (storage) {
-        const newAdditionalStorage = Math.max(0, storage.additionalStorageBytes + adjustmentBytes);
+        const newAdditionalStorage = Math.max(0, storage.additional_storage_bytes + adjustmentBytes);
         
         await supabase
           .from('user_storage')
@@ -579,8 +579,8 @@ class ReferralRewardService {
       const { data: expiredReferrals } = await supabase
         .from('referrals')
         .select('*')
-        .lt('expiresAt', now)
-        .eq('isActive', true);
+        .lt('expires_at', now)
+        .eq('is_active', true);
       
       if (!expiredReferrals || expiredReferrals.length === 0) {
         return;
@@ -591,7 +591,7 @@ class ReferralRewardService {
         // Prvo označiti referral kao neaktivan
         await supabase
           .from('referrals')
-          .update({ isActive: false })
+          .update({ is_active: false })
           .eq('id', referral.id);
         
         // Zatim oduzeti nagradu od skladišta korisnika
