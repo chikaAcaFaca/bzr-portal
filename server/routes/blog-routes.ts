@@ -340,13 +340,10 @@ export async function setupBlogRoutes(app: any) {
       // Ažuriranje blog posta u storage-u
       const updatedBlog = await storage.updateBlogPost(blog.id, updateData);
       
-      // Ažuriramo sitemap samo ako je post objavljen
+      // Ažuriramo sitemap samo ako je post objavljen ili izmenjen objavljeni post
       if (updatedBlog && updatedBlog.status === 'published') {
         await updateSitemap(req);
       }
-      
-      // Ažuriranje sitemap-a nakon izmene blog posta
-      await updateSitemap(req);
       
       return res.status(200).json({
         success: true,

@@ -89,7 +89,7 @@ export async function generateSitemap(domain: string): Promise<string> {
     const blogs = await storage.getAllBlogPosts();
     
     // Pratimo kategorije blogova
-    const categories = new Set<string>();
+    const categoriesMap: Record<string, boolean> = {};
     
     for (const blog of blogs) {
       // Preskoci blog postove koji nisu objavljeni
@@ -97,7 +97,7 @@ export async function generateSitemap(domain: string): Promise<string> {
       
       // Dodaj kategoriju ako postoji
       if (blog.category) {
-        categories.add(blog.category);
+        categoriesMap[blog.category] = true;
       }
       
       // Odredi učestalost promene na osnovu datuma ažuriranja
@@ -115,7 +115,8 @@ export async function generateSitemap(domain: string): Promise<string> {
     }
     
     // Dodaj stranice kategorija
-    Array.from(categories).forEach(category => {
+    const categories = Object.keys(categoriesMap);
+    for (const category of categories) {
       const categoryUrl = category.toLowerCase().replace(/\s+/g, '-');
       
       entries.push({
@@ -123,7 +124,7 @@ export async function generateSitemap(domain: string): Promise<string> {
         changefreq: 'weekly',
         priority: determinePriority('category')
       });
-    });
+    }
     
     // Generiši XML
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
