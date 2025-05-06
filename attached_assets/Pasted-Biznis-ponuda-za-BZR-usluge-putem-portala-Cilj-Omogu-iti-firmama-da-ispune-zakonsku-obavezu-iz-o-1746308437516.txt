@@ -1,0 +1,86 @@
+Biznis ponuda za BZR usluge putem portala
+🎯 Cilj:
+Omogućiti firmama da ispune zakonsku obavezu iz oblasti bezbednosti i zdravlja na radu (BZR) bez potrebe za zapošljavanjem stalnog lica, uz pristup kompletnoj dokumentaciji, online obukama i evidencijama.
+
+📦 Paket 1: Kompletna usluga za firme bez lica za BZR
+Ugovor o dopunskom radu sa stručnim licem iz naše baze (licencirani stručnjaci za BZR).
+
+Ugovor se može zaključiti na:
+
+1 mesec – uplata 1 mesec unapred,
+
+6 meseci – uplata 5 meseci unapred,
+
+12 meseci – uplata 10 meseci unapred.
+
+Cena: 2.469,14 RSD bruto mesečno (pristupačno i zakonski usklađeno).
+
+Pristup portalu sa kompletnom dokumentacijom.
+
+Generisanje izveštaja i vođenje evidencije.
+
+Obuka zaposlenih putem portala i video predavanja.
+
+📦 Paket 2: Usluga za firme koje već imaju lice za BZR
+Cena korišćenja portala: 2.990 RSD + PDV mesečno = 3.588 RSD sa PDV-om
+
+Lice unosi podatke o zaposlenima, vodi evidenciju, generiše dokumentaciju.
+
+Pristup AI video obukama, testovima i potvrdi o uspešno završenoj edukaciji.
+
+🎥 AI obuke i edukacije – Ideja
+AI avatar po vašem liku i/ili glasu (npr. putem Synthesia.io ili HeyGen):
+
+Snimiš referentni video i glas (ili koristiš već postojeći).
+
+Avatar drži predavanje na zadatu BZR temu (posebno za svako radno mesto).
+
+Stil predavanja: jednostavno, animirano, sa tekstom na ekranu.
+
+Brendirano logotipom i bojama BZR portala.
+
+Predavanja se javno objavljuju na našem YouTube kanalu i vlog sekciji.
+
+Na kraju svakog videa – CTA poziv na praćenje i saradnju.
+
+Testovi i sertifikati:
+
+Zaposleni se prijavljuju na portal sa ličnim nalogom.
+
+Nakon gledanja videa – rade test.
+
+Ako prođu – sistem automatski generiše PDF sertifikat sa imenom, datumom i temom obuke.
+
+🛠 Tehnički zahtevi za programera (brief)
+🔐 Pristup korisnika:
+Login sistem sa različitim nivoima pristupa (administrator, lice za BZR, zaposleni).
+
+Evidencija aktivnosti po korisniku (gledanje videa, polaganje testa, preuzimanje dokumenata).
+
+📄 Rad sa dokumentacijom:
+Upload/download PDF dokumenata za firme.
+
+Automatsko generisanje BZR dokumentacije (procena rizika, obaveštenja, evidencije).
+
+Forme za unos imena zaposlenih i datuma obuke.
+
+Integracija sa bazom podataka za personalizaciju dokumenata.
+
+🎥 Obuke:
+Uvoz video obuka sa YouTube i/ili sopstvenog servera.
+
+Video player sa zaštitom od skidanja.
+
+Dugme „Položi test“ koje vodi na pitanja po tematici.
+
+🧪 Testiranje:
+Kreiranje kviz/test sistema (višestruki izbor).
+
+Baza pitanja po obuci.
+
+Automatska evaluacija i sertifikati u PDF formatu.
+
+📑 Elektronsko potpisivanje:
+PDF generisanje ugovora o dopunskom radu.
+
+Implementacija elektronskog potpisa (eID.rs API, ePotpis.rs, Adobe Sign).
