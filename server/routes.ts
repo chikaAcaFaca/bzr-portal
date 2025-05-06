@@ -38,6 +38,7 @@ import path from 'path';
 import fs from 'fs';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
+import { SitemapService } from './services/sitemap-service';
 import { knowledgeReferenceService } from './services/knowledge-reference-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1193,6 +1194,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         error: error.message || 'Greška pri generisanju embeddings-a'
       });
+    }
+  });
+  
+  // Sitemap.xml ruta
+  app.get('/sitemap.xml', async (req: Request, res: Response) => {
+    try {
+      // Dobavljanje host-a iz zahteva
+      const protocol = req.protocol;
+      const host = req.get('host') || 'localhost:5000';
+      const domain = `${protocol}://${host}`;
+      
+      // Inicijalizacija servisa za sitemap
+      const sitemapService = new SitemapService(domain);
+      
+      // Generisanje sitemap.xml datoteke
+      const sitemapPath = await sitemapService.generateSitemap();
+      
+      // Vraćanje sitemap.xml fajla
+      res.header('Content-Type', 'application/xml');
+      res.sendFile(sitemapPath);
+    } catch (error: any) {
+      console.error('Greška pri generisanju sitemap-a:', error);
+      res.status(500).send('Greška pri generisanju sitemap.xml');
     }
   });
 
