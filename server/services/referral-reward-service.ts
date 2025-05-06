@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { db } from '../db';
-import { createClient } from '@supabase/supabase-js';
+import supabase from '../lib/supabase';
 
 // Tipovi za Supabase bazu
 interface ReferralCode {
@@ -46,15 +46,7 @@ const PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
 
 const REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS = 365; // 12 meseci
 
-// Inicijalizacija Supabase klijenta
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Supabase URL i anonimni ključ moraju biti definisani u env varijablama');
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase klijent je već inicijalizovan u lib/supabase.ts
 
 /**
  * Servis za upravljanje referalnim programom

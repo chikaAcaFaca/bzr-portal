@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShareIcon, Copy, Users, HardDrive } from 'lucide-react';
+import { Share as ShareIcon, Copy, Users, HardDrive, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // Format bytes to human readable size (KB, MB, GB)
 const formatBytes = (bytes: number, decimals = 2) => {
