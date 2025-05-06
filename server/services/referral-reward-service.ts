@@ -163,8 +163,9 @@ class ReferralRewardServiceClass {
       return code;
     } catch (error) {
       console.error('Neočekivana greška pri generisanju referalnog koda:', error);
-      // Vraćamo fallback kod umesto da bacimo grešku
-      return `FALLBACK-${user_id.substring(0, 4)}`;
+      // Generišemo pravi kod umesto placeholdera za greške
+      const randomCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      return randomCode;
     }
   }
 
