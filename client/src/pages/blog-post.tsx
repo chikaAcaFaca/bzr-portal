@@ -70,9 +70,9 @@ export default function BlogPostPage() {
   const isAuthor = (post: BlogPost) => post.authorId === user?.id;
 
   const { data: postData, isLoading, error } = useQuery<{ success: boolean, blog: BlogPost }>({
-    queryKey: ['/api/blog/slug', slug],
+    queryKey: ['/api/blog/get-by-slug', slug],
     queryFn: async () => {
-      const response = await fetch(`/api/blog/slug/${slug}`);
+      const response = await fetch(`/api/blog/get-by-slug/${slug}`);
       if (!response.ok) {
         throw new Error('Neuspešno učitavanje blog posta');
       }
@@ -90,7 +90,7 @@ export default function BlogPostPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/blog/slug', slug] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blog/get-by-slug', slug] });
       toast({
         title: "Post odobren",
         description: "Blog post je uspešno odobren.",
@@ -112,7 +112,7 @@ export default function BlogPostPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/blog/slug', slug] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blog/get-by-slug', slug] });
       toast({
         title: "Post objavljen",
         description: "Blog post je uspešno objavljen.",
@@ -135,7 +135,7 @@ export default function BlogPostPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/blog/slug', slug] });
+      queryClient.invalidateQueries({ queryKey: ['/api/blog/get-by-slug', slug] });
       toast({
         title: "Post odbijen",
         description: "Blog post je označen kao odbijen.",
