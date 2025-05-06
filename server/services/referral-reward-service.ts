@@ -499,6 +499,7 @@ class ReferralRewardServiceClass {
     total_pro_referrals: number;
     earned_space: number;
     active_space: number;
+    total_used_bytes: number;
     created_at: string;
   }> {
     try {
@@ -522,11 +523,21 @@ class ReferralRewardServiceClass {
         referrals[referrals.length - 1].created_at : 
         new Date().toISOString();
       
+      // Dobavljanje informacija o korišćenom prostoru
+      const { data: storage } = await supabase
+        .from('user_storage')
+        .select('total_used_bytes')
+        .eq('user_id', user_id)
+        .single();
+      
+      const total_used_bytes = storage?.total_used_bytes || 0;
+      
       return {
         total_referrals,
         total_pro_referrals,
         earned_space,
         active_space,
+        total_used_bytes,
         created_at
       };
     } catch (error) {

@@ -27,6 +27,7 @@ interface ReferralInfo {
   total_pro_referrals: number;
   earned_space: number;
   active_space: number;
+  total_used_bytes: number;
   created_at: string;
 }
 
@@ -291,12 +292,34 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                     <Card>
                       <CardContent className="pt-6">
                         <div className="flex flex-col">
-                          <p className="text-sm font-medium text-muted-foreground">Iskorišćenost</p>
+                          <p className="text-sm font-medium text-muted-foreground">Iskorišćenost prostora</p>
                           <p className="text-2xl font-bold mt-1">
-                            0% {/* Promenjeno sa izračunavanja na ručno postavljanje jer još nema uploadovanih dokumenata */}
+                            {(() => {
+                              // Dobavljanje informacija iz referralInfo (podaci s API-ja)
+                              const usedBytes = referralInfo?.total_used_bytes || 0;
+                              const baseStorageBytes = 100 * 1024 * 1024; // 100MB za FREE korisnika
+                              const additionalStorageBytes = referralInfo?.active_space || 0;
+                              const totalAvailableBytes = baseStorageBytes + additionalStorageBytes;
+                              
+                              // Računanje procenta iskorišćenosti
+                              const usagePercentage = totalAvailableBytes > 0 
+                                ? (usedBytes / totalAvailableBytes * 100) 
+                                : 0;
+                                
+                              return `${usagePercentage.toFixed(1)}%`;
+                            })()}
                           </p>
                           <Progress 
-                            value={0} 
+                            value={(() => {
+                              const usedBytes = referralInfo?.total_used_bytes || 0;
+                              const baseStorageBytes = 100 * 1024 * 1024; // 100MB za FREE korisnika
+                              const additionalStorageBytes = referralInfo?.active_space || 0;
+                              const totalAvailableBytes = baseStorageBytes + additionalStorageBytes;
+                              
+                              return totalAvailableBytes > 0 
+                                ? (usedBytes / totalAvailableBytes * 100) 
+                                : 0;
+                            })()} 
                             className="h-2 mt-2" 
                           />
                           <p className="text-xs text-muted-foreground mt-2">
