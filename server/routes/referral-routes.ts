@@ -136,7 +136,8 @@ router.post('/process', async (req: Request, res: Response) => {
     console.error('Greška pri procesiranju referala:', error);
     return res.status(500).json({
       success: false,
-      message: 'Greška pri procesiranju referala'
+      message: 'Greška pri procesiranju referala',
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 });

@@ -151,7 +151,7 @@ export default function AuthPage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              user_id: userData.user.id,
+              referred_user_id: userData.user.id,
               referral_code: referralCode
             })
           });
