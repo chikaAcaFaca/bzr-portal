@@ -168,7 +168,7 @@ export default function BlogEditPage() {
 
   const blog = postData.blog;
   const isAuthor = blog.authorId === user?.id;
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = (user as any)?.role === 'admin';
 
   // Provera prava pristupa
   if (!isAuthor && !isAdmin) {

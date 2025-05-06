@@ -25,6 +25,7 @@ import Users from "./pages/users";
 import AuthPage from "./pages/auth-page";
 import Blog from "./pages/blog";
 import BlogPost from "./pages/blog-post";
+import BlogEdit from "./pages/blog-edit"; // Dodajemo novu komponentu
 import UserProfile from "./pages/user-profile";
 import AdminDashboard from "./pages/admin-dashboard";
 import RegulatoryUpdates from "./pages/regulatory-updates";
@@ -71,6 +72,14 @@ function Router() {
         <MainLayout>
           <Blog />
         </MainLayout>
+      </Route>
+      
+      <Route path="/blog/edit/:id">
+        <RequireAuth>
+          <MainLayout>
+            <BlogEdit />
+          </MainLayout>
+        </RequireAuth>
       </Route>
       
       <Route path="/blog/:slug">
