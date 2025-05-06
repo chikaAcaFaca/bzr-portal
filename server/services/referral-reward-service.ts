@@ -51,13 +51,8 @@ interface UserStorage {
 const FREE_USER_BASE_STORAGE_BYTES = 100 * 1024 * 1024; // 100MB (povećano sa 50MB)
 const PRO_USER_BASE_STORAGE_BYTES = 2 * 1024 * 1024 * 1024; // 2GB (povećano sa 1GB)
 
-const FREE_REFERRAL_REWARD_BYTES = 50 * 1024 * 1024; // 50MB za svakog novog FREE korisnika
-const PRO_REFERRAL_REWARD_BYTES = 150 * 1024 * 1024; // 150MB za svakog novog PRO korisnika
-
 const FREE_USER_MAX_ADDITIONAL_STORAGE_BYTES = 3 * 1024 * 1024 * 1024; // 3GB (za besplatne korisnike) 
 const PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES = 50 * 1024 * 1024 * 1024; // 50GB (za PRO korisnike)
-
-const REFERRAL_EXPIRY_DAYS = 365; // 12 meseci osnovno trajanje
 const REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS = 365; // 12 meseci nakon isteka PRO statusa
 
 // Supabase klijent je već inicijalizovan u lib/supabase.ts
