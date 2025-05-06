@@ -35,16 +35,17 @@ interface UserStorage {
 }
 
 // Konstante za referralni program
-const FREE_USER_BASE_STORAGE_BYTES = 50 * 1024 * 1024; // 50MB
-const PRO_USER_BASE_STORAGE_BYTES = 1024 * 1024 * 1024; // 1GB
+const FREE_USER_BASE_STORAGE_BYTES = 100 * 1024 * 1024; // 100MB (povećano sa 50MB)
+const PRO_USER_BASE_STORAGE_BYTES = 2 * 1024 * 1024 * 1024; // 2GB (povećano sa 1GB)
 
-const BASE_REFERRAL_REWARD_BYTES = 50 * 1024 * 1024; // 50MB za svakog novog korisnika (FREE ili PRO)
-const PRO_REFERRAL_BONUS_BYTES = 50 * 1024 * 1024; // Dodatnih 50MB ako je korisnik PRO
+const FREE_REFERRAL_REWARD_BYTES = 50 * 1024 * 1024; // 50MB za svakog novog FREE korisnika
+const PRO_REFERRAL_REWARD_BYTES = 150 * 1024 * 1024; // 150MB za svakog novog PRO korisnika
 
-const FREE_USER_MAX_ADDITIONAL_STORAGE_BYTES = 2 * 1024 * 1024 * 1024; // 2GB
-const PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+const FREE_USER_MAX_ADDITIONAL_STORAGE_BYTES = 3 * 1024 * 1024 * 1024; // 3GB (za besplatne korisnike) 
+const PRO_USER_MAX_ADDITIONAL_STORAGE_BYTES = 50 * 1024 * 1024 * 1024; // 50GB (za PRO korisnike)
 
-const REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS = 365; // 12 meseci
+const REFERRAL_EXPIRY_DAYS = 365; // 12 meseci osnovno trajanje
+const REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS = 365; // 12 meseci nakon isteka PRO statusa
 
 // Supabase klijent je već inicijalizovan u lib/supabase.ts
 
@@ -307,16 +308,14 @@ class ReferralRewardServiceClass {
     post_link?: string
   ): Promise<Referral | null> {
     try {
-      // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
-      const reward_size = BASE_REFERRAL_REWARD_BYTES + (is_pro_user ? PRO_REFERRAL_BONUS_BYTES : 0);
+      // Nagrada zavisi od tipa korisnika
+      const reward_size = is_pro_user ? PRO_REFERRAL_REWARD_BYTES : FREE_REFERRAL_REWARD_BYTES;
       
-      // Računanje datuma isteka nagrade
-      // Za besplatne korisnike, nagrada nikad ne ističe (30 godina u budućnost)
-      // Za PRO korisnike, nagrada ističe nakon isteka PRO pretplate + dodatnih 12 meseci
+      // Računanje datuma isteka nagrade (12 meseci za sve)
       const now = new Date();
-      const expiryDate = is_pro_user
-        ? new Date(now.setDate(now.getDate() + REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS))
-        : new Date(now.setFullYear(now.getFullYear() + 30));
+      // Za sve korisnike nagrada traje 12 meseci
+      const expiryDate = new Date(now);
+      expiryDate.setDate(expiryDate.getDate() + REFERRAL_EXPIRY_DAYS);
       
       const { data, error } = await supabase
         .from('referrals')
@@ -590,14 +589,13 @@ class ReferralRewardServiceClass {
         
         if (referral.is_pro_user !== is_pro_user) {
           // Ažuriranje statusa referala
-          // Nagrada je uvek 50MB osnovnih + dodatnih 50MB ako je korisnik PRO
-          const reward_size = BASE_REFERRAL_REWARD_BYTES + (is_pro_user ? PRO_REFERRAL_BONUS_BYTES : 0);
+          // Nagrada zavisi od tipa korisnika
+          const reward_size = is_pro_user ? PRO_REFERRAL_REWARD_BYTES : FREE_REFERRAL_REWARD_BYTES;
           
-          // Računanje novog datuma isteka
+          // Računanje novog datuma isteka (12 meseci za sve)
           const now = new Date();
-          const expiryDate = is_pro_user
-            ? new Date(now.setDate(now.getDate() + REFERRAL_EXPIRY_DAYS_AFTER_PRO_ENDS))
-            : new Date(now.setFullYear(now.getFullYear() + 30));
+          const expiryDate = new Date(now);
+          expiryDate.setDate(expiryDate.getDate() + REFERRAL_EXPIRY_DAYS);
           
           await supabase
             .from('referrals')

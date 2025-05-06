@@ -293,15 +293,15 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                         <div className="flex flex-col">
                           <p className="text-sm font-medium text-muted-foreground">Iskorišćenost</p>
                           <p className="text-2xl font-bold mt-1">
-                            {referralInfo.total_referrals > 0 ? 
-                              `${(referralInfo.active_space / referralInfo.earned_space * 100).toFixed(1)}%` : 
-                              '0%'}
+                            0% {/* Promenjeno sa izračunavanja na ručno postavljanje jer još nema uploadovanih dokumenata */}
                           </p>
                           <Progress 
-                            value={referralInfo.total_referrals > 0 ? 
-                              (referralInfo.active_space / referralInfo.earned_space * 100) : 0} 
+                            value={0} 
                             className="h-2 mt-2" 
                           />
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Preporuči još i osvoji do 3GB prostora
+                          </p>
                         </div>
                       </CardContent>
                     </Card>
