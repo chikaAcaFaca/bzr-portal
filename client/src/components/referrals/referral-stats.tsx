@@ -21,27 +21,27 @@ const formatBytes = (bytes: number, decimals = 2) => {
 };
 
 interface ReferralInfo {
-  referralCode: string;
-  totalReferrals: number;
-  totalProReferrals: number;
-  earnedSpace: number;
-  activeSpace: number;
-  createdAt: string;
+  referral_code: string;
+  total_referrals: number;
+  total_pro_referrals: number;
+  earned_space: number;
+  active_space: number;
+  created_at: string;
 }
 
 interface ReferralEntry {
   id: string;
-  referrerId: string;
-  referredId: string;
-  referralCode: string;
-  isProUser: boolean;
-  createdAt: string;
-  expiresAt: string;
-  rewardSize: number;
-  isActive: boolean;
+  referrer_id: string;
+  referred_id: string;
+  referral_code: string;
+  is_pro_user: boolean;
+  created_at: string;
+  expires_at: string;
+  reward_size: number;
+  is_active: boolean;
   source: string;
-  socialPlatform?: string;
-  postLink?: string;
+  social_platform?: string;
+  post_link?: string;
 }
 
 interface ReferralStatsProps {
@@ -63,11 +63,11 @@ export function ReferralStats({ className }: ReferralStatsProps) {
     retry: false,
   });
   
-  const referralInfo: ReferralInfo | null = infoData?.success ? infoData.referralInfo : null;
+  const referralInfo: ReferralInfo | null = infoData?.success ? infoData.referral_info : null;
   const referrals: ReferralEntry[] = infoData?.success ? infoData.referrals : [];
   
-  const referralCode = codeData?.success ? codeData.referralCode : '';
-  const referralUrl = codeData?.success ? codeData.referralUrl : '';
+  const referralCode = codeData?.success ? codeData.referral_code : '';
+  const referralUrl = codeData?.success ? codeData.referral_url : '';
   
   // Funkcija za kopiranje referalnog URL-a
   const copyReferralLink = () => {
@@ -149,13 +149,13 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="text-sm font-medium text-muted-foreground">Ukupni referali</p>
-                            <p className="text-2xl font-bold mt-1">{referralInfo.totalReferrals}</p>
+                            <p className="text-2xl font-bold mt-1">{referralInfo.total_referrals}</p>
                           </div>
                           <Users className="text-primary w-8 h-8" />
                         </div>
                         <div className="mt-2">
                           <p className="text-xs text-muted-foreground">
-                            Od toga PRO korisnika: {referralInfo.totalProReferrals}
+                            Od toga PRO korisnika: {referralInfo.total_pro_referrals}
                           </p>
                         </div>
                       </CardContent>
@@ -166,13 +166,13 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                         <div className="flex justify-between items-start">
                           <div>
                             <p className="text-sm font-medium text-muted-foreground">Ukupno zarađeno</p>
-                            <p className="text-2xl font-bold mt-1">{formatBytes(referralInfo.earnedSpace)}</p>
+                            <p className="text-2xl font-bold mt-1">{formatBytes(referralInfo.earned_space)}</p>
                           </div>
                           <HardDrive className="text-primary w-8 h-8" />
                         </div>
                         <div className="mt-2">
                           <p className="text-xs text-muted-foreground">
-                            Trenutno aktivno: {formatBytes(referralInfo.activeSpace)}
+                            Trenutno aktivno: {formatBytes(referralInfo.active_space)}
                           </p>
                         </div>
                       </CardContent>
@@ -183,13 +183,13 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                         <div className="flex flex-col">
                           <p className="text-sm font-medium text-muted-foreground">Iskorišćenost</p>
                           <p className="text-2xl font-bold mt-1">
-                            {referralInfo.totalReferrals > 0 ? 
-                              `${(referralInfo.activeSpace / referralInfo.earnedSpace * 100).toFixed(1)}%` : 
+                            {referralInfo.total_referrals > 0 ? 
+                              `${(referralInfo.active_space / referralInfo.earned_space * 100).toFixed(1)}%` : 
                               '0%'}
                           </p>
                           <Progress 
-                            value={referralInfo.totalReferrals > 0 ? 
-                              (referralInfo.activeSpace / referralInfo.earnedSpace * 100) : 0} 
+                            value={referralInfo.total_referrals > 0 ? 
+                              (referralInfo.active_space / referralInfo.earned_space * 100) : 0} 
                             className="h-2 mt-2" 
                           />
                         </div>
@@ -231,28 +231,28 @@ export function ReferralStats({ className }: ReferralStatsProps) {
                   {referrals.map((referral) => (
                     <tr key={referral.id} className="bg-white border-b">
                       <td className="px-6 py-4 font-medium text-gray-900">
-                        {referral.referredId.substring(0, 8)}...
+                        {referral.referred_id.substring(0, 8)}...
                       </td>
                       <td className="px-6 py-4">
-                        {referral.isProUser ? (
+                        {referral.is_pro_user ? (
                           <Badge className="bg-indigo-500">PRO</Badge>
                         ) : (
                           <Badge variant="secondary">FREE</Badge>
                         )}
-                        {!referral.isActive && <Badge variant="outline" className="ml-2">Neaktivan</Badge>}
+                        {!referral.is_active && <Badge variant="outline" className="ml-2">Neaktivan</Badge>}
                       </td>
                       <td className="px-6 py-4">
                         {sourceLabels[referral.source] || 'Nepoznat'}
-                        {referral.socialPlatform && <div className="text-xs mt-1">{referral.socialPlatform}</div>}
+                        {referral.social_platform && <div className="text-xs mt-1">{referral.social_platform}</div>}
                       </td>
                       <td className="px-6 py-4">
-                        {formatDate(referral.createdAt)}
+                        {formatDate(referral.created_at)}
                       </td>
                       <td className="px-6 py-4">
-                        {formatBytes(referral.rewardSize)}
+                        {formatBytes(referral.reward_size)}
                       </td>
                       <td className="px-6 py-4">
-                        {formatDate(referral.expiresAt)}
+                        {formatDate(referral.expires_at)}
                       </td>
                     </tr>
                   ))}

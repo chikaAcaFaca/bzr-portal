@@ -24,8 +24,8 @@ router.get('/code', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      referralCode,
-      referralUrl
+      referral_code: referralCode,
+      referral_url: referralUrl
     });
   } catch (error) {
     console.error('Greška pri dobavljanju referalnog koda:', error);
@@ -57,7 +57,7 @@ router.get('/info', async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      referralInfo,
+      referral_info: referralInfo,
       referrals
     });
   } catch (error) {
