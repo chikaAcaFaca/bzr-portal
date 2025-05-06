@@ -69,7 +69,7 @@ export default function BlogPostPage() {
   const isAdmin = user?.role === 'admin';
   const isAuthor = (post: BlogPost) => post.authorId === user?.id;
 
-  const { data: post, isLoading, error } = useQuery<BlogPost>({
+  const { data: postData, isLoading, error } = useQuery<{ success: boolean, blog: BlogPost }>({
     queryKey: ['/api/blog/slug', slug],
     queryFn: async () => {
       const response = await fetch(`/api/blog/slug/${slug}`);
@@ -79,6 +79,9 @@ export default function BlogPostPage() {
       return response.json();
     },
   });
+  
+  // Izvlačimo stvarni post iz odgovora
+  const post = postData?.blog;
 
   const approvePostMutation = useMutation({
     mutationFn: async (postId: number) => {
