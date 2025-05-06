@@ -75,7 +75,7 @@ class ReferralRewardService {
       const referral_stats = await this.getReferralStats(user_id);
       
       // Vraćamo ukupan prostor
-      return base_storage + referral_stats.activeSpace;
+      return base_storage + referral_stats.active_space;
     } catch (error) {
       console.error('Greška pri dobavljanju ukupno dostupnog prostora:', error);
       return base_storage; // U slučaju greške, vraćamo samo osnovni prostor
@@ -87,11 +87,11 @@ class ReferralRewardService {
    * @param user_id ID korisnika
    * @returns Informacije o referalima ili null ako ne postoje
    */
-  async getUserReferralInfo(user_id: string): Promise<{ activeSpace: number } | null> {
+  async getUserReferralInfo(user_id: string): Promise<{ active_space: number } | null> {
     try {
       const stats = await this.getReferralStats(user_id);
       return {
-        activeSpace: stats.activeSpace
+        active_space: stats.active_space
       };
     } catch (error) {
       console.error('Greška pri dobavljanju referalnih informacija:', error);
@@ -203,13 +203,13 @@ class ReferralRewardService {
 
   /**
    * Kreira novu referalnu vezu između dva korisnika
-   * @param referrerId ID korisnika koji je pozvao
-   * @param referredId ID korisnika koji se registrovao
-   * @param referralCode Korišćeni referalni kod
-   * @param isProUser Da li je novi korisnik PRO
+   * @param referrer_id ID korisnika koji je pozvao
+   * @param referred_id ID korisnika koji se registrovao
+   * @param referral_code Korišćeni referalni kod
+   * @param is_pro_user Da li je novi korisnik PRO
    * @param source Izvor referala (blog_post, social_comment, direct_link)
-   * @param socialPlatform Platforma za društvene mreže (opciono)
-   * @param postLink Link na post (opciono)
+   * @param social_platform Platforma za društvene mreže (opciono)
+   * @param post_link Link na post (opciono)
    */
   async createReferral(
     referrer_id: string,
@@ -330,12 +330,12 @@ class ReferralRewardService {
 
   /**
    * Procesira registraciju korisnika preko referalnog koda
-   * @param referredUserId ID novog korisnika
-   * @param referralCode Korišćeni referalni kod
-   * @param isProUser Da li je novi korisnik PRO
+   * @param referred_user_id ID novog korisnika
+   * @param referral_code Korišćeni referalni kod
+   * @param is_pro_user Da li je novi korisnik PRO
    * @param source Izvor referala
-   * @param socialPlatform Platforma za društvene mreže (opciono)
-   * @param postLink Link na post (opciono)
+   * @param social_platform Platforma za društvene mreže (opciono)
+   * @param post_link Link na post (opciono)
    * @returns true ako je uspešno, false ako ne
    */
   async processReferral(
@@ -410,39 +410,39 @@ class ReferralRewardService {
    * @returns Statistika referala
    */
   async getReferralStats(user_id: string): Promise<{
-    totalReferrals: number;
-    totalProReferrals: number;
-    earnedSpace: number;
-    activeSpace: number;
-    createdAt: string;
+    total_referrals: number;
+    total_pro_referrals: number;
+    earned_space: number;
+    active_space: number;
+    created_at: string;
   }> {
     try {
       // Dobavljanje svih referala korisnika
       const referrals = await this.getUserReferrals(user_id);
       
       // Računanje statistike
-      const totalReferrals = referrals.length;
-      const totalProReferrals = referrals.filter(ref => ref.is_pro_user).length;
+      const total_referrals = referrals.length;
+      const total_pro_referrals = referrals.filter(ref => ref.is_pro_user).length;
       
       // Računanje zarađenog prostora
-      const earnedSpace = referrals.reduce((total, ref) => total + ref.reward_size, 0);
+      const earned_space = referrals.reduce((total, ref) => total + ref.reward_size, 0);
       
       // Računanje aktivnog prostora
       const now = new Date().toISOString();
-      const activeReferrals = referrals.filter(ref => ref.is_active && ref.expires_at > now);
-      const activeSpace = activeReferrals.reduce((total, ref) => total + ref.reward_size, 0);
+      const active_referrals = referrals.filter(ref => ref.is_active && ref.expires_at > now);
+      const active_space = active_referrals.reduce((total, ref) => total + ref.reward_size, 0);
       
       // Datum prvog referala
-      const createdAt = referrals.length > 0 ? 
+      const created_at = referrals.length > 0 ? 
         referrals[referrals.length - 1].created_at : 
         new Date().toISOString();
       
       return {
-        totalReferrals,
-        totalProReferrals,
-        earnedSpace,
-        activeSpace,
-        createdAt
+        total_referrals,
+        total_pro_referrals,
+        earned_space,
+        active_space,
+        created_at
       };
     } catch (error) {
       console.error('Greška pri dobavljanju statistike referala:', error);
@@ -452,8 +452,8 @@ class ReferralRewardService {
 
   /**
    * Ažurira status PRO korisnika i prilagođava referale
-   * @param userId ID korisnika
-   * @param isProUser Novi PRO status korisnika
+   * @param user_id ID korisnika
+   * @param is_pro_user Novi PRO status korisnika
    */
   async updateUserProStatus(user_id: string, is_pro_user: boolean): Promise<void> {
     try {

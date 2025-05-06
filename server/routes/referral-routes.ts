@@ -75,9 +75,9 @@ router.get('/info', async (req: Request, res: Response) => {
  */
 router.post('/process', async (req: Request, res: Response) => {
   try {
-    const { referredUserId, referralCode, isProUser, source, socialPlatform, postLink } = req.body;
+    const { referred_user_id, referral_code, is_pro_user, source, social_platform, post_link } = req.body;
 
-    if (!referredUserId || !referralCode) {
+    if (!referred_user_id || !referral_code) {
       return res.status(400).json({
         success: false,
         message: 'Potrebni su ID korisnika i referalni kod'
@@ -85,12 +85,12 @@ router.post('/process', async (req: Request, res: Response) => {
     }
 
     const success = await ReferralRewardService.processReferral(
-      referredUserId,
-      referralCode,
-      isProUser || false,
+      referred_user_id,
+      referral_code,
+      is_pro_user || false,
       source || 'direct_link',
-      socialPlatform,
-      postLink
+      social_platform,
+      post_link
     );
 
     if (success) {
@@ -126,20 +126,20 @@ router.put('/update-pro-status', async (req: Request, res: Response) => {
       });
     }
 
-    const { isProUser } = req.body;
+    const { is_pro_user } = req.body;
 
-    if (typeof isProUser !== 'boolean') {
+    if (typeof is_pro_user !== 'boolean') {
       return res.status(400).json({
         success: false,
         message: 'Potrebno je definisati PRO status (true/false)'
       });
     }
 
-    await ReferralRewardService.updateUserProStatus(req.user.id, isProUser);
+    await ReferralRewardService.updateUserProStatus(req.user.id, is_pro_user);
 
     return res.status(200).json({
       success: true,
-      message: `PRO status uspešno ${isProUser ? 'aktiviran' : 'deaktiviran'}`
+      message: `PRO status uspešno ${is_pro_user ? 'aktiviran' : 'deaktiviran'}`
     });
   } catch (error) {
     console.error('Greška pri ažuriranju PRO statusa:', error);
