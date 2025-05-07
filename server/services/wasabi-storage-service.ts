@@ -68,8 +68,13 @@ class WasabiStorageService {
    * @param bucket Opciono ime bucket-a (defaultno koristnički dokumenti)
    * @returns Informacije o uploadovanom fajlu
    */
-  async uploadFile(key: string, fileBuffer: Buffer, contentType: string, bucket?: string): Promise<any> {
+  async uploadFile(key: string, fileBuffer: Buffer, contentType: string, userId: string, bucket?: string): Promise<any> {
     try {
+      // Ensure the file path starts with user ID for isolation
+      if (!key.startsWith(`${userId}/`)) {
+        key = `${userId}/${key}`;
+      }
+      
       const bucketName = bucket || WASABI_USER_DOCUMENTS_BUCKET;
 
       // Koristimo Upload klasu za multi-part upload velikih fajlova

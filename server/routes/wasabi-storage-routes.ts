@@ -62,6 +62,13 @@ import { userStorageQuotaService } from '../services/user-storage-quota-service'
  * - isPro: (opciono) Da li je korisnik u PRO statusu (podrazumevano false)
  */
 router.post('/upload-user-document', upload.single('file'), async (req: Request, res: Response) => {
+  // Ensure user is authenticated
+  if (!req.user?.id) {
+    return res.status(401).send({ 
+      success: false, 
+      message: 'Morate biti prijavljeni za pristup vašem skladištu' 
+    });
+  }
   try {
     const file = req.file as MulterFile;
     const userId = req.body.userId;
