@@ -845,8 +845,11 @@ class ReferralRewardServiceClass {
   }
 }
 
+// Eksportujemo klasu da bi mogla biti instancirana gde je potrebno
+export { ReferralRewardServiceClass };
+
 // Kreiramo instancu servisa koju ćemo koristiti u celoj aplikaciji
 const ReferralRewardService = new ReferralRewardServiceClass();
 
-// Exportujemo je kao default
+// Exportujemo je kao default za jednostavnije korišćenje u ostatku aplikacije
 export default ReferralRewardService;

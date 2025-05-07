@@ -246,8 +246,8 @@ export class MemStorage implements IStorage {
       if (insertUser.email === '1.nikolina.jovanovic@gmail.com') {
         // Poseban kod za Nikolinu
         console.log('Kreiranje posebnog koda NIKOLINA za korisnika:', completeUser.id, insertUser.email);
-        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
-        const ReferralRewardService = new ReferralRewardServiceClass();
+        // Importujemo default instancu umesto kreiranja nove
+        const ReferralRewardService = (await import('./services/referral-reward-service')).default;
         try {
           // Direktan upis u bazu
           await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'NIKOLINA');
@@ -258,8 +258,8 @@ export class MemStorage implements IStorage {
       } else if (insertUser.email === 'aleksandar.jovanovic@gmail.com') {
         // Poseban kod za Aleksandra
         console.log('Kreiranje posebnog koda ALEXBZR za korisnika:', completeUser.id, insertUser.email);
-        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
-        const ReferralRewardService = new ReferralRewardServiceClass();
+        // Importujemo default instancu umesto kreiranja nove
+        const ReferralRewardService = (await import('./services/referral-reward-service')).default;
         try {
           // Direktan upis u bazu
           await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'ALEXBZR');
@@ -269,8 +269,8 @@ export class MemStorage implements IStorage {
         }
       } else {
         // Standardni kod za ostale korisnike
-        const ReferralRewardServiceClass = (await import('./services/referral-reward-service')).ReferralRewardServiceClass;
-        const ReferralRewardService = new ReferralRewardServiceClass();
+        // Importujemo default instancu umesto kreiranja nove
+        const ReferralRewardService = (await import('./services/referral-reward-service')).default;
         try {
           await ReferralRewardService.generateReferralCode(completeUser.id.toString());
           console.log('Automatski generisan referral kod za novog korisnika:', completeUser.id);
