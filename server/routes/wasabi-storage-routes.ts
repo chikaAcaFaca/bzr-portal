@@ -249,6 +249,23 @@ router.get('/list-user-documents', async (req: Request, res: Response) => {
     const userId = req.query.userId as string;
     const folder = req.query.folder as string;
     const pathParam = req.query.path as string;
+    const isAdminView = req.query.isAdminView === 'true';
+
+    // Provera da li korisnik ima pravo pristupa
+    if (!req.user?.id) {
+      return res.status(401).send({ success: false, message: 'Niste prijavljeni' });
+    }
+
+    // Admin može da vidi samo svoje korisničke dokumente kad pristupa kroz korisnički interfejs
+    if (req.user.role === 'admin' && !isAdminView) {
+      // Tretiramo admina kao običnog korisnika kad pristupa svojim dokumentima
+      if (userId !== req.user.id) {
+        return res.status(403).send({ 
+          success: false, 
+          message: 'Pristup tuđim dokumentima nije dozvoljen kroz korisnički interfejs' 
+        });
+      }
+    }
     const useMock = req.query.mock === 'true'; // Opcioni parametar za korištenje mock podataka
 
     if (!userId) {

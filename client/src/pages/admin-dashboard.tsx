@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import PageHeader from "@/components/layout/page-header";
 import { useAuth } from "@/hooks/use-auth";
+import { AdminDocumentsViewer } from '@/components/admin/admin-documents-viewer';
 
 // Mock podaci za demo
 const userStats = {
@@ -233,7 +234,7 @@ const AdminQuickActions = () => {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("pregled");
-  
+
   // Provera da li je korisnik admin
   if (user?.role !== 'admin') {
     return (
@@ -250,14 +251,18 @@ export default function AdminDashboard() {
       </div>
     );
   }
-  
+
   return (
     <>
       <PageHeader 
         title="Admin Dashboard" 
         description="Upravljanje BZR portalom i korisnicima" 
       />
-      
+
+      <div className="mb-8">
+        <AdminDocumentsViewer />
+      </div>
+
       <div className="mb-6">
         <Tabs defaultValue="pregled" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between mb-4">
@@ -267,7 +272,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="blogovi">Blogovi</TabsTrigger>
               <TabsTrigger value="izveštaji">Izveštaji</TabsTrigger>
             </TabsList>
-            
+
             <div className="flex items-center">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -279,13 +284,13 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-          
+
           <TabsContent value="pregled" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <UserStatsCard />
               <ActivityStatsCard />
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
                 <RecentUsersCard />
@@ -295,7 +300,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="korisnici">
             <Card>
               <CardHeader>
@@ -309,7 +314,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="blogovi">
             <Card>
               <CardHeader>
@@ -330,7 +335,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="izveštaji">
             <Card>
               <CardHeader>

@@ -31,6 +31,7 @@ interface StorageInfo {
 // Prema dokumentaciji: https://docs.wasabi.com/v1/docs/service-urls-for-wasabis-storage-regions
 const WASABI_USER_DOCUMENTS_BUCKET = process.env.WASABI_USER_DOCUMENTS_BUCKET || 'bzr-user-documents-bucket';
 const WASABI_KNOWLEDGE_BASE_BUCKET = process.env.WASABI_KNOWLEDGE_BASE_BUCKET || 'bzr-knowledge-base-bucket';
+const WASABI_ADMIN_DOCUMENTS_BUCKET = process.env.WASABI_ADMIN_DOCUMENTS_BUCKET || 'bzr-admin-documents-bucket';
 const WASABI_REGION = 'eu-west-2';
 
 // Za Path-Style URL (preporučeno za SDK integracije)
