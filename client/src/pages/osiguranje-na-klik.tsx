@@ -334,19 +334,19 @@ export default function OsiguranjeNaKlik() {
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Povećanje zadovoljstva i lojalnosti zaposlenih</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Niža cena osiguranja po osobi zbog grupne polise</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Troškovi osiguranja se priznaju kao rashod</span>
                       </li>
@@ -361,31 +361,31 @@ export default function OsiguranjeNaKlik() {
                     <ul className="space-y-3">
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Finansijska sigurnost u slučaju nezgode</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Pokriće troškova lečenja</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Naknada za dane sprečenosti za rad</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Osiguranje važi 24/7, na poslu i van posla</span>
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Nema dodatnih troškova za zaposlene</span>
                       </li>
@@ -578,7 +578,7 @@ export default function OsiguranjeNaKlik() {
                       className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all gap-2 rounded-full px-6"
                     >
                       <span>Zatražite ponudu danas</span>
-                      <ArrowRightIcon className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -776,7 +776,7 @@ export default function OsiguranjeNaKlik() {
                         <Link href="/blog">
                           <div className="group flex items-start">
                             <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
-                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                              <FileText className="h-6 w-6 text-blue-600" />
                             </div>
                             <div>
                               <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
@@ -791,7 +791,7 @@ export default function OsiguranjeNaKlik() {
                         <Link href="/blog">
                           <div className="group flex items-start">
                             <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
-                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                              <FileText className="h-6 w-6 text-blue-600" />
                             </div>
                             <div>
                               <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
@@ -806,7 +806,7 @@ export default function OsiguranjeNaKlik() {
                         <Link href="/blog">
                           <div className="group flex items-start">
                             <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
-                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                              <FileText className="h-6 w-6 text-blue-600" />
                             </div>
                             <div>
                               <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
