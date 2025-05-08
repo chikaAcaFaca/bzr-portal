@@ -81,7 +81,7 @@ router.post('/send-insurance-inquiry', async (req: Request, res: Response) => {
       subject, 
       htmlContent, 
       'BZR Portal - Osiguranje',
-      'noreply@bzr-portal.com'
+      'onboarding@resend.dev'
     );
     
     // Odgovor klijentu

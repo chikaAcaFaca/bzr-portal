@@ -90,7 +90,7 @@ class EmailServiceManager {
     subject: string,
     htmlContent: string,
     fromName: string = 'BZR Portal',
-    fromEmail: string = 'noreply@bzr-portal.com'
+    fromEmail: string = 'onboarding@resend.dev'
   ): Promise<boolean> {
     // Pokušaj slanja preko Resend-a
     if (this._hasResend && this.resendClient) {
@@ -158,7 +158,7 @@ export async function sendEmail(
   subject: string,
   htmlContent: string,
   fromName: string = 'BZR Portal',
-  fromEmail: string = 'noreply@bzr-portal.com'
+  fromEmail: string = 'onboarding@resend.dev'
 ): Promise<boolean> {
   try {
     // Koristimo objedinjenu metodu iz EmailServiceManager klase
