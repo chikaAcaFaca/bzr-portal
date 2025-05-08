@@ -243,132 +243,28 @@ export default function OsiguranjeNaKlik() {
                 </Button>
               </div>
               
-              {/* Desna kolona - kontakt forma */}
+              {/* Desna kolona - uklonjena kontakt forma */}
               <div className="lg:w-1/2">
-                <Card 
+                <div 
                   id="contact-form" 
                   ref={contactFormRef}
-                  className={`shadow-xl rounded-xl overflow-hidden border-orange-100 transition-all transform
+                  className={`flex items-center justify-center h-full
                     ${isHeroVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
                   style={{ animationDelay: '0.5s' }}
                 >
-                  <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                    <CardTitle className="text-xl flex items-center">
-                      <MessageSquare className="h-5 w-5 mr-2" />
-                      Zatražite besplatnu ponudu
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6 bg-white">
-                    <form onSubmit={handleSubmit}>
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Naziv kompanije <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="companyName"
-                            name="companyName"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder="Unesite naziv vaše kompanije"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Kontakt osoba <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            placeholder="Ime i prezime"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                              Email <span className="text-orange-500">*</span>
-                            </label>
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={handleInputChange}
-                              placeholder="vasa@email.com"
-                              className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                              required
-                            />
-                          </div>
-                          
-                          <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                              Telefon <span className="text-orange-500">*</span>
-                            </label>
-                            <Input
-                              id="phone"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={handleInputChange}
-                              placeholder="+381 6X XXX XXX"
-                              className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                              required
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
-                            Broj zaposlenih <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="employeeCount"
-                            name="employeeCount"
-                            type="number"
-                            value={formData.employeeCount}
-                            onChange={handleInputChange}
-                            placeholder="Unesite broj"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                            Dodatne napomene
-                          </label>
-                          <Textarea
-                            id="message"
-                            name="message"
-                            value={formData.message}
-                            onChange={handleInputChange}
-                            placeholder="Unesite dodatne informacije..."
-                            className="h-24 rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        type="submit" 
-                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-lg hover:shadow-xl transition-all font-medium text-base text-lg relative hover:scale-105 animate-pulse-slow"
-                        style={{ animationDuration: '2s' }}
-                      >
-                        <span className="relative z-10">Podneti upit</span>
-                        <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-400 rounded-md opacity-0 hover:opacity-100 transition-opacity"></span>
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-4 text-center">
-                        Slanjem upita prihvatate našu politiku privatnosti.
+                  <div className="flex items-center justify-center">
+                    <div className="py-6 px-8 bg-orange-50 rounded-xl border border-orange-100 shadow-md hover:shadow-lg transition-all">
+                      <h3 className="text-2xl font-bold text-orange-600 mb-4">Zatražite ponudu danas</h3>
+                      <p className="text-gray-700 mb-6">
+                        Kliknite na dugme "Podneti upit" kako biste dobili besplatnu ponudu za osiguranje vaših zaposlenih.
                       </p>
-                    </form>
-                  </CardContent>
-                </Card>
+                      <div className="flex items-center space-x-4 text-gray-700">
+                        <CheckCircle className="h-5 w-5 text-orange-500" />
+                        <span>Odgovor u roku od 24h</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -778,112 +674,31 @@ export default function OsiguranjeNaKlik() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 bg-white">
-                    <form onSubmit={handleSubmit}>
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Naziv kompanije <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="companyName"
-                            name="companyName"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder="Unesite naziv vaše kompanije"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Kontakt osoba <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            placeholder="Ime i prezime"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                            Email <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="vasa@email.com"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                            Telefon <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            placeholder="+381 6X XXX XXX"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
-                            Broj zaposlenih <span className="text-orange-500">*</span>
-                          </label>
-                          <Input
-                            id="employeeCount"
-                            name="employeeCount"
-                            type="number"
-                            value={formData.employeeCount}
-                            onChange={handleInputChange}
-                            placeholder="Unesite broj"
-                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                            Dodatne napomene
-                          </label>
-                          <Textarea
-                            id="message"
-                            name="message"
-                            value={formData.message}
-                            onChange={handleInputChange}
-                            placeholder="Unesite dodatne informacije..."
-                            className="h-24 rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        </div>
+                    <div className="space-y-4">
+                      <p className="text-gray-700 mb-4">
+                        Kliknite na dugme u donjem desnom uglu da zatražite ponudu za osiguranje zaposlenih. Dobićete brz odgovor i personalizovanu ponudu prema potrebama vaše kompanije.
+                      </p>
+                      
+                      <div className="bg-orange-50 p-4 rounded-md border border-orange-100">
+                        <h4 className="font-medium text-orange-700 mb-2 flex items-center">
+                          <CheckCircle className="h-5 w-5 mr-2 text-orange-500" />
+                          Brza ponuda
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Dobićete personalizovanu ponudu za vašu kompaniju u roku od 24h.
+                        </p>
                       </div>
                       
-                      <Button 
-                        type="submit" 
-                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-lg hover:shadow-xl transition-all font-medium text-base text-lg relative hover:scale-105 animate-pulse-slow"
-                        style={{ animationDuration: '2s' }}
-                      >
-                        <span className="relative z-10">Podneti upit</span>
-                        <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-400 rounded-md opacity-0 hover:opacity-100 transition-opacity"></span>
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-4 text-center">
-                        Slanjem upita prihvatate našu politiku privatnosti.
-                      </p>
-                    </form>
+                      <div className="bg-orange-50 p-4 rounded-md border border-orange-100">
+                        <h4 className="font-medium text-orange-700 mb-2 flex items-center">
+                          <Shield className="h-5 w-5 mr-2 text-orange-500" />
+                          Zakonska usklađenost
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          Ispunite zakonsku obavezu i izbegnite potencijalne kazne.
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -934,10 +749,13 @@ export default function OsiguranjeNaKlik() {
                         className="border-orange-200 text-orange-600 hover:bg-orange-50 w-full"
                         onClick={() => {
                           const contactForm = document.getElementById('contact-form');
-                          if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
+                          if (contactForm) {
+                            contactForm.scrollIntoView({ behavior: 'smooth' });
+                            setShowContactForm(true);
+                          }
                         }}
                       >
-                        Pošalji upit
+                        Zatražite ponudu
                       </Button>
                     </div>
                   </CardContent>
