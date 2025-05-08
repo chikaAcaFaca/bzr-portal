@@ -53,7 +53,7 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="companyAddress">Adresa</Label>
-                <Input id="companyAddress" defaultValue="Beogradska 123, 11000 Beograd" />
+                <Input id="companyAddress" defaultValue="Karađorđeva 18a, Pančevo" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -67,11 +67,11 @@ export default function SettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="companyPhone">Telefon</Label>
-                <Input id="companyPhone" defaultValue="+381 11 123 4567" />
+                <Input id="companyPhone" defaultValue="+381 64 125 8686" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="companyEmail">Email</Label>
-                <Input id="companyEmail" type="email" defaultValue="info@vasakompanija.rs" />
+                <Input id="companyEmail" type="email" defaultValue="bzr.portal.com@gmail.com" />
               </div>
             </CardContent>
           </Card>
