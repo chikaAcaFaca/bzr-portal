@@ -246,11 +246,13 @@ export default function LandingPage() {
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <Badge className="mb-4 px-4 py-2 text-base bg-blue-100 text-blue-800 hover:bg-blue-200 rounded-full">
+            <Badge className="mb-4 px-4 py-2 text-base bg-blue-100 text-blue-800 hover:bg-blue-200 rounded-full animate-fade-in-scale" style={{ animationDelay: '0.1s' }}>
               Bezbednost i zdravlje na radu
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Zašto odabrati BZR Portal?</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
+              Zašto odabrati BZR Portal?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto animate-slide-in-right" style={{ animationDelay: '0.3s' }}>
               Naš portal pruža sveobuhvatno rešenje za upravljanje svim aspektima bezbednosti i zdravlja na radu.
             </p>
           </div>

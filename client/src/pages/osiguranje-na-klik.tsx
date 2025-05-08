@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { 
   Card, 
@@ -23,7 +23,11 @@ import {
   AlertCircleIcon,
   FileTextIcon, 
   InfoIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  BadgeCheck,
+  PhoneCall,
+  Mail,
+  MessageSquare
 } from "lucide-react";
 
 export default function OsiguranjeNaKlik() {
@@ -36,6 +40,65 @@ export default function OsiguranjeNaKlik() {
     employeeCount: '',
     message: ''
   });
+  
+  // Reference za animacije pri scrollovanju
+  const heroRef = useRef<HTMLElement>(null);
+  const benefitsRef = useRef<HTMLDivElement>(null);
+  const processRef = useRef<HTMLUListElement>(null);
+  const contactFormRef = useRef<HTMLDivElement>(null);
+  
+  // Stanja za praćenje vidljivosti elemenata
+  const [isHeroVisible, setIsHeroVisible] = useState(false);
+  const [areBenefitsVisible, setAreBenefitsVisible] = useState(false);
+  const [isProcessVisible, setIsProcessVisible] = useState(false);
+  const [isContactFormVisible, setIsContactFormVisible] = useState(false);
+  
+  // Implementacija IntersectionObserver-a za animacije pri scrollovanju
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Detektovanje Hero sekcije
+          if (entry.target === heroRef.current && entry.isIntersecting) {
+            setIsHeroVisible(true);
+            observer.unobserve(entry.target);
+          }
+          
+          // Detektovanje Benefits sekcije
+          if (entry.target === benefitsRef.current && entry.isIntersecting) {
+            setAreBenefitsVisible(true);
+            observer.unobserve(entry.target);
+          }
+          
+          // Detektovanje Process sekcije
+          if (entry.target === processRef.current && entry.isIntersecting) {
+            setIsProcessVisible(true);
+            observer.unobserve(entry.target);
+          }
+          
+          // Detektovanje Contact Form sekcije
+          if (entry.target === contactFormRef.current && entry.isIntersecting) {
+            setIsContactFormVisible(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.2 } // Aktivira se kada je 20% elementa vidljivo
+    );
+    
+    // Posmatramo sve sekcije koje imamo u referencama
+    if (heroRef.current) observer.observe(heroRef.current);
+    if (benefitsRef.current) observer.observe(benefitsRef.current);
+    if (processRef.current) observer.observe(processRef.current);
+    if (contactFormRef.current) observer.observe(contactFormRef.current);
+    
+    return () => {
+      if (heroRef.current) observer.unobserve(heroRef.current);
+      if (benefitsRef.current) observer.unobserve(benefitsRef.current);
+      if (processRef.current) observer.unobserve(processRef.current);
+      if (contactFormRef.current) observer.unobserve(contactFormRef.current);
+    };
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -65,19 +128,44 @@ export default function OsiguranjeNaKlik() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-4 py-16 md:py-20">
+      <section 
+        ref={heroRef}
+        className="bg-gradient-to-r from-orange-500 to-orange-600 text-white pt-16 pb-20 md:pt-20 md:pb-24 relative overflow-hidden"
+      >
+        {/* Ukrasni elementi u pozadini za vizuelni efekat */}
+        <div className="absolute -right-16 -top-16 w-64 h-64 bg-orange-300 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-amber-200 rounded-full opacity-20"></div>
+        <div className="absolute right-1/4 bottom-12 w-20 h-20 bg-white/10 rounded-full backdrop-blur-sm"></div>
+        
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
+            <div className={`w-fit mx-auto mb-6 px-4 py-1.5 bg-orange-700/30 rounded-full text-white text-sm font-medium border border-white/20 
+              ${isHeroVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
+              style={{ animationDelay: '0.1s' }}
+            >
+              ZAKONSKA OBAVEZA
+            </div>
+            <h1 
+              className={`text-3xl md:text-5xl font-bold mb-4 leading-tight 
+                ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+              style={{ animationDelay: '0.3s' }}
+            >
               Osiguranje zaposlenih od posledica nesrećnog slučaja
             </h1>
-            <p className="text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto">
+            <p 
+              className={`text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto 
+                ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+              style={{ animationDelay: '0.5s' }}
+            >
               Saznajte sve o kolektivnom osiguranju zaposlenih - zakonskim obavezama, prednostima, uporednim ponudama i koracima za dobijanje optimalnog rešenja
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className={`flex flex-wrap justify-center gap-4 
+              ${isHeroVisible ? 'animate-bounce-in' : 'opacity-0'}`}
+              style={{ animationDelay: '0.7s' }}
+            >
               <Button 
                 size="lg" 
-                className="bg-white text-blue-700 hover:bg-blue-50"
+                className="bg-white text-orange-600 hover:bg-orange-50 shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
                   const contactForm = document.getElementById('contact-form');
                   if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
@@ -85,6 +173,35 @@ export default function OsiguranjeNaKlik() {
               >
                 ZATRAŽITE PONUDU
               </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-white border-white/80 hover:bg-white/10 transition-all"
+              >
+                SAZNAJTE VIŠE
+              </Button>
+            </div>
+            
+            {/* Prednosti kartice ispod glavnog naslova */}
+            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 
+              ${isHeroVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
+              style={{ animationDelay: '0.9s' }}
+            >
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+                <BadgeCheck className="h-8 w-8 text-amber-300 mx-auto mb-2" />
+                <h3 className="font-bold text-lg">Zakonska obaveza</h3>
+                <p className="text-sm text-white/80">Izbegnite kazne do 1.000.000 RSD</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+                <PhoneCall className="h-8 w-8 text-amber-300 mx-auto mb-2" />
+                <h3 className="font-bold text-lg">Brz kontakt</h3>
+                <p className="text-sm text-white/80">Odgovor u roku od 24h</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+                <Mail className="h-8 w-8 text-amber-300 mx-auto mb-2" />
+                <h3 className="font-bold text-lg">Besplatna ponuda</h3>
+                <p className="text-sm text-white/80">Personalizovana za vašu firmu</p>
+              </div>
             </div>
           </div>
         </div>
@@ -163,54 +280,85 @@ export default function OsiguranjeNaKlik() {
                   <li>Dodatnim pogodnostima</li>
                 </ul>
 
-                <h2>Prednosti kolektivnog osiguranja zaposlenih</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-blue-700">Za poslodavca:</h3>
+                <h2 className="text-2xl font-bold text-orange-600 mt-10 mb-6">Prednosti kolektivnog osiguranja zaposlenih</h2>
+                <div 
+                  ref={benefitsRef}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6"
+                >
+                  <div 
+                    className={`bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border border-orange-100 shadow-md hover:shadow-lg transition-all 
+                      ${areBenefitsVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    <h3 className="text-xl font-bold mb-4 text-orange-600 border-b border-orange-100 pb-2">Za poslodavca:</h3>
                     <ul className="space-y-3">
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Ispunjavanje zakonske obaveze</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Zaštita od potencijalnih sudskih procesa</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Povećanje zadovoljstva i lojalnosti zaposlenih</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Niža cena osiguranja po osobi zbog grupne polise</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Troškovi osiguranja se priznaju kao rashod</span>
                       </li>
                     </ul>
                   </div>
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                    <h3 className="text-lg font-bold mb-4 text-blue-700">Za zaposlene:</h3>
+                  <div 
+                    className={`bg-gradient-to-br from-orange-50 to-white p-6 rounded-xl border border-orange-100 shadow-md hover:shadow-lg transition-all
+                      ${areBenefitsVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.4s' }}
+                  >
+                    <h3 className="text-xl font-bold mb-4 text-orange-600 border-b border-orange-100 pb-2">Za zaposlene:</h3>
                     <ul className="space-y-3">
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Finansijska sigurnost u slučaju nezgode</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Pokriće troškova lečenja</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Naknada za dane sprečenosti za rad</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Osiguranje važi 24/7, na poslu i van posla</span>
                       </li>
                       <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
+                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                        </div>
                         <span>Nema dodatnih troškova za zaposlene</span>
                       </li>
                     </ul>
