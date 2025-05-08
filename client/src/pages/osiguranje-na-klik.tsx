@@ -177,6 +177,10 @@ export default function OsiguranjeNaKlik() {
                 variant="outline" 
                 size="lg" 
                 className="text-white border-white/80 hover:bg-white/10 transition-all"
+                onClick={() => {
+                  const benefitsSection = document.getElementById('prednosti');
+                  if (benefitsSection) benefitsSection.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 SAZNAJTE VIŠE
               </Button>
@@ -187,17 +191,35 @@ export default function OsiguranjeNaKlik() {
               ${isHeroVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
               style={{ animationDelay: '0.9s' }}
             >
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+              <div 
+                className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all cursor-pointer" 
+                onClick={() => {
+                  const zakonSection = document.getElementById('zakonska-obaveza');
+                  if (zakonSection) zakonSection.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <BadgeCheck className="h-8 w-8 text-amber-300 mx-auto mb-2" />
                 <h3 className="font-bold text-lg">Zakonska obaveza</h3>
                 <p className="text-sm text-white/80">Izbegnite kazne do 1.000.000 RSD</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+              <div 
+                className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all cursor-pointer"
+                onClick={() => {
+                  const contactInfo = document.getElementById('contact-info');
+                  if (contactInfo) contactInfo.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <PhoneCall className="h-8 w-8 text-amber-300 mx-auto mb-2" />
                 <h3 className="font-bold text-lg">Brz kontakt</h3>
                 <p className="text-sm text-white/80">Odgovor u roku od 24h</p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all">
+              <div 
+                className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all cursor-pointer"
+                onClick={() => {
+                  const contactForm = document.getElementById('contact-form');
+                  if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
                 <Mail className="h-8 w-8 text-amber-300 mx-auto mb-2" />
                 <h3 className="font-bold text-lg">Besplatna ponuda</h3>
                 <p className="text-sm text-white/80">Personalizovana za vašu firmu</p>
@@ -280,7 +302,7 @@ export default function OsiguranjeNaKlik() {
                   <li>Dodatnim pogodnostima</li>
                 </ul>
 
-                <h2 className="text-2xl font-bold text-orange-600 mt-10 mb-6">Prednosti kolektivnog osiguranja zaposlenih</h2>
+                <h2 id="prednosti" className="text-2xl font-bold text-orange-600 mt-10 mb-6">Prednosti kolektivnog osiguranja zaposlenih</h2>
                 <div 
                   ref={benefitsRef}
                   className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6"
@@ -365,7 +387,7 @@ export default function OsiguranjeNaKlik() {
                   </div>
                 </div>
 
-                <h2>Zakonska regulativa i odgovornost poslodavca</h2>
+                <h2 id="zakonska-obaveza">Zakonska regulativa i odgovornost poslodavca</h2>
                 <p>
                   Zakon o bezbednosti i zdravlju na radu (član 53) jasno propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom.
                 </p>
