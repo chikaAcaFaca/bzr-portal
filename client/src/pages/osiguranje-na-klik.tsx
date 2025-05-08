@@ -632,7 +632,7 @@ export default function OsiguranjeNaKlik() {
                 <Card 
                   id="contact-form" 
                   ref={contactFormRef}
-                  className={`shadow-xl rounded-xl overflow-hidden border-orange-100 transition-all transform
+                  className={`shadow-xl rounded-xl overflow-hidden border-orange-100 transition-all transform hover:translate-y-[-20px] 
                     ${isContactFormVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
                 >
                   <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
@@ -738,9 +738,11 @@ export default function OsiguranjeNaKlik() {
                       
                       <Button 
                         type="submit" 
-                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-sm hover:shadow-md transition-all font-medium text-base"
+                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-lg hover:shadow-xl transition-all font-medium text-base text-lg relative hover:scale-105 animate-pulse-slow"
+                        style={{ animationDuration: '2s' }}
                       >
-                        Podneti upit
+                        <span className="relative z-10">Podneti upit</span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-400 rounded-md opacity-0 hover:opacity-100 transition-opacity"></span>
                       </Button>
                       <p className="text-xs text-gray-500 mt-4 text-center">
                         Slanjem upita prihvatate našu politiku privatnosti.
