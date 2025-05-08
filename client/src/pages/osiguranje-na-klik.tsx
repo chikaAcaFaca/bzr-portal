@@ -703,6 +703,62 @@ export default function OsiguranjeNaKlik() {
                   </CardContent>
                 </Card>
 
+                {/* Contact Info Card */}
+                <Card 
+                  id="contact-info" 
+                  className="shadow-md border-primary/10 overflow-hidden my-6"
+                >
+                  <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                    <CardTitle className="text-lg flex items-center">
+                      <PhoneCall className="h-5 w-5 mr-2" />
+                      Direktan kontakt
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="bg-gradient-to-b from-orange-50/80 to-white pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center hover:text-orange-600 transition-colors">
+                        <Phone className="h-5 w-5 mr-3 text-orange-500" />
+                        <a href="tel:+381641258686" className="text-sm hover:underline">
+                          +381 64 125 8686
+                        </a>
+                      </div>
+                      <div className="flex items-center hover:text-orange-600 transition-colors">
+                        <Mail className="h-5 w-5 mr-3 text-orange-500" />
+                        <a href="mailto:bzr.portal.com@gmail.com" className="text-sm hover:underline">
+                          bzr.portal.com@gmail.com
+                        </a>
+                      </div>
+                      <div className="flex items-center hover:text-orange-600 transition-colors">
+                        <MapPin className="h-5 w-5 mr-3 text-orange-500" />
+                        <a 
+                          href="https://maps.google.com/?q=Karađorđeva+18a,+Pančevo,+Srbija" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm hover:underline"
+                        >
+                          Karađorđeva 18a, Pančevo
+                        </a>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Svi naši agenti su dostupni radnim danima od 8:00 do 16:00 časova.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="border-orange-200 text-orange-600 hover:bg-orange-50 w-full"
+                        onClick={() => {
+                          const contactForm = document.getElementById('contact-form');
+                          if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                      >
+                        Pošalji upit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Related Articles */}
                 <Card className="shadow-md border-primary/10">
                   <CardHeader>
