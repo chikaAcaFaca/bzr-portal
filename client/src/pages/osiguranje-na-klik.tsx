@@ -19,14 +19,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { 
-  CheckIcon, 
-  AlertCircleIcon,
-  FileTextIcon, 
-  InfoIcon,
-  ArrowRightIcon,
+  FileText, 
+  PhoneCall, 
+  Phone, 
+  Mail, 
+  MapPin,
+  CheckCircle,
+  Users,
+  Shield,
+  Clock,
+  ArrowRight,
+  Check, 
+  AlertCircle,
+  Info,
   BadgeCheck,
-  PhoneCall,
-  Mail,
   MessageSquare
 } from "lucide-react";
 
