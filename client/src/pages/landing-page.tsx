@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -57,6 +57,8 @@ function formatDate(dateString: string) {
 export default function LandingPage() {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const { toast } = useToast();
+  const insuranceSectionRef = useRef<HTMLElement>(null);
+  const [isInsuranceVisible, setIsInsuranceVisible] = useState(false);
 
   // Učitaj najnovije blog postove
   const { data: recentPostsData, isLoading } = useQuery({
@@ -72,6 +74,30 @@ export default function LandingPage() {
   });
   
   const recentPosts = recentPostsData?.blogs || [];
+  
+  // Dodajemo IntersectionObserver da bismo detektovali kada je sekcija osiguranja vidljiva
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInsuranceVisible(true);
+          // Možemo zaustaviti posmatranje nakon što je komponenta postala vidljiva
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.2 } // Aktivira se kada je 20% elementa vidljivo
+    );
+    
+    if (insuranceSectionRef.current) {
+      observer.observe(insuranceSectionRef.current);
+    }
+
+    return () => {
+      if (insuranceSectionRef.current) {
+        observer.unobserve(insuranceSectionRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -122,36 +148,63 @@ export default function LandingPage() {
       </section>
 
       {/* Osiguranje na klik mini hero section */}
-      <section className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+      <section 
+        ref={insuranceSectionRef}
+        className={`bg-gradient-to-r from-orange-500 to-orange-600 text-white py-8 rounded-xl mx-4 my-6 shadow-xl overflow-hidden relative
+          ${isInsuranceVisible ? 'animate-fade-in-scale transform-gpu' : 'opacity-0'}
+        `}
+        style={{
+          transition: 'all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        }}
+      >
+        {/* Ukrasni elementi u pozadini */}
+        <div className="absolute -right-12 -top-12 w-40 h-40 bg-orange-300 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -left-12 -bottom-12 w-32 h-32 bg-amber-200 rounded-full opacity-20"></div>
+        
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
             <div className="md:w-2/3 mb-6 md:mb-0 md:pr-10">
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">
+              <div className="w-fit mb-4 px-3 py-1 bg-orange-700/30 rounded-full text-white text-sm font-medium border border-white/20">
+                NOVO!
+              </div>
+              <h2 className={`text-2xl md:text-3xl font-bold mb-3 ${isInsuranceVisible ? 'animate-slide-in-right' : ''}`}
+                  style={{ animationDelay: '0.3s' }}>
                 Osiguranje zaposlenih - zakonska obaveza
               </h2>
-              <p className="md:text-lg mb-4 opacity-90">
+              <p className={`md:text-lg mb-4 opacity-90 ${isInsuranceVisible ? 'animate-slide-in-right' : ''}`}
+                 style={{ animationDelay: '0.5s' }}>
                 Ispunite zakonsku obavezu osiguranja zaposlenih od povreda na radu i profesionalnih oboljenja.
               </p>
               <Button 
-                className="bg-white text-purple-700 hover:bg-purple-100"
+                className={`bg-white text-orange-600 hover:bg-orange-50 shadow-md hover:shadow-lg ${isInsuranceVisible ? 'animate-bounce-in' : ''}`}
+                style={{ animationDelay: '0.7s', transition: 'all 0.3s ease' }}
               >
                 <Link href="/osiguranje-na-klik">Saznajte više o osiguranju</Link>
               </Button>
             </div>
-            <div className="md:w-1/3 bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/20 shadow-xl">
+            <div className={`md:w-1/3 bg-white/10 p-5 rounded-lg backdrop-blur-sm border border-white/20 shadow-2xl 
+              hover:shadow-orange-300/30 hover:border-white/40 transition-all duration-300
+              ${isInsuranceVisible ? 'animate-slide-in-left' : ''}`}
+              style={{ animationDelay: '0.6s' }}
+            >
               <div className="flex items-start space-x-3">
-                <CheckIcon className="h-6 w-6 text-green-400 flex-shrink-0 mt-1" />
+                <CheckIcon className="h-6 w-6 text-amber-300 flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-bold text-white">Zakonska obaveza</h3>
                   <p className="text-sm text-white/80">Izbegnite kazne do 1.000.000 RSD</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3 mt-3">
-                <CheckIcon className="h-6 w-6 text-green-400 flex-shrink-0 mt-1" />
+              <div className="flex items-start space-x-3 mt-4">
+                <CheckIcon className="h-6 w-6 text-amber-300 flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="font-bold text-white">Jednostavno ugovaranje</h3>
                   <p className="text-sm text-white/80">Brza procedura bez papirologije</p>
                 </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <Button variant="link" className="text-white px-0 hover:text-amber-200">
+                  <Link href="/osiguranje-na-klik">Ugovorite odmah →</Link>
+                </Button>
               </div>
             </div>
           </div>
