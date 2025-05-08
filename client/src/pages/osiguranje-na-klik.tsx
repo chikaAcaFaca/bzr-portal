@@ -8,11 +8,11 @@ import {
   CardFooter 
 } from "@/components/ui/card";
 import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,9 +22,8 @@ import {
   CheckIcon, 
   AlertCircleIcon,
   FileTextIcon, 
-  ShieldIcon, 
-  Users2Icon, 
-  BuildingIcon 
+  InfoIcon,
+  ArrowRightIcon
 } from "lucide-react";
 
 export default function OsiguranjeNaKlik() {
@@ -48,7 +47,6 @@ export default function OsiguranjeNaKlik() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ovde bi se inače poslali podaci na server
     toast({
       title: "Zahtev uspešno poslat",
       description: "Uskoro ćemo vas kontaktirati sa personalizovanom ponudom.",
@@ -65,19 +63,18 @@ export default function OsiguranjeNaKlik() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="container mx-auto px-4 py-20 md:py-28 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-              ZAŠTITITE SVOJE <br />
-              <span className="text-yellow-300">ZAPOSLENE I POSLOVANJE</span>
+        <div className="container mx-auto px-4 py-16 md:py-20">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
+              Osiguranje zaposlenih od posledica nesrećnog slučaja
             </h1>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
-              Kompletna rešenja za kolektivno osiguranje zaposlenih u skladu sa zakonom
+            <p className="text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto">
+              Saznajte sve o kolektivnom osiguranju zaposlenih - zakonskim obavezama, prednostima, uporednim ponudama i koracima za dobijanje optimalnog rešenja
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
               <Button 
                 size="lg" 
                 className="bg-white text-blue-700 hover:bg-blue-50"
@@ -88,470 +85,460 @@ export default function OsiguranjeNaKlik() {
               >
                 ZATRAŽITE PONUDU
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-white border-white hover:bg-white/10"
-              >
-                Saznajte više
-              </Button>
-            </div>
-          </div>
-          <div className="md:w-1/2 flex justify-center md:justify-end">
-            <div className="bg-white rounded-lg p-6 shadow-xl text-gray-800 max-w-md w-full">
-              <h3 className="font-bold text-xl mb-4 text-blue-700">Zakonska obaveza osiguranja</h3>
-              <p className="mb-4">
-                Prema Zakonu o bezbednosti i zdravlju na radu, svaki poslodavac je dužan da osigura zaposlene od:
-              </p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Smrti usled nesrećnog slučaja</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Trajnog gubitka radne sposobnosti (invaliditeta)</span>
-                </li>
-              </ul>
-              <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 flex items-start">
-                <AlertCircleIcon className="h-5 w-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0" />
-                <p className="text-sm">
-                  Neispunjavanje ove obaveze može dovesti do ozbiljnih pravnih i finansijskih posledica.
-                </p>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Prednosti Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Main Content */}
+      <section className="py-12 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Zašto je kolektivno osiguranje zaposlenih pametna investicija?</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Osiguranje zaposlenih nije samo zakonska obaveza - to je strateška investicija koja štiti vaš biznis i motiviše zaposlene.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 mt-12">
-            <div className="bg-white p-8 rounded-xl shadow-md">
-              <h3 className="text-xl font-bold mb-6 text-blue-700">Za vašu kompaniju:</h3>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Ispunjavate zakonsku obavezu</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Štitite poslovanje od nepredviđenih finansijskih rizika</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Povećavate lojalnost i motivaciju zaposlenih</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Unapređujete imidž društveno odgovorne kompanije</span>
-                </li>
-              </ul>
-            </div>
-            
-            <div className="bg-white p-8 rounded-xl shadow-md">
-              <h3 className="text-xl font-bold mb-6 text-blue-700">Za vaše zaposlene:</h3>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Finansijska sigurnost u slučaju nezgode</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Pokriće troškova lečenja</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Naknada za period privremene sprečenosti za rad</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckIcon className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                  <span>Dodatna zaštita za porodicu</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="text-center mt-12">
-            <Button 
-              size="lg" 
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => {
-                const contactForm = document.getElementById('contact-form');
-                if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
-              }}
-            >
-              Investirajte u sigurnost danas za bezbrižnu budućnost sutra!
-            </Button>
-          </div>
-        </div>
-      </section>
-      
-      {/* Ponude osiguravajućih kuća */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Uporedite najbolje ponude i izaberite idealno rešenje</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Pružamo vam pregled aktuelnih ponuda vodećih osiguravajućih kuća u Srbiji, sa svim relevantnim informacijama na jednom mestu.
-            </p>
-          </div>
-          
-          <Tabs defaultValue="dunav" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="dunav">Dunav osiguranje</TabsTrigger>
-              <TabsTrigger value="generali">Generali</TabsTrigger>
-              <TabsTrigger value="wiener">Wiener Städtische</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="dunav">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <img 
-                      src="https://www.dunav.com/wp-content/uploads/2018/07/dunav-logo.png" 
-                      alt="Dunav osiguranje" 
-                      className="h-10 mr-4" 
-                    />
-                    Dunav osiguranje
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p>
-                      Dunav osiguranje je jedna od vodećih osiguravajućih kuća u Srbiji koja nudi sveobuhvatno kolektivno osiguranje zaposlenih od posledica nesrećnog slučaja.
-                    </p>
-                    <h4 className="font-semibold text-lg">Prednosti:</h4>
-                    <ul className="space-y-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* Main Article */}
+            <div className="lg:col-span-2">
+              <article className="prose prose-lg max-w-none">
+                <div className="mb-6 flex justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    <span>Objavljeno: 10.05.2025.</span>
+                    <span className="mx-2">|</span>
+                    <span>Kategorija: Osiguranje</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"/>
+                      </svg>
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                      </svg>
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 1.146C0 .513.526 0 1.175 0h13.65C15.474 0 16 .513 16 1.146v13.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 16 0 15.487 0 14.854V1.146zm4.943 12.248V6.169H2.542v7.225h2.401zm-1.2-8.212c.837 0 1.358-.554 1.358-1.248-.015-.709-.52-1.248-1.342-1.248-.822 0-1.359.54-1.359 1.248 0 .694.521 1.248 1.327 1.248h.016zm4.908 8.212V9.359c0-.216.016-.432.08-.586.173-.431.568-.878 1.232-.878.869 0 1.216.662 1.216 1.634v3.865h2.401V9.25c0-2.22-1.184-3.252-2.764-3.252-1.274 0-1.845.7-2.165 1.193v.025h-.016a5.54 5.54 0 0 1 .016-.025V6.169h-2.4c.03.678 0 7.225 0 7.225h2.4z"/>
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <InfoIcon className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-blue-700">
+                        <strong>Ključni podatak:</strong> Prema Zakonu o bezbednosti i zdravlju na radu, svi poslodavci u Srbiji su u obavezi da osiguraju svoje zaposlene od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom. 
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <h2>Šta je kolektivno osiguranje zaposlenih?</h2>
+                <p>
+                  Kolektivno osiguranje zaposlenih od posledica nesrećnog slučaja (nezgode) predstavlja vid osiguranja kojim poslodavac osigurava sve svoje zaposlene, ili određene kategorije zaposlenih, od posledica nesrećnog slučaja bez obzira na to da li se nezgoda dogodila na radu ili van rada.
+                </p>
+                <p>
+                  Ovaj vid osiguranja predviđen je kao <strong>zakonska obaveza poslodavca</strong> prema Zakonu o bezbednosti i zdravlju na radu. Tačnije, član 53. ovog zakona propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom, radi obezbeđivanja naknade štete.
+                </p>
+
+                <h2>Osnovni rizici pokriveni osiguranjem zaposlenih</h2>
+                <p>
+                  Standardan paket kolektivnog osiguranja zaposlenih od posledica nesrećnog slučaja obično pokriva sledeće rizike:
+                </p>
+                <ul>
+                  <li>Trajni invaliditet usled nezgode</li>
+                  <li>Smrt usled nezgode</li>
+                  <li>Troškovi lečenja usled nezgode</li>
+                  <li>Dnevna naknada za bolničke dane</li>
+                </ul>
+
+                <p>
+                  Osiguravajuća društva nude različite varijante paketa osiguranja zaposlenih, koji se razlikuju prema:
+                </p>
+                <ul>
+                  <li>Visini osiguranih suma</li>
+                  <li>Obimu pokrića (24h ili samo za vreme rada)</li>
+                  <li>Dodatnim pogodnostima</li>
+                </ul>
+
+                <h2>Prednosti kolektivnog osiguranja zaposlenih</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4 text-blue-700">Za poslodavca:</h3>
+                    <ul className="space-y-3">
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Tradicionalno pouzdan partner sa dugogodišnjim iskustvom</span>
+                        <span>Ispunjavanje zakonske obaveze</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Sveobuhvatna zaštita za sve vrste delatnosti</span>
+                        <span>Zaštita od potencijalnih sudskih procesa</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Prilagođene ponude prema specifičnostima vašeg poslovanja</span>
+                        <span>Povećanje zadovoljstva i lojalnosti zaposlenih</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Jednostavan proces prijave i brze isplate štete</span>
+                        <span>Niža cena osiguranja po osobi zbog grupne polise</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Troškovi osiguranja se priznaju kao rashod</span>
                       </li>
                     </ul>
                   </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Zatražite ponudu</Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="generali">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <img 
-                      src="https://www.generali.rs/resources/img/logo/generali_logo_new.png" 
-                      alt="Generali osiguranje" 
-                      className="h-10 mr-4" 
-                    />
-                    Generali osiguranje
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p>
-                      Generali osiguranje nudi fleksibilne pakete kolektivnog osiguranja prilagođene različitim potrebama poslodavaca i zaposlenih.
-                    </p>
-                    <h4 className="font-semibold text-lg">Prednosti:</h4>
-                    <ul className="space-y-2">
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 className="text-lg font-bold mb-4 text-blue-700">Za zaposlene:</h3>
+                    <ul className="space-y-3">
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Deo međunarodne grupacije sa globalnim iskustvom</span>
+                        <span>Finansijska sigurnost u slučaju nezgode</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Konkurentne cene za male i srednje firme</span>
+                        <span>Pokriće troškova lečenja</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Digitalni pristup polisama i upravljanju osiguranjem</span>
+                        <span>Naknada za dane sprečenosti za rad</span>
                       </li>
                       <li className="flex items-start">
                         <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Široka mreža zdravstvenih ustanova za lečenje</span>
+                        <span>Osiguranje važi 24/7, na poslu i van posla</span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>Nema dodatnih troškova za zaposlene</span>
                       </li>
                     </ul>
                   </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Zatražite ponudu</Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="wiener">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <img 
-                      src="https://wiener.co.rs/wp-content/uploads/2023/09/logo.png" 
-                      alt="Wiener Städtische" 
-                      className="h-10 mr-4" 
-                    />
-                    Wiener Städtische
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <p>
-                      Wiener Städtische osiguranje pruža kvalitetne programe kolektivnog osiguranja zaposlenih sa dodatnim benefitima.
-                    </p>
-                    <h4 className="font-semibold text-lg">Prednosti:</h4>
-                    <ul className="space-y-2">
-                      <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Inovativna rešenja osiguranja sa dodatnim pogodnostima</span>
+                </div>
+
+                <h2>Zakonska regulativa i odgovornost poslodavca</h2>
+                <p>
+                  Zakon o bezbednosti i zdravlju na radu (član 53) jasno propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom.
+                </p>
+                <p>
+                  U slučaju da poslodavac ne obezbedi ovo osiguranje, može biti kažnjen novčanom kaznom:
+                </p>
+                <ul>
+                  <li>Za pravno lice: od 800.000 do 1.000.000 dinara</li>
+                  <li>Za odgovorno lice u pravnom licu: od 40.000 do 50.000 dinara</li>
+                  <li>Za preduzetnike: od 300.000 do 500.000 dinara</li>
+                </ul>
+                <p>
+                  Osim zakonskih kazni, poslodavac koji nije osigurao zaposlene može biti izložen građanskim tužbama zaposlenih koji pretrpe povredu na radu. U takvim slučajevima, poslodavac bi morao iz sopstvenih sredstava da nadoknadi štetu, što može dovesti do značajnih finansijskih gubitaka.
+                </p>
+
+                <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 my-6">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <AlertCircleIcon className="h-5 w-5 text-yellow-500" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        <strong>Važno upozorenje:</strong> Odsustvo ili nedostatak odgovarajućeg osiguranja zaposlenih može rezultirati teškim posledicama za poslodavca - od plaćanja visokih kazni do potencijalnih tužbi zaposlenih za naknadu štete.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <h2>Šta utiče na cenu osiguranja zaposlenih?</h2>
+                <p>
+                  Pri određivanju premije za kolektivno osiguranje zaposlenih, osiguravači uzimaju u obzir više faktora:
+                </p>
+                <ul>
+                  <li><strong>Delatnost kompanije</strong> - delatnosti sa povećanim rizikom (npr. građevinarstvo) imaju više premije</li>
+                  <li><strong>Broj zaposlenih</strong> - veći broj zaposlenih obično znači nižu premiju po zaposlenom</li>
+                  <li><strong>Visina osiguranih suma</strong> - veće osigurane sume znače i višu premiju</li>
+                  <li><strong>Starosna struktura zaposlenih</strong> - prosečna starost zaposlenih može uticati na premiju</li>
+                  <li><strong>Prethodno iskustvo</strong> - istorija šteta može uticati na visinu premije</li>
+                </ul>
+
+                <h2>Proces ugovaranja osiguranja zaposlenih</h2>
+                <p>
+                  Proces ugovaranja kolektivnog osiguranja zaposlenih obično prati sledeće korake:
+                </p>
+                <ol className="space-y-4 my-6">
+                  <li className="flex items-start">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
+                    <div>
+                      <strong>Analiza potreba</strong>
+                      <p className="text-gray-600 mt-1">
+                        Procena specifičnih rizika u vašoj delatnosti i potreba zaposlenih.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
+                    <div>
+                      <strong>Prikupljanje ponuda</strong>
+                      <p className="text-gray-600 mt-1">
+                        Kontaktiranje više osiguravajućih društava radi dobijanja ponuda.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
+                    <div>
+                      <strong>Poređenje ponuda</strong>
+                      <p className="text-gray-600 mt-1">
+                        Analiza uslova osiguranja, cena i dodatnih pogodnosti koje osiguravači nude.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</div>
+                    <div>
+                      <strong>Ugovaranje polise</strong>
+                      <p className="text-gray-600 mt-1">
+                        Potpisivanje ugovora o osiguranju sa izabranim osiguravačem.
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">5</div>
+                    <div>
+                      <strong>Plaćanje premije</strong>
+                      <p className="text-gray-600 mt-1">
+                        Premija se može platiti jednokratno ili u ratama, zavisno od dogovora.
+                      </p>
+                    </div>
+                  </li>
+                </ol>
+
+                <h2>Često postavljana pitanja</h2>
+                <Accordion type="single" collapsible className="my-6">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger className="text-left">Da li se moraju osigurati svi zaposleni?</AccordionTrigger>
+                    <AccordionContent>
+                      Da, zakonska obaveza podrazumeva osiguranje svih zaposlenih. Polisa kolektivnog osiguranja obično pokriva sve zaposlene u kompaniji, bez obzira na vrstu ugovora o radu (stalni radni odnos, privremeni i povremeni poslovi, itd.).
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-2">
+                    <AccordionTrigger className="text-left">Šta pokriva osiguranje od nezgode?</AccordionTrigger>
+                    <AccordionContent>
+                      Standardno pokriće uključuje smrt usled nezgode, trajni invaliditet, troškove lečenja i dnevne naknade. Moguće je ugovoriti i dodatna pokrića prema potrebama kompanije i zaposlenih, kao što su hirurške intervencije, prelomi kostiju, itd.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-3">
+                    <AccordionTrigger className="text-left">Koliko košta osiguranje zaposlenih?</AccordionTrigger>
+                    <AccordionContent>
+                      Cena zavisi od više faktora, uključujući delatnost kompanije, broj zaposlenih i visinu osiguranih suma. Za male i srednje firme, cena po zaposlenom može iznositi od nekoliko stotina do nekoliko hiljada dinara godišnje, zavisno od obima pokrića.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-4">
+                    <AccordionTrigger className="text-left">Šta ako zaposleni napusti kompaniju tokom osiguranog perioda?</AccordionTrigger>
+                    <AccordionContent>
+                      U slučaju fluktuacije zaposlenih, moguće je ugovoriti polisu na osnovu spiska zaposlenih koji se periodično ažurira. Neki osiguravači nude i opciju osiguranja zasnovanu na broju zaposlenih bez potrebe za dostavljanjem pojedinačnih podataka.
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="item-5">
+                    <AccordionTrigger className="text-left">Kako se prijavljuje šteta u slučaju nezgode?</AccordionTrigger>
+                    <AccordionContent>
+                      Procedura obično uključuje popunjavanje obrasca za prijavu štete, dostavljanje medicinske dokumentacije koja potvrđuje nezgodu i posledice, i eventualno drugih dokumenata koje zatraži osiguravač. Prijava se obično može izvršiti online, telefonom ili lično u poslovnici osiguravajućeg društva.
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 my-8">
+                  <h3 className="text-xl font-bold mb-4 text-primary-800">Zaključak</h3>
+                  <p className="mb-4">
+                    Kolektivno osiguranje zaposlenih od posledica nesrećnog slučaja nije samo zakonska obaveza, već i mudra investicija koja štiti i poslodavca i zaposlene od finansijskih posledica nezgoda.
+                  </p>
+                  <p>
+                    Kroz minimalna ulaganja, poslodavci mogu obezbediti adekvatnu zaštitu za svoje zaposlene, ispuniti zakonske obaveze, i istovremeno povećati zadovoljstvo i lojalnost zaposlenih.
+                  </p>
+                  <div className="mt-6">
+                    <Button 
+                      onClick={() => {
+                        const contactForm = document.getElementById('contact-form');
+                        if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="gap-2"
+                    >
+                      <span>Zatražite ponudu danas</span>
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="space-y-8 sticky top-24">
+                {/* Contact Card */}
+                <Card id="contact-form" className="shadow-md border-primary/10">
+                  <CardHeader className="bg-primary text-white">
+                    <CardTitle>Zatražite ponudu</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <form onSubmit={handleSubmit}>
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Naziv kompanije <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="companyName"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Unesite naziv vaše kompanije"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Kontakt osoba <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="fullName"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleInputChange}
+                            placeholder="Ime i prezime"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            Email <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="vasa@email.com"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                            Telefon <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                            placeholder="+381 6X XXX XXX"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
+                            Broj zaposlenih <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            id="employeeCount"
+                            name="employeeCount"
+                            type="number"
+                            value={formData.employeeCount}
+                            onChange={handleInputChange}
+                            placeholder="Unesite broj"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                            Dodatne napomene
+                          </label>
+                          <Textarea
+                            id="message"
+                            name="message"
+                            value={formData.message}
+                            onChange={handleInputChange}
+                            placeholder="Unesite dodatne informacije..."
+                            className="h-24"
+                          />
+                        </div>
+                      </div>
+                      
+                      <Button type="submit" className="w-full mt-6">
+                        Pošalji upit
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-4 text-center">
+                        Slanjem upita prihvatate našu politiku privatnosti.
+                      </p>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                {/* Related Articles */}
+                <Card className="shadow-md border-primary/10">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Povezani članci</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <ul className="space-y-4">
+                      <li>
+                        <Link href="/blog">
+                          <div className="group flex items-start">
+                            <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                                Prevencija povreda na radu – praktični saveti
+                              </h4>
+                              <p className="text-xs text-muted-foreground mt-1">15. april 2025.</p>
+                            </div>
+                          </div>
+                        </Link>
                       </li>
-                      <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Posebni paketi za visokorizična zanimanja</span>
+                      <li>
+                        <Link href="/blog">
+                          <div className="group flex items-start">
+                            <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                                Kako odabrati najbolje osiguranje za zaposlene
+                              </h4>
+                              <p className="text-xs text-muted-foreground mt-1">2. maj 2025.</p>
+                            </div>
+                          </div>
+                        </Link>
                       </li>
-                      <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Mogućnost kombinovanja sa dobrovoljnim zdravstvenim osiguranjem</span>
-                      </li>
-                      <li className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Transparentni uslovi i brza procedura isplate</span>
+                      <li>
+                        <Link href="/blog">
+                          <div className="group flex items-start">
+                            <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mr-3">
+                              <FileTextIcon className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                                Novine u Zakonu o bezbednosti i zdravlju na radu
+                              </h4>
+                              <p className="text-xs text-muted-foreground mt-1">28. april 2025.</p>
+                            </div>
+                          </div>
+                        </Link>
                       </li>
                     </ul>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Zatražite ponudu</Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-      
-      {/* Proces osiguranja */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Jednostavan proces do potpunog osiguranja</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Samo 4 koraka do kompletnog osiguranja vaših zaposlenih u skladu sa zakonom.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-              <h3 className="text-xl font-bold mb-3">Zatražite ponudu</h3>
-              <p className="text-gray-600">
-                Popunite jednostavan formular sa osnovnim podacima o vašoj kompaniji i broju zaposlenih.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-              <h3 className="text-xl font-bold mb-3">Konsultujte se sa ekspertom</h3>
-              <p className="text-gray-600">
-                Naši stručnjaci će vas kontaktirati i pomoći vam da razumete sve opcije osiguranja.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-              <h3 className="text-xl font-bold mb-3">Izaberite najbolje rešenje</h3>
-              <p className="text-gray-600">
-                Na osnovu vaših potreba i preferencija, izaberite ponudu koja vam najviše odgovara.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-md text-center relative">
-              <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mx-auto mb-4 text-xl font-bold">4</div>
-              <h3 className="text-xl font-bold mb-3">Potpišite ugovor</h3>
-              <p className="text-gray-600">
-                Finalizujte proces potpisivanjem ugovora i obezbedite sigurnost vašim zaposlenima.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* FAQ Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Najčešća pitanja</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Odgovori na pitanja koja poslodavci najčešće postavljaju o osiguranju zaposlenih.
-            </p>
-          </div>
-          
-          <div className="max-w-3xl mx-auto">
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="font-bold text-lg mb-2">Šta tačno pokriva kolektivno osiguranje zaposlenih?</h3>
-                <p className="text-gray-700">
-                  Kolektivno osiguranje pokriva najmanje smrt usled nesrećnog slučaja i trajni invaliditet. Proširene opcije mogu uključivati troškove lečenja, dnevne naknade za bolničke dane, i druge pogodnosti.
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="font-bold text-lg mb-2">Da li je osiguranje zaposlenih obavezno po zakonu?</h3>
-                <p className="text-gray-700">
-                  Da, prema Zakonu o bezbednosti i zdravlju na radu, poslodavci su dužni da osiguraju zaposlene od povreda na radu i profesionalnih oboljenja.
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="font-bold text-lg mb-2">Koliko košta kolektivno osiguranje zaposlenih?</h3>
-                <p className="text-gray-700">
-                  Cena zavisi od više faktora, uključujući broj zaposlenih, vrstu delatnosti, izabrani obim pokrića i osiguravajuću kuću. Za mala preduzeća, cena može biti već od nekoliko stotina dinara mesečno po zaposlenom.
-                </p>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="font-bold text-lg mb-2">Kako se prijavljuje šteta u slučaju povrede zaposlenog?</h3>
-                <p className="text-gray-700">
-                  Proces uključuje popunjavanje formulara za prijavu štete i dostavljanje medicinske dokumentacije koja potvrđuje povredu. Većina osiguravajućih kuća ima jednostavne online procedure za prijavu.
-                </p>
+                  </CardContent>
+                </Card>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Contact Form */}
-      <section id="contact-form" className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Ne čekajte nesreću da biste shvatili vrednost osiguranja!</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Popunite formular i dobićete besplatnu konsultaciju sa ekspertom i personalizovanu ponudu prilagođenu vašim potrebama.
-            </p>
-          </div>
-          
-          <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Naziv kompanije *
-                  </label>
-                  <Input
-                    id="companyName"
-                    name="companyName"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
-                    placeholder="Unesite naziv vaše kompanije"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Ime i prezime *
-                  </label>
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    placeholder="Unesite vaše ime i prezime"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email adresa *
-                  </label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="example@company.com"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Telefon *
-                  </label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+381 6X XXX XXX"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
-                    Broj zaposlenih *
-                  </label>
-                  <Input
-                    id="employeeCount"
-                    name="employeeCount"
-                    type="number"
-                    value={formData.employeeCount}
-                    onChange={handleInputChange}
-                    placeholder="Unesite broj zaposlenih"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                  Dodatne napomene
-                </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Unesite dodatne informacije koje mogu biti važne za kreiranje ponude..."
-                  className="h-32"
-                />
-              </div>
-              
-              <div className="text-center">
-                <Button type="submit" size="lg" className="w-full md:w-auto px-8">
-                  POŠALJI UPIT
-                </Button>
-                <p className="text-xs text-gray-500 mt-4">
-                  Slanjem upita prihvatate našu politiku privatnosti. Nećemo deliti vaše podatke sa trećim licima.
-                </p>
-              </div>
-            </form>
           </div>
         </div>
       </section>
       
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-12 mt-auto">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
@@ -578,48 +565,23 @@ export default function OsiguranjeNaKlik() {
               </div>
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-4">Korisni linkovi</h3>
+              <h3 className="text-xl font-bold mb-4">Linkovi</h3>
               <ul className="space-y-2">
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-white">Blog</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-white">O nama</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-white">Kontakt</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-white">Politika privatnosti</a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-400 hover:text-white">Uslovi korišćenja</a>
-                </li>
+                <li><Link href="/" className="text-gray-400 hover:text-white">Početna</Link></li>
+                <li><Link href="/blog" className="text-gray-400 hover:text-white">Blog</Link></li>
+                <li><Link href="/osiguranje-na-klik" className="text-gray-400 hover:text-white">Osiguranje na klik</Link></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">O nama</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">Kontakt</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white">Uslovi korišćenja</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-xl font-bold mb-4">Kontaktirajte nas</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <span>+381 11 123 4567</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <span>kontakt@bzr-portal.com</span>
-                </li>
-                <li className="flex items-start">
-                  <svg className="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>Bulevar kralja Aleksandra 73<br />11000 Beograd, Srbija</span>
-                </li>
-              </ul>
+              <h3 className="text-xl font-bold mb-4">Kontakt</h3>
+              <address className="not-italic text-gray-400">
+                <p className="mb-2">Email: info@bzrportal.rs</p>
+                <p className="mb-2">Telefon: +381 11 123 4567</p>
+                <p>Adresa: Bulevar oslobođenja 123, Beograd</p>
+              </address>
             </div>
           </div>
           <Separator className="my-8 bg-gray-800" />
