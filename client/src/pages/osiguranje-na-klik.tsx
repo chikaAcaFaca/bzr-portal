@@ -46,6 +46,7 @@ export default function OsiguranjeNaKlik() {
     employeeCount: '',
     message: ''
   });
+  const [showContactForm, setShowContactForm] = useState(false);
   
   // Reference za animacije pri scrollovanju
   const heroRef = useRef<HTMLElement>(null);
@@ -172,7 +173,25 @@ export default function OsiguranjeNaKlik() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background relative">
+      {/* Fiksno pozicionirano dugme za kontakt formu */}
+      <div className="fixed right-8 bottom-8 z-50 animate-pulse-slow" style={{ animationDuration: '2s' }}>
+        <Button 
+          onClick={() => {
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+              contactForm.scrollIntoView({ behavior: 'smooth' });
+              setShowContactForm(true);
+            }
+          }}
+          className="group bg-orange-500 hover:bg-orange-600 text-white shadow-xl hover:shadow-2xl transition-all rounded-full px-5 py-4 flex items-center gap-2 hover:scale-105"
+          size="lg"
+        >
+          <span className="hidden md:inline font-bold">Podneti upit</span>
+          <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+          <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-400 rounded-full opacity-0 hover:opacity-100 transition-opacity"></span>
+        </Button>
+      </div>
       {/* Hero Section */}
       <section 
         ref={heroRef}
