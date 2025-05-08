@@ -1,0 +1,256 @@
+Database Indexes
+Improve query performance against your database
+Docs
+Index Advisor
+
+schema
+
+public
+
+Search for an index
+
+Create index
+Schema	Table	Name	
+public
+
+referral_codes
+
+idx_referral_codes_code
+
+
+View definition
+
+public
+
+referral_codes
+
+idx_referral_codes_user_id
+
+
+View definition
+
+public
+
+referrals
+
+idx_referrals_code
+
+
+View definition
+
+public
+
+referrals
+
+idx_referrals_referred_id
+
+
+View definition
+
+public
+
+referrals
+
+idx_referrals_referrer_id
+
+
+View definition
+
+public
+
+user_storage
+
+idx_user_storage_user_id
+
+
+View definition
+
+public
+
+referral_codes
+
+referral_codes_code_idx
+
+
+View definition
+
+public
+
+referral_codes
+
+referral_codes_code_key
+
+
+View definition
+
+public
+
+referral_codes_new
+
+referral_codes_new_code_key
+
+
+View definition
+
+public
+
+referral_codes_new
+
+referral_codes_new_pkey
+
+
+View definition
+
+public
+
+referral_codes_new
+
+referral_codes_new_user_id_key
+
+
+View definition
+
+public
+
+referral_codes
+
+referral_codes_pkey
+
+
+View definition
+
+public
+
+referral_codes
+
+referral_codes_user_id_idx
+
+
+View definition
+
+public
+
+referral_codes
+
+referral_codes_user_id_key
+
+
+View definition
+
+public
+
+referrals
+
+referrals_code_idx
+
+
+View definition
+
+public
+
+referrals
+
+referrals_expires_at_idx
+
+
+View definition
+
+public
+
+referrals_new
+
+referrals_new_pkey
+
+
+View definition
+
+public
+
+referrals_new
+
+referrals_new_referred_id_key
+
+
+View definition
+
+public
+
+referrals
+
+referrals_pkey
+
+
+View definition
+
+public
+
+referrals
+
+referrals_referred_id_idx
+
+
+View definition
+
+public
+
+referrals
+
+referrals_referred_id_key
+
+
+View definition
+
+public
+
+referrals
+
+referrals_referrer_id_idx
+
+
+View definition
+
+public
+
+user_storage_new
+
+user_storage_new_pkey
+
+
+View definition
+
+public
+
+user_storage_new
+
+user_storage_new_user_id_key
+
+
+View definition
+
+public
+
+user_storage
+
+user_storage_pkey
+
+
+View definition
+
+public
+
+user_storage
+
+user_storage_user_id_idx
+
+
+View definition
+
+public
+
+user_storage
+
+user_storage_user_id_key
+
+
+View definition
+

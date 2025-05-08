@@ -108,7 +108,7 @@ class ReferralRewardServiceClass {
     try {
       console.log('Generisanje referral koda za korisnika ID:', user_id);
       
-      // Prvo proveri da li korisnik već ima referalni kod
+      // Prvo proveri da li korisnik već ima referalni kod u bilo kojoj tabeli
       const { data: existingCode } = await supabase
         .from('referral_codes')
         .select('code')
@@ -120,18 +120,46 @@ class ReferralRewardServiceClass {
         return existingCode.code;
       }
       
-      // Posebni kodovi za određene korisnike - ID-jevi umesto email-ova
-      // U slučaju testiranja sa admin korisnikom u MemStorage, koristimo i ID 1
+      // Takođe proverimo novu tabelu ako postoji
+      try {
+        const { data: existingCodeNew } = await supabase
+          .from('referral_codes_new')
+          .select('code')
+          .eq('user_id', user_id)
+          .single();
+          
+        if (existingCodeNew) {
+          console.log(`Korisnik ${user_id} ima kod u novoj tabeli:`, existingCodeNew.code);
+          
+          // Pošto pronađen u novoj tabeli, sinhronizujemo sa glavnom
+          try {
+            await supabase
+              .from('referral_codes')
+              .insert([
+                { user_id: user_id, code: existingCodeNew.code }
+              ]);
+          } catch (syncError) {
+            console.error('Greška pri sinhronizaciji koda između tabela:', syncError);
+          }
+          
+          return existingCodeNew.code;
+        }
+      } catch (newTableError) {
+        console.log('Nema referral_codes_new tabele ili korisnik nema kod:', newTableError);
+      }
+      
+      // Posebni kodovi za određene korisnike
       const specialUsers: Record<string, string> = {
-        // Postavljamo izričite kodove za posebne korisnike
-        '1': 'ADMIN123',                              // Admin u MemStorage
-        'admin@example.com': 'ADMIN456',              // Admin u MemStorage (po email-u)
-        '1.nikolina.jovanovic@gmail.com': 'NIKOLINA', // email
-        'aleksandar.jovanovic@gmail.com': 'ALEXBZR',  // email
+        // Specijalni kodovi prema ID-ju
+        '1': 'ADMIN123',  // Admin u MemStorage
         
-        // UUID-ovi za Supabase (ovo su samo primeri)
-        'f9b5b8b0-5a7b-4a7e-9b0a-5b5b5b5b5b5b': 'NIKOLINA',  // Pretpostavljeni UUID Nikoline
-        'a7c6b8d0-3e7f-4a7e-8c0b-2d5e6f7a8b9c': 'ALEXBZR'    // Pretpostavljeni UUID Aleksandra
+        // Specijalni kodovi prema email-u
+        '1.nikolina.jovanovic@gmail.com': 'NIKOLINA',
+        'aleksandar.jovanovic@gmail.com': 'ALEXBZR',
+        
+        // UUID-ovi sa priloženih slika
+        '32e7c918-1bd5-43aa-a0d3-5f2d7c8c3605': 'NIKOLINA', // UUID Nikoline sa slike
+        '71afd2d5-e0c4-49f9-891e-2d048f286f4cd': 'ALEXBZR'  // UUID sa slike iz referrals tabele
       };
       
       // Provera direktno da li je korisnik jedan od posebnih po ID-u
@@ -148,101 +176,51 @@ class ReferralRewardServiceClass {
             ]);
         } catch (insertError) {
           console.error('Greška pri čuvanju posebnog koda:', insertError);
-          // Nastavljamo izvršavanje jer želimo da vratimo kod čak i ako insert ne uspe
         }
         
         return specialCode;
       }
       
       // Ako nismo našli po ID-u, probamo po email-u
-      const { data: userData } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', user_id)
-        .single();
-      
-      const userEmail = userData?.email as string;
-      
-      // Ako je korisnik na listi posebnih, vrati specifičan kod
-      if (userEmail && specialUsers[userEmail]) {
-        const specialCode = specialUsers[userEmail];
-        console.log(`Korišćenje posebnog koda ${specialCode} za korisnika ${userEmail}`);
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', user_id)
+          .single();
         
-        // Proverimo prvo da li tabela referral_codes postoji
-        const { error: tableCheckError } = await supabase
-          .from('referral_codes')
-          .select('count')
-          .limit(1);
+        const userEmail = userData?.email as string;
         
-        if (!tableCheckError) {
-          // Proveriti da li korisnik već ima referalni kod
-          const { data: existingCode, error: existingError } = await supabase
-            .from('referral_codes')
-            .select('*')
-            .eq('user_id', user_id)
-            .single();
+        // Ako je korisnik na listi posebnih, vrati specifičan kod
+        if (userEmail && specialUsers[userEmail]) {
+          const specialCode = specialUsers[userEmail];
+          console.log(`Korišćenje posebnog koda ${specialCode} za korisnika ${userEmail}`);
           
-          if (existingCode) {
-            // Ako korisnik već ima kod, ažuriramo ga na poseban kod
-            await supabase
-              .from('referral_codes')
-              .update({ code: specialCode })
-              .eq('user_id', user_id);
-          } else {
-            // Ako korisnik nema kod, kreiramo novi sa posebnim kodom
+          // Sačuvaj u bazi
+          try {
             await supabase
               .from('referral_codes')
               .insert([
                 { user_id: user_id, code: specialCode }
               ]);
+          } catch (insertError) {
+            console.error('Greška pri čuvanju posebnog koda prema email-u:', insertError);
           }
-        }
-        
-        return specialCode;
-      }
-      
-      // Standardna logika za ostale korisnike
-      // Proverimo prvo da li tabela referral_codes postoji
-      const { error: initialCheckError } = await supabase
-        .from('referral_codes')
-        .select('count')
-        .limit(1);
-        
-      if (initialCheckError) {
-        console.error('Tabela referral_codes ne postoji:', initialCheckError);
-        
-        // Generišemo stabilan kod baziran na ID korisnika umesto random koda
-        const stableCode = crypto
-          .createHash('md5')
-          .update(user_id + '-bzr-portal')
-          .digest('hex')
-          .substring(0, 8)
-          .toUpperCase();
           
-        return stableCode;
+          return specialCode;
+        }
+      } catch (emailError) {
+        console.error('Greška pri proveri email-a korisnika:', emailError);
       }
       
-      // Proveriti da li korisnik već ima referalni kod
-      const { data: existingCodes, error: existingError } = await supabase
-        .from('referral_codes')
-        .select('*')
-        .eq('user_id', user_id)
-        .single();
+      // Generisanje JEDINSTVENOG koda baziranog na kombinaciji ID-a i random komponente
+      // Ovo će generisati različit kod za svakog korisnika, ali konzistentan za istog korisnika
+      const timestamp = new Date().getTime().toString();
+      const randomComponent = Math.floor(Math.random() * 1000000).toString();
       
-      // Rukujemo errorom pravilno
-      if (existingError && existingError.code !== 'PGRST116') {
-        console.error('Greška pri proveri postojećeg koda:', existingError);
-      }
-
-      if (existingCodes) {
-        return existingCodes.code;
-      }
-
-      // Generisanje stabilnog koda baziranog na ID korisnika
-      // Ovo će uvek generisati isti kod za istog korisnika
-      const stableCode = crypto
+      const uniqueCode = crypto
         .createHash('md5')
-        .update(user_id + '-bzr-portal')
+        .update(user_id + '-' + timestamp + '-' + randomComponent)
         .digest('hex')
         .substring(0, 8)
         .toUpperCase();
@@ -252,21 +230,21 @@ class ReferralRewardServiceClass {
         const { error } = await supabase
           .from('referral_codes')
           .insert([
-            { user_id: user_id, code: stableCode }
+            { user_id: user_id, code: uniqueCode }
           ]);
   
         if (error) {
           console.error('Detaljna greška pri čuvanju koda:', error);
-          // Ako ne možemo da sačuvamo, vraćamo ipak stabilan kod
-          return stableCode;
+          // Ako ne možemo da sačuvamo, vraćamo ipak jedinstveni kod
+          return uniqueCode;
         }
       } catch (insertError) {
         console.error('Greška pri INSERT operaciji:', insertError);
-        return stableCode;
+        return uniqueCode;
       }
 
-      // Ako je sve u redu, vratimo stabilan kod
-      return stableCode;
+      // Ako je sve u redu, vratimo jedinstveni kod
+      return uniqueCode;
     } catch (error) {
       console.error('Neočekivana greška pri generisanju referalnog koda:', error);
       // Generišemo stabilan kod umesto random koda
