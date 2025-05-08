@@ -463,9 +463,9 @@ export default function LandingPage() {
             <div>
               <h3 className="text-xl font-bold mb-4">Kontakt</h3>
               <address className="not-italic text-gray-400">
-                <p className="mb-2">Email: info@bzrportal.rs</p>
-                <p className="mb-2">Telefon: +381 11 123 4567</p>
-                <p>Adresa: Bulevar oslobođenja 123, Beograd</p>
+                <p className="mb-2">Email: bzr.portal.com@gmail.com</p>
+                <p className="mb-2">Telefon: +381 64 125 8686</p>
+                <p>Adresa: Karađorđeva 18a, Pančevo</p>
               </address>
             </div>
           </div>
