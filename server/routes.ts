@@ -26,6 +26,7 @@ import { setupDocumentScraperRoutes } from './routes/document-scraper';
 import { setupBlogRoutes } from './routes/blog-routes';
 import { setupQuestionnaireRoutes } from './routes/questionnaire-routes';
 import { adminRouter } from './routes/admin-routes';
+import { adminRoleRouter } from './routes/admin-role-routes';
 import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
@@ -1150,6 +1151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Registracija admin ruta
   app.use('/api/admin', adminRouter);
+  
+  // Registracija ruta za upravljanje admin ulogama (prvi korisnik=admin)
+  app.use('/api/admin-role', adminRoleRouter);
   
   // Registracija korisničkih ruta
   app.use('/api/user', userRouter);
