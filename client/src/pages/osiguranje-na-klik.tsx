@@ -47,6 +47,8 @@ export default function OsiguranjeNaKlik() {
     message: ''
   });
   const [showContactForm, setShowContactForm] = useState(false);
+  const [isContactFormInView, setIsContactFormInView] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
   
   // Reference za animacije pri scrollovanju
   const heroRef = useRef<HTMLElement>(null);
@@ -84,9 +86,9 @@ export default function OsiguranjeNaKlik() {
           }
           
           // Detektovanje Contact Form sekcije
-          if (entry.target === contactFormRef.current && entry.isIntersecting) {
+          if (entry.target === contactFormRef.current) {
             setIsContactFormVisible(true);
-            observer.unobserve(entry.target);
+            setIsContactFormInView(entry.isIntersecting);
           }
         });
       },
@@ -109,10 +111,20 @@ export default function OsiguranjeNaKlik() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
+    const newFormData = {
+      ...formData,
       [name]: value
-    }));
+    };
+    setFormData(newFormData);
+    
+    // Proveravamo da li su sva obavezna polja forme popunjena
+    const isValid = !!newFormData.companyName && 
+                  !!newFormData.fullName && 
+                  !!newFormData.email && 
+                  !!newFormData.phone && 
+                  !!newFormData.employeeCount;
+    
+    setIsFormValid(isValid);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
