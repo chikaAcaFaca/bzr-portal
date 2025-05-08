@@ -70,7 +70,8 @@ router.post('/send-insurance-inquiry', async (req: Request, res: Response) => {
     `;
 
     // Ciljana email adresa za primanje upita (BZR Portal)
-    const targetEmail = 'bzr.portal.com@gmail.com';
+    // Za testiranje koristimo verifikovanu email adresu koja je dozvoljena od strane Resend
+    const targetEmail = 'baksis.net@gmail.com';
     
     // Naslov emaila
     const subject = `Novi upit za osiguranje - ${companyName}`;
@@ -81,7 +82,7 @@ router.post('/send-insurance-inquiry', async (req: Request, res: Response) => {
       subject, 
       htmlContent, 
       'BZR Portal - Osiguranje',
-      'onboarding@resend.dev'
+      'baksis.net@gmail.com'
     );
     
     // Odgovor klijentu
