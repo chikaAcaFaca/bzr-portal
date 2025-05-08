@@ -328,7 +328,7 @@ export default function OsiguranjeNaKlik() {
                       </li>
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Zaštita od potencijalnih sudskih procesa</span>
                       </li>

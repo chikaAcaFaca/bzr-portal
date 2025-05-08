@@ -36,6 +36,7 @@ import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
 import { registerDocumentStorageRoutes } from './routes/document-storage-routes';
 import { notificationRouter } from './routes/notification-routes';
+import contactRouter from './routes/contact-routes';
 import path from 'path';
 import fs from 'fs';
 import session from 'express-session';
@@ -1102,6 +1103,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register referral routes
   app.use('/api/referrals', referralRoutes);
   app.use('/api/ai/usage', aiUsageRoutes);
+  
+  // Register contact routes
+  app.use('/api/contact', contactRouter);
   
   // Test ruta za serviranje lokalnih fajlova
   app.get('/test-files/:filename', async (req: Request, res: Response) => {
