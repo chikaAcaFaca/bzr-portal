@@ -114,21 +114,61 @@ export default function OsiguranjeNaKlik() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Zahtev uspešno poslat",
-      description: "Uskoro ćemo vas kontaktirati sa personalizovanom ponudom.",
-      variant: "default",
-    });
-    setFormData({
-      companyName: '',
-      fullName: '',
-      email: '',
-      phone: '',
-      employeeCount: '',
-      message: ''
-    });
+    
+    try {
+      // Prikazujemo loading toast
+      toast({
+        title: "Slanje upita...",
+        description: "Molimo sačekajte trenutak.",
+        variant: "default",
+      });
+      
+      // Slanje podataka na API
+      const response = await fetch('/api/contact/send-insurance-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (response.ok) {
+        // Uspešno slanje
+        toast({
+          title: "Zahtev uspešno poslat",
+          description: "Uskoro ćemo vas kontaktirati sa personalizovanom ponudom.",
+          variant: "default",
+        });
+        
+        // Resetujemo formu
+        setFormData({
+          companyName: '',
+          fullName: '',
+          email: '',
+          phone: '',
+          employeeCount: '',
+          message: ''
+        });
+      } else {
+        // Greška pri slanju
+        const errorData = await response.json();
+        toast({
+          title: "Greška pri slanju",
+          description: errorData.message || "Došlo je do greške prilikom slanja upita. Molimo pokušajte kasnije.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      // Neočekivana greška
+      console.error("Greška pri slanju upita:", error);
+      toast({
+        title: "Greška pri slanju",
+        description: "Došlo je do greške prilikom slanja upita. Molimo pokušajte kasnije.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -601,7 +641,7 @@ export default function OsiguranjeNaKlik() {
                       Zatražite besplatnu ponudu
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-6 bg-gradient-to-b from-orange-50/80 to-white">
+                  <CardContent className="pt-6 bg-white">
                     <form onSubmit={handleSubmit}>
                       <div className="space-y-4">
                         <div>
@@ -614,7 +654,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.companyName}
                             onChange={handleInputChange}
                             placeholder="Unesite naziv vaše kompanije"
-                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -629,7 +669,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.fullName}
                             onChange={handleInputChange}
                             placeholder="Ime i prezime"
-                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -645,7 +685,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="vasa@email.com"
-                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -660,7 +700,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.phone}
                             onChange={handleInputChange}
                             placeholder="+381 6X XXX XXX"
-                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -676,7 +716,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.employeeCount}
                             onChange={handleInputChange}
                             placeholder="Unesite broj"
-                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -691,16 +731,16 @@ export default function OsiguranjeNaKlik() {
                             value={formData.message}
                             onChange={handleInputChange}
                             placeholder="Unesite dodatne informacije..."
-                            className="h-24 rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                            className="h-24 rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                       </div>
                       
                       <Button 
                         type="submit" 
-                        className="w-full mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-sm hover:shadow-md transition-all font-medium text-base"
                       >
-                        Pošalji upit
+                        Podneti upit
                       </Button>
                       <p className="text-xs text-gray-500 mt-4 text-center">
                         Slanjem upita prihvatate našu politiku privatnosti.
