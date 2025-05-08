@@ -121,6 +121,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Osiguranje na klik mini hero section */}
+      <section className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-2/3 mb-6 md:mb-0 md:pr-10">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                Osiguranje zaposlenih - zakonska obaveza
+              </h2>
+              <p className="md:text-lg mb-4 opacity-90">
+                Ispunite zakonsku obavezu osiguranja zaposlenih od povreda na radu i profesionalnih oboljenja.
+              </p>
+              <Button 
+                className="bg-white text-purple-700 hover:bg-purple-100"
+              >
+                <Link href="/osiguranje-na-klik">Saznajte više o osiguranju</Link>
+              </Button>
+            </div>
+            <div className="md:w-1/3 bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/20 shadow-xl">
+              <div className="flex items-start space-x-3">
+                <CheckIcon className="h-6 w-6 text-green-400 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold text-white">Zakonska obaveza</h3>
+                  <p className="text-sm text-white/80">Izbegnite kazne do 1.000.000 RSD</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3 mt-3">
+                <CheckIcon className="h-6 w-6 text-green-400 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold text-white">Jednostavno ugovaranje</h3>
+                  <p className="text-sm text-white/80">Brza procedura bez papirologije</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Qualification Questionnaire Modal */}
       {showQuestionnaire && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
