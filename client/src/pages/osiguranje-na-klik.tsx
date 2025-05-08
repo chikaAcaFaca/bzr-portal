@@ -270,7 +270,7 @@ export default function OsiguranjeNaKlik() {
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <InfoIcon className="h-5 w-5 text-blue-500" />
+                      <Info className="h-5 w-5 text-blue-500" />
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-blue-700">
@@ -322,7 +322,7 @@ export default function OsiguranjeNaKlik() {
                     <ul className="space-y-3">
                       <li className="flex items-start">
                         <div className="bg-orange-100 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0">
-                          <CheckIcon className="h-4 w-4 text-orange-500" />
+                          <Check className="h-4 w-4 text-orange-500" />
                         </div>
                         <span>Ispunjavanje zakonske obaveze</span>
                       </li>
@@ -412,7 +412,7 @@ export default function OsiguranjeNaKlik() {
                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 my-6">
                   <div className="flex">
                     <div className="flex-shrink-0">
-                      <AlertCircleIcon className="h-5 w-5 text-yellow-500" />
+                      <AlertCircle className="h-5 w-5 text-yellow-500" />
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-yellow-700">
