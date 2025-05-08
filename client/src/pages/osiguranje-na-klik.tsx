@@ -406,107 +406,148 @@ export default function OsiguranjeNaKlik() {
                   <li><strong>Prethodno iskustvo</strong> - istorija šteta može uticati na visinu premije</li>
                 </ul>
 
-                <h2>Proces ugovaranja osiguranja zaposlenih</h2>
+                <h2 className="text-2xl font-bold text-orange-600 mt-10 mb-6">Proces ugovaranja osiguranja zaposlenih</h2>
                 <p>
                   Proces ugovaranja kolektivnog osiguranja zaposlenih obično prati sledeće korake:
                 </p>
-                <ol className="space-y-4 my-6">
-                  <li className="flex items-start">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
-                    <div>
-                      <strong>Analiza potreba</strong>
-                      <p className="text-gray-600 mt-1">
+                
+                <ul className="list-none space-y-6 my-8" ref={processRef}>
+                  <li 
+                    className={`flex items-start transition-all hover:-translate-y-1 
+                      ${isProcessVisible ? 'animate-fade-in-down' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.1s' }}
+                  >
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-md">
+                      <span className="font-bold">1</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-md border border-orange-100 flex-1 hover:shadow-lg transition-all">
+                      <strong className="text-lg text-orange-600">Analiza potreba</strong>
+                      <p className="text-gray-700 mt-2">
                         Procena specifičnih rizika u vašoj delatnosti i potreba zaposlenih.
                       </p>
                     </div>
                   </li>
-                  <li className="flex items-start">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
-                    <div>
-                      <strong>Prikupljanje ponuda</strong>
-                      <p className="text-gray-600 mt-1">
+                  <li 
+                    className={`flex items-start transition-all hover:-translate-y-1 
+                      ${isProcessVisible ? 'animate-fade-in-down' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-md">
+                      <span className="font-bold">2</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-md border border-orange-100 flex-1 hover:shadow-lg transition-all">
+                      <strong className="text-lg text-orange-600">Prikupljanje ponuda</strong>
+                      <p className="text-gray-700 mt-2">
                         Kontaktiranje više osiguravajućih društava radi dobijanja ponuda.
                       </p>
                     </div>
                   </li>
-                  <li className="flex items-start">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
-                    <div>
-                      <strong>Poređenje ponuda</strong>
-                      <p className="text-gray-600 mt-1">
+                  <li 
+                    className={`flex items-start transition-all hover:-translate-y-1 
+                      ${isProcessVisible ? 'animate-fade-in-down' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-md">
+                      <span className="font-bold">3</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-md border border-orange-100 flex-1 hover:shadow-lg transition-all">
+                      <strong className="text-lg text-orange-600">Poređenje ponuda</strong>
+                      <p className="text-gray-700 mt-2">
                         Analiza uslova osiguranja, cena i dodatnih pogodnosti koje osiguravači nude.
                       </p>
                     </div>
                   </li>
-                  <li className="flex items-start">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</div>
-                    <div>
-                      <strong>Ugovaranje polise</strong>
-                      <p className="text-gray-600 mt-1">
+                  <li 
+                    className={`flex items-start transition-all hover:-translate-y-1 
+                      ${isProcessVisible ? 'animate-fade-in-down' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.4s' }}
+                  >
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-md">
+                      <span className="font-bold">4</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-md border border-orange-100 flex-1 hover:shadow-lg transition-all">
+                      <strong className="text-lg text-orange-600">Ugovaranje polise</strong>
+                      <p className="text-gray-700 mt-2">
                         Potpisivanje ugovora o osiguranju sa izabranim osiguravačem.
                       </p>
                     </div>
                   </li>
-                  <li className="flex items-start">
-                    <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">5</div>
-                    <div>
-                      <strong>Plaćanje premije</strong>
-                      <p className="text-gray-600 mt-1">
+                  <li 
+                    className={`flex items-start transition-all hover:-translate-y-1 
+                      ${isProcessVisible ? 'animate-fade-in-down' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.5s' }}
+                  >
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center mr-4 shadow-md">
+                      <span className="font-bold">5</span>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-md border border-orange-100 flex-1 hover:shadow-lg transition-all">
+                      <strong className="text-lg text-orange-600">Plaćanje premije</strong>
+                      <p className="text-gray-700 mt-2">
                         Premija se može platiti jednokratno ili u ratama, zavisno od dogovora.
                       </p>
                     </div>
                   </li>
-                </ol>
+                </ul>
 
-                <h2>Često postavljana pitanja</h2>
-                <Accordion type="single" collapsible className="my-6">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-left">Da li se moraju osigurati svi zaposleni?</AccordionTrigger>
-                    <AccordionContent>
+                <h2 className="text-2xl font-bold text-orange-600 mt-10 mb-6">Često postavljana pitanja</h2>
+                <Accordion type="single" collapsible className="my-6 border border-orange-100 rounded-xl overflow-hidden">
+                  <AccordionItem value="item-1" className="border-orange-100 px-1">
+                    <AccordionTrigger className="text-left py-4 text-orange-800 hover:text-orange-600">
+                      Da li se moraju osigurati svi zaposleni?
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-orange-50/50 rounded-lg p-4 text-gray-700">
                       Da, zakonska obaveza podrazumeva osiguranje svih zaposlenih. Polisa kolektivnog osiguranja obično pokriva sve zaposlene u kompaniji, bez obzira na vrstu ugovora o radu (stalni radni odnos, privremeni i povremeni poslovi, itd.).
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="item-2">
-                    <AccordionTrigger className="text-left">Šta pokriva osiguranje od nezgode?</AccordionTrigger>
-                    <AccordionContent>
+                  <AccordionItem value="item-2" className="border-orange-100 px-1">
+                    <AccordionTrigger className="text-left py-4 text-orange-800 hover:text-orange-600">
+                      Šta pokriva osiguranje od nezgode?
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-orange-50/50 rounded-lg p-4 text-gray-700">
                       Standardno pokriće uključuje smrt usled nezgode, trajni invaliditet, troškove lečenja i dnevne naknade. Moguće je ugovoriti i dodatna pokrića prema potrebama kompanije i zaposlenih, kao što su hirurške intervencije, prelomi kostiju, itd.
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="item-3">
-                    <AccordionTrigger className="text-left">Koliko košta osiguranje zaposlenih?</AccordionTrigger>
-                    <AccordionContent>
+                  <AccordionItem value="item-3" className="border-orange-100 px-1">
+                    <AccordionTrigger className="text-left py-4 text-orange-800 hover:text-orange-600">
+                      Koliko košta osiguranje zaposlenih?
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-orange-50/50 rounded-lg p-4 text-gray-700">
                       Cena zavisi od više faktora, uključujući delatnost kompanije, broj zaposlenih i visinu osiguranih suma. Za male i srednje firme, cena po zaposlenom može iznositi od nekoliko stotina do nekoliko hiljada dinara godišnje, zavisno od obima pokrića.
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="item-4">
-                    <AccordionTrigger className="text-left">Šta ako zaposleni napusti kompaniju tokom osiguranog perioda?</AccordionTrigger>
-                    <AccordionContent>
+                  <AccordionItem value="item-4" className="border-orange-100 px-1">
+                    <AccordionTrigger className="text-left py-4 text-orange-800 hover:text-orange-600">
+                      Šta ako zaposleni napusti kompaniju tokom osiguranog perioda?
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-orange-50/50 rounded-lg p-4 text-gray-700">
                       U slučaju fluktuacije zaposlenih, moguće je ugovoriti polisu na osnovu spiska zaposlenih koji se periodično ažurira. Neki osiguravači nude i opciju osiguranja zasnovanu na broju zaposlenih bez potrebe za dostavljanjem pojedinačnih podataka.
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="item-5">
-                    <AccordionTrigger className="text-left">Kako se prijavljuje šteta u slučaju nezgode?</AccordionTrigger>
-                    <AccordionContent>
+                  <AccordionItem value="item-5" className="border-orange-100 px-1">
+                    <AccordionTrigger className="text-left py-4 text-orange-800 hover:text-orange-600">
+                      Kako se prijavljuje šteta u slučaju nezgode?
+                    </AccordionTrigger>
+                    <AccordionContent className="bg-orange-50/50 rounded-lg p-4 text-gray-700">
                       Procedura obično uključuje popunjavanje obrasca za prijavu štete, dostavljanje medicinske dokumentacije koja potvrđuje nezgodu i posledice, i eventualno drugih dokumenata koje zatraži osiguravač. Prijava se obično može izvršiti online, telefonom ili lično u poslovnici osiguravajućeg društva.
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
 
-                <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 my-8">
-                  <h3 className="text-xl font-bold mb-4 text-primary-800">Zaključak</h3>
-                  <p className="mb-4">
+                <div className="bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-xl p-8 my-8 shadow-md">
+                  <h3 className="text-2xl font-bold mb-4 text-orange-600">Zaključak</h3>
+                  <p className="mb-4 text-gray-700">
                     Kolektivno osiguranje zaposlenih od posledica nesrećnog slučaja nije samo zakonska obaveza, već i mudra investicija koja štiti i poslodavca i zaposlene od finansijskih posledica nezgoda.
                   </p>
-                  <p>
+                  <p className="text-gray-700">
                     Kroz minimalna ulaganja, poslodavci mogu obezbediti adekvatnu zaštitu za svoje zaposlene, ispuniti zakonske obaveze, i istovremeno povećati zadovoljstvo i lojalnost zaposlenih.
                   </p>
-                  <div className="mt-6">
+                  <div className="mt-8">
                     <Button 
                       onClick={() => {
                         const contactForm = document.getElementById('contact-form');
                         if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
                       }}
-                      className="gap-2"
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-md hover:shadow-lg transition-all gap-2 rounded-full px-6"
                     >
                       <span>Zatražite ponudu danas</span>
                       <ArrowRightIcon className="h-4 w-4" />
@@ -520,16 +561,24 @@ export default function OsiguranjeNaKlik() {
             <div className="lg:col-span-1">
               <div className="space-y-8 sticky top-24">
                 {/* Contact Card */}
-                <Card id="contact-form" className="shadow-md border-primary/10">
-                  <CardHeader className="bg-primary text-white">
-                    <CardTitle>Zatražite ponudu</CardTitle>
+                <Card 
+                  id="contact-form" 
+                  ref={contactFormRef}
+                  className={`shadow-xl rounded-xl overflow-hidden border-orange-100 transition-all transform
+                    ${isContactFormVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
+                >
+                  <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                    <CardTitle className="text-xl flex items-center">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      Zatražite besplatnu ponudu
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-6">
+                  <CardContent className="pt-6 bg-gradient-to-b from-orange-50/80 to-white">
                     <form onSubmit={handleSubmit}>
                       <div className="space-y-4">
                         <div>
                           <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Naziv kompanije <span className="text-red-500">*</span>
+                            Naziv kompanije <span className="text-orange-500">*</span>
                           </label>
                           <Input
                             id="companyName"
@@ -537,13 +586,14 @@ export default function OsiguranjeNaKlik() {
                             value={formData.companyName}
                             onChange={handleInputChange}
                             placeholder="Unesite naziv vaše kompanije"
+                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
                         
                         <div>
                           <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                            Kontakt osoba <span className="text-red-500">*</span>
+                            Kontakt osoba <span className="text-orange-500">*</span>
                           </label>
                           <Input
                             id="fullName"
@@ -551,13 +601,14 @@ export default function OsiguranjeNaKlik() {
                             value={formData.fullName}
                             onChange={handleInputChange}
                             placeholder="Ime i prezime"
+                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
                         
                         <div>
                           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                            Email <span className="text-red-500">*</span>
+                            Email <span className="text-orange-500">*</span>
                           </label>
                           <Input
                             id="email"
@@ -566,13 +617,14 @@ export default function OsiguranjeNaKlik() {
                             value={formData.email}
                             onChange={handleInputChange}
                             placeholder="vasa@email.com"
+                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
                         
                         <div>
                           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                            Telefon <span className="text-red-500">*</span>
+                            Telefon <span className="text-orange-500">*</span>
                           </label>
                           <Input
                             id="phone"
@@ -580,13 +632,14 @@ export default function OsiguranjeNaKlik() {
                             value={formData.phone}
                             onChange={handleInputChange}
                             placeholder="+381 6X XXX XXX"
+                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
                         
                         <div>
                           <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
-                            Broj zaposlenih <span className="text-red-500">*</span>
+                            Broj zaposlenih <span className="text-orange-500">*</span>
                           </label>
                           <Input
                             id="employeeCount"
@@ -595,6 +648,7 @@ export default function OsiguranjeNaKlik() {
                             value={formData.employeeCount}
                             onChange={handleInputChange}
                             placeholder="Unesite broj"
+                            className="rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                             required
                           />
                         </div>
@@ -609,12 +663,15 @@ export default function OsiguranjeNaKlik() {
                             value={formData.message}
                             onChange={handleInputChange}
                             placeholder="Unesite dodatne informacije..."
-                            className="h-24"
+                            className="h-24 rounded-lg border-orange-200 focus:border-orange-500 focus:ring-orange-500"
                           />
                         </div>
                       </div>
                       
-                      <Button type="submit" className="w-full mt-6">
+                      <Button 
+                        type="submit" 
+                        className="w-full mt-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                      >
                         Pošalji upit
                       </Button>
                       <p className="text-xs text-gray-500 mt-4 text-center">
