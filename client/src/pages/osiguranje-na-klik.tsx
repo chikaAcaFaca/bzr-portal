@@ -267,7 +267,7 @@ export default function OsiguranjeNaKlik() {
                               onChange={handleInputChange}
                               required
                               placeholder="Unesite naziv firme"
-                              className="w-full"
+                              className="w-full text-gray-900"
                             />
                           </div>
                           
@@ -280,7 +280,7 @@ export default function OsiguranjeNaKlik() {
                               onChange={handleInputChange}
                               required
                               placeholder="Unesite vaše ime i prezime"
-                              className="w-full"
+                              className="w-full text-gray-900"
                             />
                           </div>
                           
@@ -294,7 +294,7 @@ export default function OsiguranjeNaKlik() {
                               onChange={handleInputChange}
                               required
                               placeholder="Unesite email adresu"
-                              className="w-full"
+                              className="w-full text-gray-900"
                             />
                           </div>
                           
@@ -307,7 +307,7 @@ export default function OsiguranjeNaKlik() {
                               onChange={handleInputChange}
                               required
                               placeholder="Unesite broj telefona"
-                              className="w-full"
+                              className="w-full text-gray-900"
                             />
                           </div>
 
@@ -320,7 +320,7 @@ export default function OsiguranjeNaKlik() {
                               onChange={handleInputChange}
                               required
                               placeholder="Unesite broj zaposlenih"
-                              className="w-full"
+                              className="w-full text-gray-900"
                             />
                           </div>
                           
@@ -332,7 +332,7 @@ export default function OsiguranjeNaKlik() {
                               value={formData.message}
                               onChange={handleInputChange}
                               placeholder="Unesite dodatne napomene ili pitanja"
-                              className="w-full min-h-[80px]"
+                              className="w-full min-h-[80px] text-gray-900"
                             />
                           </div>
                         </div>
