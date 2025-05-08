@@ -255,13 +255,104 @@ export default function OsiguranjeNaKlik() {
                   <div className="flex items-center justify-center">
                     <div className="py-6 px-8 bg-orange-50 rounded-xl border border-orange-100 shadow-md hover:shadow-lg transition-all">
                       <h3 className="text-2xl font-bold text-orange-600 mb-4">Zatražite ponudu danas</h3>
-                      <p className="text-gray-700 mb-6">
-                        Kliknite na dugme "Podneti upit" kako biste dobili besplatnu ponudu za osiguranje vaših zaposlenih.
-                      </p>
-                      <div className="flex items-center space-x-4 text-gray-700">
-                        <CheckCircle className="h-5 w-5 text-orange-500" />
-                        <span>Odgovor u roku od 24h</span>
-                      </div>
+                      
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="space-y-2">
+                            <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">Naziv firme *</label>
+                            <Input
+                              id="companyName"
+                              name="companyName"
+                              value={formData.companyName}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Unesite naziv firme"
+                              className="w-full"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Vaše ime i prezime *</label>
+                            <Input
+                              id="fullName"
+                              name="fullName"
+                              value={formData.fullName}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Unesite vaše ime i prezime"
+                              className="w-full"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email adresa *</label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Unesite email adresu"
+                              className="w-full"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Telefon *</label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Unesite broj telefona"
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700">Broj zaposlenih *</label>
+                            <Input
+                              id="employeeCount"
+                              name="employeeCount"
+                              value={formData.employeeCount}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Unesite broj zaposlenih"
+                              className="w-full"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label htmlFor="message" className="block text-sm font-medium text-gray-700">Dodatna poruka</label>
+                            <Textarea
+                              id="message"
+                              name="message"
+                              value={formData.message}
+                              onChange={handleInputChange}
+                              placeholder="Unesite dodatne napomene ili pitanja"
+                              className="w-full min-h-[80px]"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4 text-gray-700 bg-orange-50 p-3 rounded-md border border-orange-100">
+                          <CheckCircle className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                          <span className="text-sm">Odgovor sa ponudom u roku od 24h</span>
+                        </div>
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold"
+                        >
+                          Pošaljite upit
+                        </Button>
+                        
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                          Vaši podaci će biti korišćeni isključivo za kreiranje ponude za osiguranje.
+                        </p>
+                      </form>
                     </div>
                   </div>
                 </div>
