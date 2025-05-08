@@ -184,56 +184,177 @@ export default function OsiguranjeNaKlik() {
         <div className="absolute right-1/4 bottom-12 w-20 h-20 bg-white/10 rounded-full backdrop-blur-sm"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className={`w-fit mx-auto mb-6 px-4 py-1.5 bg-orange-700/30 rounded-full text-white text-sm font-medium border border-white/20 
-              ${isHeroVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
-              style={{ animationDelay: '0.1s' }}
-            >
-              ZAKONSKA OBAVEZA
-            </div>
-            <h1 
-              className={`text-3xl md:text-5xl font-bold mb-4 leading-tight 
-                ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
-              style={{ animationDelay: '0.3s' }}
-            >
-              Osiguranje zaposlenih od posledica nesrećnog slučaja
-            </h1>
-            <p 
-              className={`text-lg md:text-xl opacity-90 mb-8 max-w-3xl mx-auto 
-                ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
-              style={{ animationDelay: '0.5s' }}
-            >
-              Saznajte sve o kolektivnom osiguranju zaposlenih - zakonskim obavezama, prednostima, uporednim ponudama i koracima za dobijanje optimalnog rešenja
-            </p>
-            <div className={`flex flex-wrap justify-center gap-4 
-              ${isHeroVisible ? 'animate-bounce-in' : 'opacity-0'}`}
-              style={{ animationDelay: '0.7s' }}
-            >
-              <Button 
-                size="lg" 
-                className="bg-white text-orange-600 hover:bg-orange-50 shadow-md hover:shadow-lg transition-all"
-                onClick={() => {
-                  const contactForm = document.getElementById('contact-form');
-                  if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                ZATRAŽITE PONUDU
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="text-white border-white/80 hover:bg-white/10 transition-all"
-                onClick={() => {
-                  const benefitsSection = document.getElementById('prednosti');
-                  if (benefitsSection) benefitsSection.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                SAZNAJTE VIŠE
-              </Button>
+          <div className="max-w-5xl mx-auto">
+            
+            {/* Flex container za dve kolone - naslov i forma */}
+            <div className="flex flex-col lg:flex-row gap-8 items-center">
+              
+              {/* Leva kolona - glavni naslov */}
+              <div className="lg:w-1/2 text-center lg:text-left">
+                <div className={`w-fit mb-6 mx-auto lg:mx-0 px-4 py-1.5 bg-orange-700/30 rounded-full text-white text-sm font-medium border border-white/20 
+                  ${isHeroVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
+                  style={{ animationDelay: '0.1s' }}
+                >
+                  ZAKONSKA OBAVEZA
+                </div>
+                <h1 
+                  className={`text-3xl md:text-5xl font-bold mb-4 leading-tight 
+                    ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+                  style={{ animationDelay: '0.3s' }}
+                >
+                  Osiguranje zaposlenih
+                </h1>
+                <p 
+                  className={`text-lg md:text-xl opacity-90 mb-8 
+                    ${isHeroVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+                  style={{ animationDelay: '0.5s' }}
+                >
+                  Kolektivno osiguranje vaših zaposlenih - brzo i jednostavno. Ispunite zakonsku obavezu već danas!
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="text-white border-white/80 hover:bg-white/10 transition-all hidden lg:inline-flex"
+                  onClick={() => {
+                    const benefitsSection = document.getElementById('prednosti');
+                    if (benefitsSection) benefitsSection.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  SAZNAJTE VIŠE
+                </Button>
+              </div>
+              
+              {/* Desna kolona - kontakt forma */}
+              <div className="lg:w-1/2">
+                <Card 
+                  id="contact-form" 
+                  ref={contactFormRef}
+                  className={`shadow-xl rounded-xl overflow-hidden border-orange-100 transition-all transform
+                    ${isHeroVisible ? 'animate-fade-in-scale' : 'opacity-0'}`}
+                  style={{ animationDelay: '0.5s' }}
+                >
+                  <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                    <CardTitle className="text-xl flex items-center">
+                      <MessageSquare className="h-5 w-5 mr-2" />
+                      Zatražite besplatnu ponudu
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 bg-white">
+                    <form onSubmit={handleSubmit}>
+                      <div className="space-y-4">
+                        <div>
+                          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Naziv kompanije <span className="text-orange-500">*</span>
+                          </label>
+                          <Input
+                            id="companyName"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Unesite naziv vaše kompanije"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                            Kontakt osoba <span className="text-orange-500">*</span>
+                          </label>
+                          <Input
+                            id="fullName"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleInputChange}
+                            placeholder="Ime i prezime"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                              Email <span className="text-orange-500">*</span>
+                            </label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              placeholder="vasa@email.com"
+                              className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                              Telefon <span className="text-orange-500">*</span>
+                            </label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              placeholder="+381 6X XXX XXX"
+                              className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="employeeCount" className="block text-sm font-medium text-gray-700 mb-1">
+                            Broj zaposlenih <span className="text-orange-500">*</span>
+                          </label>
+                          <Input
+                            id="employeeCount"
+                            name="employeeCount"
+                            type="number"
+                            value={formData.employeeCount}
+                            onChange={handleInputChange}
+                            placeholder="Unesite broj"
+                            className="rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                            Dodatne napomene
+                          </label>
+                          <Textarea
+                            id="message"
+                            name="message"
+                            value={formData.message}
+                            onChange={handleInputChange}
+                            placeholder="Unesite dodatne informacije..."
+                            className="h-24 rounded-md border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                          />
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md shadow-lg hover:shadow-xl transition-all font-medium text-base text-lg relative hover:scale-105 animate-pulse-slow"
+                        style={{ animationDuration: '2s' }}
+                      >
+                        <span className="relative z-10">Podneti upit</span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-400 rounded-md opacity-0 hover:opacity-100 transition-opacity"></span>
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-4 text-center">
+                        Slanjem upita prihvatate našu politiku privatnosti.
+                      </p>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
             
-            {/* Prednosti kartice ispod glavnog naslova */}
-            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 
+            {/* Prednosti kartice ispod glavnog naslova - samo na mobilnom prikazu */}
+            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 lg:hidden
               ${isHeroVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
               style={{ animationDelay: '0.9s' }}
             >
@@ -261,10 +382,6 @@ export default function OsiguranjeNaKlik() {
               </div>
               <div 
                 className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all cursor-pointer"
-                onClick={() => {
-                  const contactForm = document.getElementById('contact-form');
-                  if (contactForm) contactForm.scrollIntoView({ behavior: 'smooth' });
-                }}
               >
                 <Mail className="h-8 w-8 text-amber-300 mx-auto mb-2" />
                 <h3 className="font-bold text-lg">Besplatna ponuda</h3>
