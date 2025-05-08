@@ -45,6 +45,17 @@ export default function Header() {
                   <span className="font-bold text-xl gradient-heading cursor-pointer">BZR Portal</span>
                 </Link>
               </div>
+              <div className="hidden md:flex space-x-4 ml-6">
+                <Link href="/">
+                  <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer px-3 py-2">Početna</span>
+                </Link>
+                <Link href="/osiguranje-na-klik">
+                  <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer px-3 py-2">Osiguranje na klik</span>
+                </Link>
+                <Link href="/blog">
+                  <span className="text-muted-foreground hover:text-primary transition-colors cursor-pointer px-3 py-2">Blog</span>
+                </Link>
+              </div>
               <ol className="flex text-sm items-center">
                 <li className="flex items-center">
                   <Link href="/">

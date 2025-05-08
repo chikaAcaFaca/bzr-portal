@@ -34,6 +34,7 @@ import ResetPassword from "./pages/reset-password";
 import FileUtils from "./pages/file-utils";
 import LandingPage from "./pages/landing-page";
 import TestEmail from "./pages/test-email";
+import OsiguranjeNaKlik from "./pages/osiguranje-na-klik";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -65,6 +66,11 @@ function Router() {
         <RedirectIfAuthenticated>
           <AuthPage />
         </RedirectIfAuthenticated>
+      </Route>
+      
+      {/* Javna stranica - Osiguranje na klik */}
+      <Route path="/osiguranje-na-klik">
+        <OsiguranjeNaKlik />
       </Route>
       
       {/* Javne stranice - blog */}

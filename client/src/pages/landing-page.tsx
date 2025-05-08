@@ -454,6 +454,7 @@ export default function LandingPage() {
               <ul className="space-y-2">
                 <li><Link href="/auth" className="text-gray-400 hover:text-white">Prijava</Link></li>
                 <li><Link href="/blog" className="text-gray-400 hover:text-white">Blog</Link></li>
+                <li><Link href="/osiguranje-na-klik" className="text-gray-400 hover:text-white">Osiguranje na klik</Link></li>
                 <li><a href="#" className="text-gray-400 hover:text-white">O nama</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white">Kontakt</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-white">Uslovi korišćenja</a></li>
