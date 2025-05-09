@@ -450,6 +450,19 @@ export default function OsiguranjeNaKlik() {
                 <p>
                   Ovaj vid osiguranja predviđen je kao <strong>zakonska obaveza poslodavca</strong> prema Zakonu o bezbednosti i zdravlju na radu. Tačnije, član 67. ovog zakona propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom, radi obezbeđivanja naknade štete.
                 </p>
+                <div className="bg-orange-50 border-l-4 border-orange-500 p-4 my-4 rounded-r-md shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-start space-x-3">
+                    <Info className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        <strong>Novo!</strong> Pročitajte detaljnije o zakonskim obavezama i kaznenim odredbama za nepoštovanje člana 67. u našem blogu:
+                      </p>
+                      <Link href="/blog/kaznene-odredbe-zakona-o-bezbednosti-i-zdravlju-na-radu-obaveza-osiguranja-zaposlenih" className="text-sm font-medium text-orange-600 hover:text-orange-700 underline mt-1 inline-block transition-colors">
+                        Kaznene odredbe Zakona o bezbednosti i zdravlju na radu: Obaveza osiguranja zaposlenih →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
 
                 <h2>Osnovni rizici pokriveni osiguranjem zaposlenih</h2>
                 <p>

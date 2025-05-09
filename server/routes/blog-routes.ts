@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
 import { transliterate } from '../utils/transliterate';
 import { SitemapService } from '../services/sitemap-service';
+import { addPenaltyBlogPost } from '../scripts/add-penalty-blog-post';
 
 /**
  * Postavljanje ruta za blogove
@@ -359,5 +360,44 @@ export async function setupBlogRoutes(app: any) {
     }
   });
 
+  /**
+   * Endpoint za dodavanje blog posta o kaznenim odredbama (samo admin)
+   * 
+   * @route GET /api/blog/add-penalty-blog-post
+   */
+  router.get('/add-penalty-blog-post', async (req: Request, res: Response) => {
+    try {
+      // Provera autorizacije - samo admin može kreirati ovaj blog post
+      if (!req.user || (req.user as any).role !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'Samo administrator može dodati ovaj blog post'
+        });
+      }
+      
+      // Pozivanje funkcije za dodavanje blog posta
+      const blogId = await addPenaltyBlogPost();
+      
+      // Ažuriranje sitemap-a
+      await updateSitemap(req);
+      
+      // Vraćanje URL-a do kreiranog blog posta
+      const slug = 'kaznene-odredbe-zakona-o-bezbednosti-i-zdravlju-na-radu-obaveza-osiguranja-zaposlenih';
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Blog post o kaznenim odredbama uspešno kreiran',
+        id: blogId,
+        url: `/blog/${slug}`
+      });
+    } catch (error: any) {
+      console.error('Greška pri dodavanju blog posta o kaznenim odredbama:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Došlo je do greške pri dodavanju blog posta o kaznenim odredbama'
+      });
+    }
+  });
+  
   app.use('/api/blog', router);
 }

@@ -1,66 +1,71 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="1200" height="600" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Gradient pozadina -->
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient background -->
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FF8A00;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FF4D00;stop-opacity:0.8" />
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff7043" />
+      <stop offset="100%" stop-color="#ff5722" />
     </linearGradient>
-    <filter id="shadow1" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.3"/>
+    <!-- Drop shadow for text -->
+    <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
     </filter>
-    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.2"/>
-    </filter>
+    <!-- Abstract shapes with transparency -->
+    <clipPath id="wavyClip">
+      <path d="M0,250 Q300,200 600,250 T1200,250 V630 H0 Z" />
+    </clipPath>
   </defs>
   
-  <!-- Pozadina -->
-  <rect width="1200" height="600" fill="url(#grad1)" />
+  <!-- Main background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
   
-  <!-- Elementi kaznenih odredbi -->
-  <rect x="100" y="150" width="400" height="300" rx="20" fill="#FFFFFF" filter="url(#shadow1)" opacity="0.95" />
-  <rect x="700" y="150" width="400" height="300" rx="20" fill="#FFFFFF" filter="url(#shadow1)" opacity="0.95" />
+  <!-- Abstract design elements -->
+  <path d="M0,250 Q300,200 600,250 T1200,250 V630 H0 Z" fill="#ffffff" fill-opacity="0.1"/>
+  <g opacity="0.15">
+    <circle cx="150" cy="150" r="100" fill="#ffffff"/>
+    <circle cx="1050" cy="500" r="120" fill="#ffffff"/>
+    <circle cx="950" cy="120" r="70" fill="#ffffff"/>
+    <circle cx="250" cy="480" r="90" fill="#ffffff"/>
+  </g>
   
-  <!-- Simboli za kaznene odredbe -->
-  <circle cx="160" cy="200" r="30" fill="#FF5533" />
-  <text x="145" y="210" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#FFFFFF">§</text>
+  <!-- Abstract design elements - patterns -->
+  <g opacity="0.07">
+    <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#ffffff" stroke-width="20" stroke-dasharray="40,20"/>
+  </g>
   
-  <circle cx="760" cy="200" r="30" fill="#FF5533" />
-  <text x="745" y="210" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#FFFFFF">§</text>
+  <!-- Document icon -->
+  <g transform="translate(150, 315) scale(0.5)">
+    <rect x="-80" y="-120" width="160" height="200" rx="5" ry="5" fill="#ffffff"/>
+    <line x1="-50" y1="-80" x2="50" y2="-80" stroke="#ff5722" stroke-width="12"/>
+    <line x1="-50" y1="-40" x2="50" y2="-40" stroke="#ff5722" stroke-width="12"/>
+    <line x1="-50" y1="0" x2="30" y2="0" stroke="#ff5722" stroke-width="12"/>
+    <rect x="-50" y="40" width="100" height="30" rx="5" ry="5" fill="#ff5722"/>
+  </g>
   
-  <!-- Tekst o kaznenim odredbama -->
-  <text x="600" y="80" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="url(#shadow2)">KAZNENE ODREDBE</text>
-  <text x="600" y="120" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#FFFFFF" text-anchor="middle" filter="url(#shadow2)">Zakon o bezbednosti i zdravlju na radu</text>
+  <!-- Warning symbol -->
+  <g transform="translate(1050, 315) scale(0.5)">
+    <path d="M-70,75 L0,-75 L70,75 Z" fill="#ffffff"/>
+    <path d="M0,-40 L0,20 Z" stroke="#ff5722" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="0" cy="45" r="8" fill="#ff5722"/>
+  </g>
   
-  <!-- Leva kolona -->
-  <text x="300" y="200" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FF5533" text-anchor="middle">Član 67.</text>
-  <text x="300" y="230" font-family="Arial, sans-serif" font-size="16" fill="#333333" text-anchor="middle">Obaveza osiguranja zaposlenih</text>
+  <!-- Title text -->
+  <g filter="url(#textShadow)">
+    <text x="600" y="200" font-family="Arial, sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="middle">Kaznene odredbe Zakona o</text>
+    <text x="600" y="270" font-family="Arial, sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="middle">bezbednosti i zdravlju na radu</text>
+  </g>
   
-  <text x="130" y="270" font-family="Arial, sans-serif" font-size="14" fill="#333333">• Poslodavac je dužan da zaposlene osigura</text>
-  <text x="130" y="295" font-family="Arial, sans-serif" font-size="14" fill="#333333">• Povrede na radu</text>
-  <text x="130" y="320" font-family="Arial, sans-serif" font-size="14" fill="#333333">• Profesionalna oboljenja</text>
-  <text x="130" y="345" font-family="Arial, sans-serif" font-size="14" fill="#333333">• Oboljenja u vezi sa radom</text>
+  <!-- Subtitle -->
+  <text x="600" y="340" font-family="Arial, sans-serif" font-size="36" fill="#ffffff" text-anchor="middle" opacity="0.9">Obaveza osiguranja zaposlenih</text>
   
-  <text x="300" y="390" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FF5533" text-anchor="middle">ZAKONSKA OBAVEZA</text>
-  <text x="300" y="415" font-family="Arial, sans-serif" font-size="12" fill="#333333" text-anchor="middle">Radi obezbeđivanja naknade štete</text>
+  <!-- Footer text -->
+  <g transform="translate(600, 520)">
+    <rect x="-250" y="-30" width="500" height="60" rx="30" ry="30" fill="#ffffff" fill-opacity="0.2"/>
+    <text x="0" y="12" font-family="Arial, sans-serif" font-size="28" fill="#ffffff" text-anchor="middle">Član 67. Zakona o BZR</text>
+  </g>
   
-  <!-- Desna kolona -->
-  <text x="900" y="200" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FF5533" text-anchor="middle">Kazne za nepoštovanje</text>
-  
-  <text x="730" y="250" font-family="Arial, sans-serif" font-size="14" fill="#333333">Pravno lice:</text>
-  <text x="980" y="250" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333333" text-anchor="end">1.000.000 - 1.500.000 din</text>
-  
-  <text x="730" y="290" font-family="Arial, sans-serif" font-size="14" fill="#333333">Odgovorno lice:</text>
-  <text x="980" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333333" text-anchor="end">30.000 - 150.000 din</text>
-  
-  <text x="730" y="330" font-family="Arial, sans-serif" font-size="14" fill="#333333">Preduzetnik:</text>
-  <text x="980" y="330" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333333" text-anchor="end">200.000 - 400.000 din</text>
-  
-  <text x="900" y="390" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FF5533" text-anchor="middle">ČLAN 101. TAČKA 20.</text>
-  <text x="900" y="415" font-family="Arial, sans-serif" font-size="12" fill="#333333" text-anchor="middle">Službeni glasnik RS, broj 35/2023</text>
-  
-  <!-- Pečat (simulacija) -->
-  <circle cx="600" cy="500" r="50" fill="#FF3300" opacity="0.8" />
-  <text x="600" y="510" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BZR</text>
-  <text x="600" y="530" font-family="Arial, sans-serif" font-size="10" fill="#FFFFFF" text-anchor="middle">PORTAL</text>
+  <!-- BZR Portal logo watermark -->
+  <g transform="translate(600, 590)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" opacity="0.7">BZR Portal</text>
+  </g>
 </svg>
