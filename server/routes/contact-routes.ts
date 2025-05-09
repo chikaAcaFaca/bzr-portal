@@ -33,37 +33,59 @@ router.post('/send-insurance-inquiry', async (req: Request, res: Response) => {
       });
     }
 
-    // Kreiranje HTML sadržaja emaila
+    // Kreiranje HTML sadržaja emaila za administratora
     const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
+      <meta charset="utf-8">
+      <title>Novi kvalifikovani lead za osiguranje</title>
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         h1 { color: #f97316; }
         .info-block { background-color: #f8fafc; border-left: 4px solid #f97316; padding: 15px; margin-bottom: 20px; }
         .label { font-weight: bold; color: #334155; }
+        .priority-box { background-color: #fff8e1; border: 2px dashed #ffc107; padding: 15px; margin-bottom: 20px; }
+        .priority-title { color: #f59e0b; font-size: 18px; font-weight: bold; }
+        .action-box { background-color: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin-top: 20px; }
+        .contact-button { display: inline-block; background-color: #f97316; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; margin-top: 10px; }
       </style>
     </head>
     <body>
       <div class="container">
-        <h1>Nov upit za osiguranje zaposlenih</h1>
+        <h1>NOVI LEAD ZA OSIGURANJE!</h1>
         
-        <p>Primili ste nov upit za osiguranje zaposlenih preko sajta BZR Portal.</p>
+        <div class="priority-box">
+          <p class="priority-title">⚡ PRIORITETNO: KVALIFIKOVANI LEAD</p>
+          <p>Primili ste novi kvalifikovani lead za osiguranje zaposlenih preko sajta BZR Portal.</p>
+          <p>Ovaj lead zahteva brzu reakciju kako bi se osigurala konverzija.</p>
+        </div>
         
         <div class="info-block">
           <p><span class="label">Kompanija:</span> ${companyName}</p>
-          <p><span class="label">Ime i prezime:</span> ${fullName}</p>
-          <p><span class="label">Email:</span> ${email}</p>
-          <p><span class="label">Telefon:</span> ${phone}</p>
+          <p><span class="label">Kontakt osoba:</span> ${fullName}</p>
+          <p><span class="label">Email:</span> <a href="mailto:${email}">${email}</a></p>
+          <p><span class="label">Telefon:</span> <a href="tel:${phone}">${phone}</a></p>
           <p><span class="label">Broj zaposlenih:</span> ${employeeCount || 'Nije navedeno'}</p>
         </div>
         
-        <h2>Poruka:</h2>
+        <h2>Poruka klijenta:</h2>
         <p>${message || 'Klijent nije uneo dodatnu poruku.'}</p>
         
-        <p>Ovaj email je automatski generisan, molimo Vas da ne odgovarate na njega.</p>
+        <div class="action-box">
+          <h3>Preporučene akcije:</h3>
+          <ol>
+            <li>Kontaktirajte klijenta unutar 24h</li>
+            <li>Prikupite ponude od osiguravajućih kuća</li>
+            <li>Identifikujte najpovoljniju opciju za klijenta na osnovu broja zaposlenih</li>
+            <li>Dogovorite prezentaciju ponude</li>
+          </ol>
+          
+          <a href="mailto:${email}?subject=Ponuda%20za%20osiguranje%20zaposlenih%20-%20BZR%20Portal&body=Poštovani/a%20${encodeURIComponent(fullName)},%0A%0AHvala%20Vam%20na%20interesovanju%20za%20osiguranje%20zaposlenih%20preko%20BZR%20Portala.%0A%0APrikupili%20smo%20nekoliko%20ponuda%20koje%20bi%20mogle%20biti%20odgovarajuće%20za%20Vašu%20kompaniju%20i%20želeli%20bismo%20da%20ih%20predstavimo.%0A%0AMožete%20li%20nam%20predložiti%20odgovarajući%20termin%20za%20kratak%20razgovor%20ili%20sastanak?%0A%0ASrdačan%20pozdrav,%0ABZR%20Portal%20Tim%0A+381%2064%20125%208686" class="contact-button">Odmah pošalji prvi email</a>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">Ovaj email je automatski generisan. Ne odgovarajte na njega.</p>
       </div>
     </body>
     </html>
@@ -130,7 +152,9 @@ router.post('/send-insurance-inquiry', async (req: Request, res: Response) => {
     );
     
     // Slanje obaveštenja administratoru (BZR Portal)
-    const adminEmail = 'baksis.net@gmail.com'; // Za testne svrhe, kasnije bi bilo bzr.portal.com@gmail.com
+    const adminEmail = process.env.NODE_ENV === 'production' 
+      ? 'bzr.portal.com@gmail.com' // Produkcijska adresa
+      : 'baksis.net@gmail.com'; // Test adresa za development
     const adminEmailSuccess = await sendEmail(
       adminEmail, 
       subject, 
