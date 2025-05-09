@@ -31,6 +31,7 @@ import { userRouter } from './routes/user-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
 import { seedBlogPosts } from './scripts/seed-blog-posts';
+import { addPenaltyBlogPost } from './scripts/add-penalty-blog-post';
 import { wasabiStorageRouter } from './routes/wasabi-storage-routes';
 import referralRoutes from './routes/referral-routes';
 import aiUsageRoutes from './routes/ai-usage-routes';
