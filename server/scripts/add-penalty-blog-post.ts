@@ -24,10 +24,16 @@ export async function addPenaltyBlogPost() {
     const title = 'Kaznene odredbe Zakona o bezbednosti i zdravlju na radu: Obaveza osiguranja zaposlenih';
     const slug = generateSlug(title);
     
-    // Provera da li blog post sa ovim slug-om već postoji
-    const existingPost = await storage.getBlogPostBySlug(slug);
+    // Traženje blog posta po naslovu, slugo, ili sadržaju koji sadrži tekst o kaznenim odredbama
+    const allPosts = await storage.getAllBlogPosts();
+    const existingPost = allPosts.find(post => 
+      post.title.includes('Kaznene odredbe') || 
+      post.slug.includes('kaznene-odredbe') ||
+      (post.content && post.content.includes('Kaznene odredbe'))
+    );
+    
     if (existingPost) {
-      console.log(`Blog post sa slug-om "${slug}" već postoji. Preskačem.`);
+      console.log(`Blog post o kaznenim odredbama već postoji (ID: ${existingPost.id}). Preskačem kreiranje.`);
       return existingPost.id;
     }
     
@@ -136,15 +142,5 @@ Poštovanje zakonske obaveze osiguranja zaposlenih predstavlja temelj odgovornog
   }
 }
 
-// Izvršavanje funkcije ako je skripta pokrenuta direktno
-if (require.main === module) {
-  addPenaltyBlogPost()
-    .then(() => {
-      console.log('Skripta uspešno izvršena.');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('Greška prilikom izvršavanja skripte:', error);
-      process.exit(1);
-    });
-}
+// Izvršavanje funkcije samo ako se skripta direktno pozove
+// Ali sada znamo da je blog post već dodat
