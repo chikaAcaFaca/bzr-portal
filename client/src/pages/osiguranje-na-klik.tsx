@@ -437,7 +437,7 @@ export default function OsiguranjeNaKlik() {
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-blue-700">
-                        <strong>Ključni podatak:</strong> Prema Zakonu o bezbednosti i zdravlju na radu, svi poslodavci u Srbiji su u obavezi da osiguraju svoje zaposlene od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom. 
+                        <strong>Ključni podatak:</strong> Prema Zakonu o bezbednosti i zdravlju na radu (član 67), svi poslodavci u Srbiji su u obavezi da osiguraju svoje zaposlene od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom. 
                       </p>
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export default function OsiguranjeNaKlik() {
                   Kolektivno osiguranje zaposlenih od posledica nesrećnog slučaja (nezgode) predstavlja vid osiguranja kojim poslodavac osigurava sve svoje zaposlene, ili određene kategorije zaposlenih, od posledica nesrećnog slučaja bez obzira na to da li se nezgoda dogodila na radu ili van rada.
                 </p>
                 <p>
-                  Ovaj vid osiguranja predviđen je kao <strong>zakonska obaveza poslodavca</strong> prema Zakonu o bezbednosti i zdravlju na radu. Tačnije, član 53. ovog zakona propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom, radi obezbeđivanja naknade štete.
+                  Ovaj vid osiguranja predviđen je kao <strong>zakonska obaveza poslodavca</strong> prema Zakonu o bezbednosti i zdravlju na radu. Tačnije, član 67. ovog zakona propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom, radi obezbeđivanja naknade štete.
                 </p>
 
                 <h2>Osnovni rizici pokriveni osiguranjem zaposlenih</h2>
@@ -558,7 +558,7 @@ export default function OsiguranjeNaKlik() {
 
                 <h2 id="zakonska-obaveza">Zakonska regulativa i odgovornost poslodavca</h2>
                 <p>
-                  Zakon o bezbednosti i zdravlju na radu (član 53) jasno propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom.
+                  Zakon o bezbednosti i zdravlju na radu (član 67) jasno propisuje da je poslodavac dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom.
                 </p>
                 <p>
                   U slučaju da poslodavac ne obezbedi ovo osiguranje, može biti kažnjen novčanom kaznom:
