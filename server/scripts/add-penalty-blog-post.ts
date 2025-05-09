@@ -24,18 +24,8 @@ export async function addPenaltyBlogPost() {
     const title = 'Kaznene odredbe Zakona o bezbednosti i zdravlju na radu: Obaveza osiguranja zaposlenih';
     const slug = generateSlug(title);
     
-    // Traženje blog posta po naslovu, slugo, ili sadržaju koji sadrži tekst o kaznenim odredbama
-    const allPosts = await storage.getAllBlogPosts();
-    const existingPost = allPosts.find(post => 
-      post.title.includes('Kaznene odredbe') || 
-      post.slug.includes('kaznene-odredbe') ||
-      (post.content && post.content.includes('Kaznene odredbe'))
-    );
-    
-    if (existingPost) {
-      console.log(`Blog post o kaznenim odredbama već postoji (ID: ${existingPost.id}). Preskačem kreiranje.`);
-      return existingPost.id;
-    }
+    // Direktno nastavljamo sa kreiranjem - želimo da forsiramo dodavanje novog bloga
+    console.log('Kreiram novi blog post o kaznenim odredbama, bez obzira na postojeće.');
     
     const content = `# Kaznene odredbe Zakona o bezbednosti i zdravlju na radu: Obaveza osiguranja zaposlenih
 
@@ -142,5 +132,14 @@ Poštovanje zakonske obaveze osiguranja zaposlenih predstavlja temelj odgovornog
   }
 }
 
-// Izvršavanje funkcije samo ako se skripta direktno pozove
-// Ali sada znamo da je blog post već dodat
+// Izvršavanje funkcije odmah
+console.log('Dodavanje blog posta o kaznenim odredbama...');
+addPenaltyBlogPost()
+  .then(() => {
+    console.log('Skripta uspešno izvršena.');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Greška prilikom izvršavanja skripte:', error);
+    process.exit(1);
+  });

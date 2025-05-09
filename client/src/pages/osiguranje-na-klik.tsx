@@ -373,7 +373,7 @@ export default function OsiguranjeNaKlik() {
               >
                 <BadgeCheck className="h-8 w-8 text-amber-300 mx-auto mb-2" />
                 <h3 className="font-bold text-lg">Zakonska obaveza</h3>
-                <p className="text-sm text-white/80">Izbegnite kazne do 1.000.000 RSD</p>
+                <p className="text-sm text-white/80">Izbegnite kazne do 1.500.000 RSD</p>
               </div>
               <div 
                 className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border border-white/20 shadow-lg hover:shadow-xl hover:border-white/40 transition-all cursor-pointer"
@@ -577,10 +577,26 @@ export default function OsiguranjeNaKlik() {
                   U slučaju da poslodavac ne obezbedi ovo osiguranje, može biti kažnjen novčanom kaznom:
                 </p>
                 <ul>
-                  <li>Za pravno lice: od 800.000 do 1.000.000 dinara</li>
-                  <li>Za odgovorno lice u pravnom licu: od 40.000 do 50.000 dinara</li>
-                  <li>Za preduzetnike: od 300.000 do 500.000 dinara</li>
+                  <li>Za pravno lice: od 1.000.000 do 1.500.000 dinara</li>
+                  <li>Za preduzetnike: od 200.000 do 400.000 dinara</li>
+                  <li>Za odgovorno lice u pravnom licu: od 30.000 do 150.000 dinara</li>
                 </ul>
+                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="mb-2 font-medium">Detaljnije o kaznenim odredbama</p>
+                      <p className="text-sm text-gray-700 mb-3">
+                        Kaznene odredbe člana 101 Zakona o bezbednosti i zdravlju na radu predviđaju stroge novčane sankcije 
+                        za poslodavce koji ne osiguraju svoje zaposlene od povreda na radu i profesionalnih oboljenja.
+                      </p>
+                      <Link href="/blog/kaznene-odredbe-zakona-o-bezbednosti-i-zdravlju-na-radu-obaveza-osiguranja-zaposlenih" className="inline-flex items-center text-orange-600 hover:text-orange-700 font-medium text-sm">
+                        Pročitajte više o kaznenim odredbama
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
                 <p>
                   Osim zakonskih kazni, poslodavac koji nije osigurao zaposlene može biti izložen građanskim tužbama zaposlenih koji pretrpe povredu na radu. U takvim slučajevima, poslodavac bi morao iz sopstvenih sredstava da nadoknadi štetu, što može dovesti do značajnih finansijskih gubitaka.
                 </p>
