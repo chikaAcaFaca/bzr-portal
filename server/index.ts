@@ -66,27 +66,7 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, async () => {
+  }, () => {
     log(`serving on port ${port}`);
-    
-    // Pokretanje seed skripte za blog postove
-    try {
-      const seededCount = await seedBlogPosts();
-      if (seededCount > 0) {
-        log(`Uspešno dodato ${seededCount} početnih blog postova.`);
-      }
-    } catch (error) {
-      console.error('Greška pri seed-ovanju blog postova:', error);
-    }
-    
-    // Generisanje inicijalnog sitemap-a
-    try {
-      const { SitemapService } = await import('./services/sitemap-service');
-      const sitemapService = new SitemapService(`http://localhost:${port}`);
-      await sitemapService.generateSitemap();
-      log('Inicijalni sitemap.xml uspešno generisan');
-    } catch (error) {
-      console.error('Greška pri generisanju inicijalnog sitemap-a:', error);
-    }
   });
 })();

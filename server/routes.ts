@@ -45,11 +45,24 @@ import cookieParser from 'cookie-parser';
 import { knowledgeReferenceService } from './services/knowledge-reference-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check route for deployments
+  app.get('/', (_req: Request, res: Response) => {
+    res.status(200).send('Health check OK');
+  });
+
   // Inicijalizacija cookie-parser middleware-a
   app.use(cookieParser());
   
   // Inicijalizacija sesije
+  const pgSession = require('connect-pg-simple')(session);
+  
   app.use(session({
+    store: new pgSession({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+      }
+    }),
     secret: process.env.SESSION_SECRET || 'supabase-bzr-portal-secret',
     resave: false,
     saveUninitialized: false,
