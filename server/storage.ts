@@ -245,15 +245,15 @@ export class MemStorage implements IStorage {
       // Posebna logika za administratore
       if (insertUser.email === '1.nikolina.jovanovic@gmail.com') {
         // Poseban kod za Nikolinu
-        console.log('Kreiranje posebnog koda NIKOLINA za korisnika:', completeUser.id, insertUser.email);
+        console.log('Kreiranje posebnog koda NIK2605 za korisnika:', completeUser.id, insertUser.email);
         // Importujemo default instancu umesto kreiranja nove
         const ReferralRewardService = (await import('./services/referral-reward-service')).default;
         try {
           // Direktan upis u bazu
-          await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'NIKOLINA');
-          console.log('Uspešno kreiran poseban kod NIKOLINA za korisnika ID:', completeUser.id);
+          await ReferralRewardService.manuallyCreateReferralCode(completeUser.id.toString(), 'NIK2605');
+          console.log('Uspešno kreiran poseban kod NIK2605 za korisnika ID:', completeUser.id);
         } catch (e: any) {
-          console.error('Greška pri kreiranju posebnog koda NIKOLINA:', e);
+          console.error('Greška pri kreiranju posebnog koda NIK2605:', e);
         }
       } else if (insertUser.email === 'aleksandar.jovanovic@gmail.com') {
         // Poseban kod za Aleksandra

@@ -125,6 +125,44 @@ class ReferralRewardServiceClass {
         return existingCode.code;
       }
       
+      // Posebna provera za Nikolinu ako se radi o njenom ID-u
+      // Proverimo podatke o korisniku da vidimo da li je to Nikolina
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('email')
+          .eq('id', user_id)
+          .single();
+          
+        console.log('Provera email-a korisnika:', userData?.email);
+        
+        if (userData?.email === '1.nikolina.jovanovic@gmail.com') {
+          console.log('Identifikovan korisnik Nikolina po email-u, dodeljujem specijalni kod NIK2605');
+          const nikolinaCode = 'NIK2605';
+          
+          // Upisujemo ga u bazu
+          try {
+            const { error: insertError } = await supabase
+              .from('referral_codes')
+              .insert([
+                { user_id: user_id, code: nikolinaCode }
+              ]);
+              
+            if (insertError) {
+              console.error('Greška pri čuvanju specijalnog koda za Nikolinu:', insertError);
+            } else {
+              console.log(`Uspešno sačuvan specijalni kod ${nikolinaCode} za Nikolinu`);
+            }
+          } catch (insertError) {
+            console.error('Izuzetak pri čuvanju specijalnog koda za Nikolinu:', insertError);
+          }
+          
+          return nikolinaCode;
+        }
+      } catch (userError) {
+        console.error('Greška pri proveri korisničkih podataka:', userError);
+      }
+      
       // Kategorije posebnih korisnika prema njihovim ID-jevima
       const specialCodes: Record<string, string> = {
         // Nikad ne koristiti iste kodove za različite korisnike!
@@ -133,7 +171,12 @@ class ReferralRewardServiceClass {
         
         // Ovi kodovi su samo za Nikolinu i Aleksandra - različiti su!
         '32e7c918-1bd5-43aa-a0d3-5f2d7c8c3605': 'NIK2605', // UUID Nikoline 
-        '71afd2d5-e0c4-49f9-891e-2d048f286f4c': 'ALE286F'  // UUID Aleksandra
+        '71afd2d5-e0c4-49f9-891e-2d048f286f4c': 'ALE286F', // UUID Aleksandra
+        
+        // Dodajemo i alternativne ID-jeve za slučaj da su različiti od očekivanih
+        // Ako je Nikolina dobila test-user-id umesto svog očekivanog UUID-a
+        // (Ovo će imati prioritet samo ako korisnik nema već definisan kod u bazi)
+        'nikolina': 'NIK2605'
       };
       
       console.log('Provera specijalnih kodova za korisnika ID:', user_id);
