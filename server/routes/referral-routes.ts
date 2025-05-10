@@ -24,11 +24,15 @@ router.get('/code', async (req: Request, res: Response) => {
     try {
       console.log('Dobavljanje referalnog koda za korisnika:', req.user.id, req.user.email);
       
-      // Generišemo referalni kod kroz servis koji će:
-      // 1. Proveriti da li već postoji kod
-      // 2. Koristiti posebne kodove za određene korisnike
-      // 3. Vratiti odgovarajući kod
-      referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+      // Dohvatamo referalni kod kroz servis
+      // Prvo pokušavamo da dobavimo postojeći kod
+      referralCode = await ReferralRewardService.getReferralCode(req.user.id);
+      
+      // Ako kod ne postoji, tek onda ga generišemo
+      if (!referralCode) {
+        console.log('Nije pronađen postojeći kod, generišemo novi');
+        referralCode = await ReferralRewardService.generateReferralCode(req.user.id);
+      }
       
       // Generišemo URL kroz servis
       referralUrl = await ReferralRewardService.getReferralUrl(req.user.id);

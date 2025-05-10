@@ -107,13 +107,18 @@ class ReferralRewardServiceClass {
   async generateReferralCode(user_id: string): Promise<string> {
     try {
       console.log('Generisanje referral koda za korisnika ID:', user_id);
+      console.log('Tip user_id:', typeof user_id);
       
       // Prvo proveri da li korisnik već ima referalni kod
-      const { data: existingCode } = await supabase
+      const { data: existingCode, error: selectError } = await supabase
         .from('referral_codes')
         .select('code')
         .eq('user_id', user_id)
         .single();
+      
+      if (selectError) {
+        console.log('Greška pri proveri postojećeg koda:', selectError);
+      }
         
       if (existingCode) {
         console.log(`Korisnik ${user_id} već ima referalni kod:`, existingCode.code);
@@ -131,19 +136,28 @@ class ReferralRewardServiceClass {
         '71afd2d5-e0c4-49f9-891e-2d048f286f4c': 'ALE286F'  // UUID Aleksandra
       };
       
+      console.log('Provera specijalnih kodova za korisnika ID:', user_id);
+      console.log('Dostupni specijalni kodovi:', Object.keys(specialCodes).join(', '));
+      
       // Proveri da li korisnik treba da dobije poseban kod
       if (specialCodes[user_id]) {
         const specialCode = specialCodes[user_id];
         console.log(`Dodeljivanje posebnog koda ${specialCode} korisniku ${user_id}`);
         
         try {
-          await supabase
+          const { error: insertError } = await supabase
             .from('referral_codes')
             .insert([
               { user_id: user_id, code: specialCode }
             ]);
+            
+          if (insertError) {
+            console.error('Greška pri čuvanju posebnog koda:', insertError);
+          } else {
+            console.log(`Uspešno sačuvan poseban kod ${specialCode} za korisnika ${user_id}`);
+          }
         } catch (insertError) {
-          console.error('Greška pri čuvanju posebnog koda:', insertError);
+          console.error('Izuzetak pri čuvanju posebnog koda:', insertError);
         }
         
         return specialCode;
@@ -153,17 +167,40 @@ class ReferralRewardServiceClass {
       // Format: "REF" + "000" + ID korisnika * 12 + 1
       // Za primer: prvi korisnik (ID = 1) dobija kod REF00013, drugi korisnik (ID = 2) dobija REF00025, itd.
       
+      console.log('Generisanje jedinstvenog koda po formuli za korisnika:', user_id);
+      
       // Parsiramo ID korisnika kao broj (čak i ako je u string formatu)
       // Koristimo regularni izraz da izvučemo samo numerički deo ID-a ako je u UUID formatu
-      let numericId = parseInt(user_id.replace(/[^0-9]/g, ''), 10);
+      let numericId: number;
+      
+      // Prvo proverimo da li je user_id čist broj (npr. "1", "2", itd.)
+      if (/^\d+$/.test(user_id)) {
+        numericId = parseInt(user_id, 10);
+        console.log('Korisnik ima čisto numerički ID:', numericId);
+      } else {
+        // Izvlačimo bilo koje brojeve iz UUID formata ili drugog formata
+        const numericPart = user_id.replace(/[^0-9]/g, '');
+        console.log('Izvučeni numerički deo iz ID-a:', numericPart);
+        
+        // Ako nemamo ni jedan broj, koristimo hash
+        if (!numericPart) {
+          const hash = crypto.createHash('md5').update(user_id).digest('hex');
+          numericId = parseInt(hash.substring(0, 8), 16) % 10000; // Uzimamo ostatak pri deljenju sa 10000
+          console.log('Korišćen hash za generisanje ID-a:', numericId);
+        } else {
+          numericId = parseInt(numericPart, 10);
+        }
+      }
       
       // Ako nismo uspeli da izvučemo broj ili je rezultat 0, koristimo 1 kao defaultnu vrednost
       if (isNaN(numericId) || numericId === 0) {
         numericId = 1;
+        console.log('Korišćena defaultna vrednost za ID:', numericId);
       }
       
       // Primenjujemo formulu: ID korisnika * 12 + 1
       const codeNumber = numericId * 12 + 1;
+      console.log('Izračunat broj za kod prema formuli:', codeNumber);
       
       // Formiramo konačni kod u formatu REF000XX
       const uniqueCode = `REF000${codeNumber}`;
@@ -173,27 +210,50 @@ class ReferralRewardServiceClass {
       // Sačuvaj kod u bazi
       try {
         // Pre upisivanja, proverimo da li je kod već dodeljen (ekstremno mala verovatnoća)
-        const { data: existingCodeCheck } = await supabase
+        const { data: existingCodeCheck, error: checkError } = await supabase
           .from('referral_codes')
           .select('user_id')
           .eq('code', uniqueCode)
           .single();
+          
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Greška pri proveri postojećeg koda:', checkError);
+        }
         
         if (existingCodeCheck) {
-          console.warn(`Detektovana kolizija koda ${uniqueCode}! Generisanje novog koda...`);
-          // Ako se to ikad desi, rekurzivno pozovemo metodu još jednom
-          return this.generateReferralCode(user_id);
+          console.warn(`Detektovana kolizija koda ${uniqueCode}! Generisanje alternativnog koda...`);
+          // Ako se to ikad desi, modifikujemo kod dodavanjem slučajnog broja
+          const randomSuffix = Math.floor(Math.random() * 100); // Slučajan broj od 0-99
+          const alternativeCode = `REF000${codeNumber}X${randomSuffix}`;
+          console.log(`Generisan alternativni kod zbog kolizije: ${alternativeCode}`);
+          
+          // Upišemo alternativni kod
+          const { error: insertAltError } = await supabase
+            .from('referral_codes')
+            .insert([
+              { user_id: user_id, code: alternativeCode }
+            ]);
+          
+          if (insertAltError) {
+            console.error('Greška pri čuvanju alternativnog koda:', insertAltError);
+          } else {
+            console.log(`Uspešno sačuvan alternativni kod ${alternativeCode} za korisnika ${user_id}`);
+          }
+          
+          return alternativeCode;
         }
         
         // Ako kod nije dodeljen, upišemo ga
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('referral_codes')
           .insert([
             { user_id: user_id, code: uniqueCode }
           ]);
           
-        if (error) {
-          console.error('Greška pri čuvanju jedinstvenog koda:', error);
+        if (insertError) {
+          console.error('Greška pri čuvanju jedinstvenog koda:', insertError);
+        } else {
+          console.log(`Uspešno sačuvan jedinstveni kod ${uniqueCode} za korisnika ${user_id}`);
         }
       } catch (dbError) {
         console.error('Greška pri radu sa bazom:', dbError);
@@ -229,25 +289,8 @@ class ReferralRewardServiceClass {
         
       if (tableCheckError) {
         console.error('Tabela referral_codes ne postoji u getReferralCode:', tableCheckError);
-        
-        // Koristimo isti algoritam kao u generateReferralCode
-        // Parsiramo ID korisnika kao broj
-        let numericId = parseInt(user_id.replace(/[^0-9]/g, ''), 10);
-        
-        // Ako nismo uspeli da izvučemo broj ili je rezultat 0, koristimo 1 kao defaultnu vrednost
-        if (isNaN(numericId) || numericId === 0) {
-          numericId = 1;
-        }
-        
-        // Primenjujemo formulu: ID korisnika * 12 + 1
-        const codeNumber = numericId * 12 + 1;
-        
-        // Formiramo konačni kod u formatu REF000XX
-        const stableCode = `REF000${codeNumber}`;
-        
-        console.log(`Generisan stabilan kod za korisnika ${user_id}: ${stableCode}`);
-          
-        return stableCode;
+        // Vraćamo null - neka ruta odluči da li će generisati kod
+        return null;
       }
       
       const { data, error } = await supabase
@@ -261,22 +304,17 @@ class ReferralRewardServiceClass {
       }
       
       if (data?.code) {
+        console.log(`Pronađen postojeći kod u bazi za korisnika ${user_id}:`, data.code);
         return data.code;
       }
       
-      // Ako nema koda, generišemo ga
-      return await this.generateReferralCode(user_id);
+      // Ako nema koda, vraćamo null (neka ruta odluči da li treba generisati novi)
+      console.log(`Nije pronađen kod u bazi za korisnika ${user_id}`);
+      return null;
     } catch (error) {
       console.error('Neočekivana greška pri dobavljanju referalnog koda:', error);
-      // Generišemo stabilan kod
-      const stableCode = crypto
-        .createHash('md5')
-        .update(user_id + '-bzr-portal')
-        .digest('hex')
-        .substring(0, 8)
-        .toUpperCase();
-        
-      return stableCode;
+      // Vraćamo null umesto generisanja koda - neka ruta odluči šta dalje
+      return null;
     }
   }
 
@@ -340,10 +378,18 @@ class ReferralRewardServiceClass {
    */
   async getReferralUrl(user_id: string): Promise<string | null> {
     try {
-      const code = await this.getReferralCode(user_id);
+      // Prvo pokušavamo da dobavimo postojeći kod
+      let code = await this.getReferralCode(user_id);
       
+      // Ako kod ne postoji, generišemo novi
       if (!code) {
-        return null;
+        console.log('Nije pronađen referalni kod, generiše se novi kod za URL...');
+        code = await this.generateReferralCode(user_id);
+        
+        if (!code) {
+          console.error('Nije uspelo generisanje novog koda');
+          return null;
+        }
       }
       
       // Generisanje URL-a sa referalnim kodom
