@@ -18,7 +18,10 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByID(id: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(id: string): Promise<boolean>;
+  createUserFromAuth(authUser: { id: string; email: string; created_at: Date }): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
 
@@ -218,6 +221,77 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
+  }
+  
+  /**
+   * Dobavlja korisnika po UUID-u (string) umesto po numeričkom ID-u
+   * @param id String ID (UUID) korisnika
+   * @returns Korisnik ili undefined ako nije pronađen
+   */
+  async getUserByID(id: string): Promise<User | undefined> {
+    // Pokušavamo da nađemo korisnika po string ID-u ili konvertovanom numeričkom ID-u
+    return Array.from(this.users.values()).find(user => {
+      return user.id.toString() === id;
+    });
+  }
+  
+  /**
+   * Briše korisnika iz baze podataka
+   * @param id ID korisnika kao string
+   * @returns true ako je brisanje uspešno, false ako korisnik nije pronađen
+   */
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      // Pokušavamo da pretvorimo string ID u number ako je moguće
+      const numberId = parseInt(id);
+      
+      if (!isNaN(numberId)) {
+        console.log(`Brisanje korisnika sa numeričkim ID ${numberId} iz baze`);
+        return this.users.delete(numberId);
+      }
+      
+      // Ako ID nije broj, pokušavamo da pronađemo korisnika preko getUserByID
+      const user = await this.getUserByID(id);
+      
+      if (!user) {
+        console.log(`Korisnik sa ID ${id} nije pronađen za brisanje`);
+        return false;
+      }
+      
+      console.log(`Brisanje korisnika sa ID ${id} (numerički ID: ${user.id}) iz baze`);
+      return this.users.delete(user.id);
+    } catch (error) {
+      console.error(`Greška pri brisanju korisnika sa ID ${id}:`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Kreira korisnika u bazi na osnovu podataka iz Supabase Auth
+   * @param authUser Podaci o korisniku iz Supabase Auth
+   * @returns Kreirani korisnik ili undefined ako kreiranje nije uspelo
+   */
+  async createUserFromAuth(authUser: {
+    id: string;
+    email: string;
+    created_at: Date;
+  }): Promise<User | undefined> {
+    try {
+      // Kreiramo osnovne podatke o korisniku
+      const newUser: InsertUser = {
+        username: authUser.email.split('@')[0], // Koristimo prvi deo email adrese kao korisničko ime
+        email: authUser.email,
+        password: "auth-managed", // Ne čuvamo lozinku jer je to u nadležnosti Supabase Auth
+        fullName: authUser.email.split('@')[0], // Koristimo prvi deo email adrese kao ime
+        role: "user" // Osnovna uloga
+      };
+      
+      console.log(`Kreiranje korisnika iz Supabase Auth: ${authUser.id} (${authUser.email})`);
+      return this.createUser(newUser);
+    } catch (error) {
+      console.error('Greška pri kreiranju korisnika iz Supabase Auth:', error);
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {

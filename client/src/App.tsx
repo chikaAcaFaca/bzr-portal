@@ -35,6 +35,7 @@ import FileUtils from "./pages/file-utils";
 import LandingPage from "./pages/landing-page";
 import TestEmail from "./pages/test-email";
 import OsiguranjeNaKlik from "./pages/osiguranje-na-klik";
+import SupabaseAuthPanel from "./pages/admin/supabase-auth-panel";
 import { AuthProvider } from "@/hooks/use-auth";
 import { RequireAuth, RequireAdmin, RedirectIfAuthenticated } from "@/lib/route-guards";
 
@@ -256,6 +257,14 @@ function Router() {
         <RequireAdmin>
           <MainLayout>
             <Users />
+          </MainLayout>
+        </RequireAdmin>
+      </Route>
+      
+      <Route path="/admin/supabase-auth">
+        <RequireAdmin>
+          <MainLayout>
+            <SupabaseAuthPanel />
           </MainLayout>
         </RequireAdmin>
       </Route>

@@ -278,6 +278,12 @@ export default function Sidebar() {
                   label="Upravljanje korisnicima"
                   active={location === "/users"}
                 />
+                <NavItem
+                  href="/admin/supabase-auth"
+                  icon="fas fa-user-shield"
+                  label="Autentifikacija"
+                  active={location === "/admin/supabase-auth"}
+                />
               </NavSection>
             )}
           </div>

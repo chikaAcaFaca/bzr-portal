@@ -28,6 +28,8 @@ import { setupQuestionnaireRoutes } from './routes/questionnaire-routes';
 import { adminRouter } from './routes/admin-routes';
 import { adminRoleRouter } from './routes/admin-role-routes';
 import { userRouter } from './routes/user-routes';
+// Import supabaseAuthRouter
+import { supabaseAuthRouter } from './routes/supabase-auth-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
 import { seedBlogPosts } from './scripts/seed-blog-posts';
@@ -1241,6 +1243,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).send('Greška pri generisanju sitemap.xml');
     }
   });
+
+  // Supabase Auth rute za upravljanje korisnicima
+  app.use('/api/supabase-auth', supabaseAuthRouter);
+  console.log('Registrovane Supabase Auth rute za upravljanje korisnicima');
 
   const httpServer = createServer(app);
   return httpServer;
