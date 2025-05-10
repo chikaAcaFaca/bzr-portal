@@ -3,7 +3,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import AdminLayout from '@/components/layout/admin-layout';
 import { 
   Table, 
   TableBody, 
@@ -41,7 +40,10 @@ import {
   XCircle, 
   Loader2, 
   Search, 
-  UserCheck
+  UserCheck,
+  Database,
+  Plus,
+  Trash2
 } from '@/lib/icons';
 
 interface SupabaseUser {
@@ -61,6 +63,10 @@ interface NewUserData {
 }
 
 export default function SupabaseAuthPanel() {
+  return <SupabaseAuthPanelContent />;
+}
+
+function SupabaseAuthPanelContent() {
   const { toast } = useToast();
   const [users, setUsers] = useState<SupabaseUser[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<SupabaseUser[]>([]);
@@ -236,209 +242,207 @@ export default function SupabaseAuthPanel() {
   };
   
   return (
-    <AdminLayout>
-      <div className="container px-4 py-8">
-        <div className="flex flex-col space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Supabase Auth Panel</h1>
-            <Button onClick={fetchUsers} variant="outline" className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Osveži
-            </Button>
+    <div className="container px-4 py-8">
+      <div className="flex flex-col space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Supabase Auth Panel</h1>
+          <Button onClick={fetchUsers} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Osveži
+          </Button>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Pretraži korisnike..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           
-          <div className="flex justify-between items-center">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Pretraži korisnike..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Dodaj korisnika
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Dodaj novog korisnika</DialogTitle>
-                  <DialogDescription>
-                    Kreirajte novog korisnika direktno u Supabase Auth bazi.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <label htmlFor="email" className="text-right">
-                      Email
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newUser.email}
-                      onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <label htmlFor="password" className="text-right">
-                      Lozinka
-                    </label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={newUser.password}
-                      onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                      className="col-span-3"
-                    />
-                  </div>
+          <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Dodaj korisnika
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Dodaj novog korisnika</DialogTitle>
+                <DialogDescription>
+                  Kreirajte novog korisnika direktno u Supabase Auth bazi.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="email" className="text-right">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    className="col-span-3"
+                  />
                 </div>
-                <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowAddUserDialog(false)}
-                    disabled={actionLoading}
-                  >
-                    Otkaži
-                  </Button>
-                  <Button 
-                    onClick={createUser} 
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Kreiranje...
-                      </>
-                    ) : 'Kreiraj korisnika'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <Card className="overflow-hidden rounded-lg">
-            <Table>
-              <TableCaption>Lista Supabase Auth korisnika</TableCaption>
-              <TableHeader>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="password" className="text-right">
+                    Lozinka
+                  </label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAddUserDialog(false)}
+                  disabled={actionLoading}
+                >
+                  Otkaži
+                </Button>
+                <Button 
+                  onClick={createUser} 
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Kreiranje...
+                    </>
+                  ) : 'Kreiraj korisnika'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <Card className="overflow-hidden rounded-lg">
+          <Table>
+            <TableCaption>Lista Supabase Auth korisnika</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Email potvrđen</TableHead>
+                <TableHead>Poslednja prijava</TableHead>
+                <TableHead>Kreiran</TableHead>
+                <TableHead>U bazi</TableHead>
+                <TableHead className="text-right">Akcije</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Email potvrđen</TableHead>
-                  <TableHead>Poslednja prijava</TableHead>
-                  <TableHead>Kreiran</TableHead>
-                  <TableHead>U bazi</TableHead>
-                  <TableHead className="text-right">Akcije</TableHead>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="flex justify-center items-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <div className="flex justify-center items-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
+              ) : filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Nema pronađenih korisnika
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-mono text-xs">
+                      {user.id.slice(0, 8)}...
                     </TableCell>
-                  </TableRow>
-                ) : filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Nema pronađenih korisnika
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {user.emailConfirmed ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-mono text-xs">
-                        {user.id.slice(0, 8)}...
-                      </TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.emailConfirmed ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-500" />
+                    <TableCell>{formatDate(user.lastSignIn)}</TableCell>
+                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>
+                      {user.existsInDb ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {!user.existsInDb && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => syncUser(user.id)}
+                            disabled={actionLoading}
+                            className="flex items-center gap-1"
+                          >
+                            {actionLoading ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <UserCheck className="h-3 w-3" />
+                            )}
+                            Sinhronizuj
+                          </Button>
                         )}
-                      </TableCell>
-                      <TableCell>{formatDate(user.lastSignIn)}</TableCell>
-                      <TableCell>{formatDate(user.createdAt)}</TableCell>
-                      <TableCell>
-                        {user.existsInDb ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-500" />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {!user.existsInDb && (
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
                             <Button
-                              variant="outline"
+                              variant="destructive"
                               size="sm"
-                              onClick={() => syncUser(user.id)}
                               disabled={actionLoading}
                               className="flex items-center gap-1"
                             >
-                              {actionLoading ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <UserCheck className="h-3 w-3" />
-                              )}
-                              Sinhronizuj
+                              <Trash className="h-3 w-3" />
+                              Obriši
                             </Button>
-                          )}
-                          
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                disabled={actionLoading}
-                                className="flex items-center gap-1"
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Da li ste sigurni?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Ova akcija će trajno obrisati korisnika <strong>{user.email}</strong> iz Supabase Auth baze.
+                                Ovaj postupak je nepovratna operacija.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Otkaži</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteUser(user.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
-                                <Trash className="h-3 w-3" />
-                                Obriši
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Da li ste sigurni?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Ova akcija će trajno obrisati korisnika <strong>{user.email}</strong> iz Supabase Auth baze.
-                                  Ovaj postupak je nepovratna operacija.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Otkaži</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteUser(user.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  {actionLoading ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Brisanje...
-                                    </>
-                                  ) : 'Obriši korisnika'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </div>
+                                {actionLoading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Brisanje...
+                                  </>
+                                ) : 'Obriši korisnika'}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

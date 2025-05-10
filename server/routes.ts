@@ -51,6 +51,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/', (_req: Request, res: Response) => {
     res.status(200).send('Health check OK');
   });
+  
+  // Registracija Supabase Auth ruta
+  app.use('/api/supabase-auth', supabaseAuthRouter);
 
   // Inicijalizacija cookie-parser middleware-a
   app.use(cookieParser());

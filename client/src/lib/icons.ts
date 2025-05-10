@@ -86,7 +86,8 @@ import {
   Moon,
   Building,
   Brain,
-  Bot
+  Bot,
+  Database
 } from 'lucide-react';
 
 // Reksportovanje ikona za upotrebu u celoj aplikaciji
@@ -169,5 +170,6 @@ export {
   Moon,
   Building,
   Brain,
-  Bot
+  Bot,
+  Database
 };
