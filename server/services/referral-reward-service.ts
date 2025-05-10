@@ -149,26 +149,24 @@ class ReferralRewardServiceClass {
         return specialCode;
       }
       
-      // POTPUNO NOVI ALGORITAM ZA JEDINSTVENE KODOVE
-      // Za svakog korisnika generišemo kod koji zavisi od:
-      // 1. Njihovog jedinstvenog ID-a
-      // 2. Trenutnog vremena (za slučaj da isti korisnik nekako dobije više kodova)
-      // 3. Potpuno novog random seed-a
+      // JEDNOSTAVAN I PREDVIDIV ALGORITAM ZA REFERALNE KODOVE
+      // Format: "REF" + "000" + ID korisnika * 12 + 1
+      // Za primer: prvi korisnik (ID = 1) dobija kod REF00013, drugi korisnik (ID = 2) dobija REF00025, itd.
       
-      // Generišemo jedinstveni hash koristeći više izvora entropije
-      const timestamp = Date.now().toString();
-      const randomSeed = crypto.randomBytes(16).toString('hex');
+      // Parsiramo ID korisnika kao broj (čak i ako je u string formatu)
+      // Koristimo regularni izraz da izvučemo samo numerički deo ID-a ako je u UUID formatu
+      let numericId = parseInt(user_id.replace(/[^0-9]/g, ''), 10);
       
-      // Generišemo kod koji je definitivno jedinstven za svakog korisnika
-      const uniqueCodeSource = `${user_id}-${timestamp}-${randomSeed}`;
+      // Ako nismo uspeli da izvučemo broj ili je rezultat 0, koristimo 1 kao defaultnu vrednost
+      if (isNaN(numericId) || numericId === 0) {
+        numericId = 1;
+      }
       
-      // Koristeći MD5 (ili SHA-256) dobijamo hash, a zatim uzimamo prvih 8 karaktera
-      const uniqueCode = crypto
-        .createHash('sha256')  // SHA-256 za veću sigurnost i manju verovatnoću kolizija
-        .update(uniqueCodeSource)
-        .digest('hex')
-        .substring(0, 8)
-        .toUpperCase();
+      // Primenjujemo formulu: ID korisnika * 12 + 1
+      const codeNumber = numericId * 12 + 1;
+      
+      // Formiramo konačni kod u formatu REF000XX
+      const uniqueCode = `REF000${codeNumber}`;
       
       console.log(`Generisan novi jedinstveni kod za korisnika ${user_id}: ${uniqueCode}`);
       
@@ -205,10 +203,10 @@ class ReferralRewardServiceClass {
     } catch (error) {
       console.error('Neočekivana greška pri generisanju referalnog koda:', error);
       
-      // Ako sve ostalo ne uspe, generišemo potpuno jedinstven kod
-      // koristeći UUID v4 algoritam (128-bitni garantovano jedinstven identifikator)
-      const backupUuid = crypto.randomUUID();
-      const backupCode = backupUuid.replace(/-/g, '').substring(0, 8).toUpperCase();
+      // U slučaju greške koristimo isti algoritam, ali sa fiksnim ID-om
+      const backupNumericId = 999; // Koristimo fiksni ID za backup
+      const backupCodeNumber = backupNumericId * 12 + 1;
+      const backupCode = `REF000${backupCodeNumber}`;
       
       console.log(`Generisan rezervni kod za korisnika ${user_id}: ${backupCode}`);
       
@@ -231,13 +229,23 @@ class ReferralRewardServiceClass {
         
       if (tableCheckError) {
         console.error('Tabela referral_codes ne postoji u getReferralCode:', tableCheckError);
-        // Generišemo stabilan kod
-        const stableCode = crypto
-          .createHash('md5')
-          .update(user_id + '-bzr-portal')
-          .digest('hex')
-          .substring(0, 8)
-          .toUpperCase();
+        
+        // Koristimo isti algoritam kao u generateReferralCode
+        // Parsiramo ID korisnika kao broj
+        let numericId = parseInt(user_id.replace(/[^0-9]/g, ''), 10);
+        
+        // Ako nismo uspeli da izvučemo broj ili je rezultat 0, koristimo 1 kao defaultnu vrednost
+        if (isNaN(numericId) || numericId === 0) {
+          numericId = 1;
+        }
+        
+        // Primenjujemo formulu: ID korisnika * 12 + 1
+        const codeNumber = numericId * 12 + 1;
+        
+        // Formiramo konačni kod u formatu REF000XX
+        const stableCode = `REF000${codeNumber}`;
+        
+        console.log(`Generisan stabilan kod za korisnika ${user_id}: ${stableCode}`);
           
         return stableCode;
       }
