@@ -1,21 +1,18 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { AlertCircle, Trash2, RefreshCw, UserPlus, UserX, MailCheck } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import AdminLayout from '@/components/layout/admin-layout';
+import { 
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -24,330 +21,424 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { 
+  UserPlus, 
+  Trash, 
+  RefreshCw, 
+  CheckCircle, 
+  XCircle, 
+  Loader2, 
+  Search, 
+  UserCheck
+} from '@/lib/icons';
 
-// Interface za korisnika iz Supabase Auth
 interface SupabaseUser {
   id: string;
   email: string;
-  created_at: string;
-  last_sign_in_at: string | null;
-  user_metadata?: any;
-  app_metadata?: any;
+  emailConfirmed: boolean;
+  lastSignIn: string | null;
+  createdAt: string;
+  updatedAt: string;
+  existsInDb: boolean;
+  userMetadata: Record<string, any>;
 }
 
-// Komponenta za prikaz panela za upravljanje Supabase autentikacijom
+interface NewUserData {
+  email: string;
+  password: string;
+}
+
 export default function SupabaseAuthPanel() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<SupabaseUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<SupabaseUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [resendVerificationEmail, setResendVerificationEmail] = useState("");
-
-  // Provera da li je korisnik admin
-  if (!user?.role || user.role !== "admin") {
-    return <Redirect to="/" />;
-  }
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUser, setSelectedUser] = useState<SupabaseUser | null>(null);
+  const [newUser, setNewUser] = useState<NewUserData>({ email: '', password: '' });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+  
+  // Funkcija za učitavanje korisnika
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/supabase-auth/supabase-users');
+      
+      if (!response.ok) {
+        throw new Error('Nije moguće pribaviti Supabase korisnike');
+      }
+      
+      const data = await response.json();
+      setUsers(data);
+      setFilteredUsers(data);
+    } catch (error: any) {
+      toast({
+        title: 'Greška pri učitavanju',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   // Učitavanje korisnika pri prvom renderovanju
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  // Funkcija za dobavljanje korisnika iz Supabase Auth
-  async function fetchUsers() {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/supabase-auth/list-users');
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Greška pri dobavljanju korisnika');
-      }
-      
-      setUsers(data.users || []);
-    } catch (error: any) {
-      setError(error.message || 'Došlo je do greške pri učitavanju korisnika');
-      console.error('Greška pri dobavljanju korisnika:', error);
-    } finally {
-      setLoading(false);
+  
+  // Filtriranje korisnika
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredUsers(users);
+    } else {
+      const filtered = users.filter(user => 
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered);
     }
-  }
-
-  // Funkcija za potpuno brisanje korisnika
-  async function deleteUser(userId: string) {
-    try {
-      const response = await fetch(`/api/supabase-auth/users/${userId}`, {
-        method: 'DELETE',
-      });
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Greška pri brisanju korisnika');
-      }
-      
-      // Uklanjamo korisnika iz liste
-      setUsers(users.filter(user => user.id !== userId));
-      
-      toast({
-        title: "Korisnik je uspešno izbrisan",
-        description: "Korisnik je izbrisan iz baze i autentikacionog sistema",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Greška pri brisanju korisnika",
-        description: error.message || 'Došlo je do greške pri brisanju korisnika',
-        variant: "destructive",
-      });
-      console.error('Greška pri brisanju korisnika:', error);
-    } finally {
-      setDeleteUserId(null);
-      setIsDeleteDialogOpen(false);
-    }
-  }
-
+  }, [searchTerm, users]);
+  
   // Funkcija za sinhronizaciju korisnika
-  async function syncUsers() {
+  const syncUser = async (userId: string) => {
     try {
-      const response = await fetch('/api/supabase-auth/sync-users', {
-        method: 'POST',
+      setActionLoading(true);
+      const response = await fetch(`/api/supabase-auth/sync-user/${userId}`, {
+        method: 'POST'
       });
       
       const data = await response.json();
       
-      if (!data.success) {
+      if (!response.ok) {
         throw new Error(data.message || 'Greška pri sinhronizaciji korisnika');
       }
       
       toast({
-        title: "Korisnici su uspešno sinhronizovani",
-        description: `${data.results?.length || 0} korisnika je sinhronizovano`,
+        title: 'Korisnik sinhronizovan',
+        description: 'Korisnik je uspešno dodat u bazu podataka aplikacije',
+        variant: 'default'
       });
       
-      // Osvežavamo listu korisnika
-      fetchUsers();
+      // Osvežavanje liste korisnika
+      await fetchUsers();
     } catch (error: any) {
       toast({
-        title: "Greška pri sinhronizaciji korisnika",
-        description: error.message || 'Došlo je do greške pri sinhronizaciji korisnika',
-        variant: "destructive",
+        title: 'Greška pri sinhronizaciji',
+        description: error.message,
+        variant: 'destructive'
       });
-      console.error('Greška pri sinhronizaciji korisnika:', error);
+    } finally {
+      setActionLoading(false);
     }
-  }
-
-  // Funkcija za slanje verifikacionog emaila
-  async function sendVerificationEmail(email: string) {
-    if (!email) {
+  };
+  
+  // Funkcija za brisanje korisnika
+  const deleteUser = async (userId: string) => {
+    try {
+      setActionLoading(true);
+      const response = await fetch(`/api/supabase-auth/delete-auth-user/${userId}`, {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Greška pri brisanju korisnika');
+      }
+      
       toast({
-        title: "Greška",
-        description: "Email adresa je obavezna",
-        variant: "destructive",
+        title: 'Korisnik obrisan',
+        description: 'Korisnik je uspešno obrisan iz Supabase Auth baze',
+        variant: 'default'
+      });
+      
+      // Osvežavanje liste korisnika
+      await fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: 'Greška pri brisanju',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  // Funkcija za kreiranje novog korisnika
+  const createUser = async () => {
+    if (!newUser.email || !newUser.password) {
+      toast({
+        title: 'Nedostaju podaci',
+        description: 'Email i lozinka su obavezni',
+        variant: 'destructive'
       });
       return;
     }
     
     try {
-      const response = await fetch('/api/supabase-auth/send-verification-email', {
+      setActionLoading(true);
+      const response = await fetch('/api/supabase-auth/create-auth-user', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(newUser)
       });
       
       const data = await response.json();
       
-      if (!data.success) {
-        throw new Error(data.message || 'Greška pri slanju verifikacionog emaila');
+      if (!response.ok) {
+        throw new Error(data.message || 'Greška pri kreiranju korisnika');
       }
       
       toast({
-        title: "Verifikacioni email je poslat",
-        description: `Verifikacioni email je poslat na ${email}`,
+        title: 'Korisnik kreiran',
+        description: 'Novi korisnik je uspešno kreiran u Supabase Auth bazi',
+        variant: 'default'
       });
       
-      // Resetujemo polje za email
-      setResendVerificationEmail("");
+      // Resetovanje podataka novog korisnika
+      setNewUser({ email: '', password: '' });
+      setShowAddUserDialog(false);
+      
+      // Osvežavanje liste korisnika
+      await fetchUsers();
     } catch (error: any) {
       toast({
-        title: "Greška pri slanju verifikacionog emaila",
-        description: error.message || 'Došlo je do greške pri slanju verifikacionog emaila',
-        variant: "destructive",
+        title: 'Greška pri kreiranju',
+        description: error.message,
+        variant: 'destructive'
       });
-      console.error('Greška pri slanju verifikacionog emaila:', error);
+    } finally {
+      setActionLoading(false);
     }
-  }
-
+  };
+  
+  // Formatiranje datuma
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Nikad';
+    return new Date(dateString).toLocaleString('sr-RS');
+  };
+  
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
-      <Card className="mb-8">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-2xl font-bold">Upravljanje korisnicima (Supabase Auth)</CardTitle>
-          <CardDescription>
-            Ovde možete videti i upravljati korisnicima u Supabase Auth sistemu.
-            Ova stranica omogućava potpuno brisanje korisnika i iz baze i iz autentikacionog sistema.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-4 mb-6">
-            <Button 
-              variant="outline" 
-              onClick={fetchUsers}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Osveži listu korisnika
+    <AdminLayout>
+      <div className="container px-4 py-8">
+        <div className="flex flex-col space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">Supabase Auth Panel</h1>
+            <Button onClick={fetchUsers} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Osveži
             </Button>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Pretraži korisnike..."
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
             
-            <Button 
-              variant="outline" 
-              onClick={syncUsers}
-              className="flex items-center gap-2"
-            >
-              <UserPlus className="w-4 h-4" />
-              Sinhronizuj korisnike
-            </Button>
-          </div>
-          
-          <div className="flex flex-col md:flex-row gap-4 mb-6 bg-muted/40 p-4 rounded-lg">
-            <div className="flex-1">
-              <Label htmlFor="verification-email" className="mb-2 block">Email za slanje verifikacije</Label>
-              <div className="flex gap-2">
-                <Input 
-                  id="verification-email"
-                  value={resendVerificationEmail}
-                  onChange={(e) => setResendVerificationEmail(e.target.value)}
-                  placeholder="korisnik@example.com"
-                  className="flex-1"
-                />
-                <Button 
-                  variant="default" 
-                  onClick={() => sendVerificationEmail(resendVerificationEmail)}
-                  className="whitespace-nowrap flex items-center gap-2"
-                >
-                  <MailCheck className="w-4 h-4" />
-                  Pošalji
+            <Dialog open={showAddUserDialog} onOpenChange={setShowAddUserDialog}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Dodaj korisnika
                 </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Koristite ovu funkciju da pošaljete verifikacioni email korisnicima koji se ne mogu prijaviti.
-              </p>
-            </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Dodaj novog korisnika</DialogTitle>
+                  <DialogDescription>
+                    Kreirajte novog korisnika direktno u Supabase Auth bazi.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="email" className="text-right">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label htmlFor="password" className="text-right">
+                      Lozinka
+                    </label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAddUserDialog(false)}
+                    disabled={actionLoading}
+                  >
+                    Otkaži
+                  </Button>
+                  <Button 
+                    onClick={createUser} 
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Kreiranje...
+                      </>
+                    ) : 'Kreiraj korisnika'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Greška</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : (
+          <Card className="overflow-hidden rounded-lg">
             <Table>
+              <TableCaption>Lista Supabase Auth korisnika</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Email</TableHead>
                   <TableHead>ID</TableHead>
-                  <TableHead>Kreirano</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Email potvrđen</TableHead>
                   <TableHead>Poslednja prijava</TableHead>
+                  <TableHead>Kreiran</TableHead>
+                  <TableHead>U bazi</TableHead>
                   <TableHead className="text-right">Akcije</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.length === 0 ? (
+                {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      Nema korisnika u sistemu
+                    <TableCell colSpan={7} className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8">
+                      Nema pronađenih korisnika
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.email}</TableCell>
-                      <TableCell className="text-xs truncate max-w-[120px]">{user.id}</TableCell>
-                      <TableCell>{new Date(user.created_at).toLocaleString()}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {user.id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Nije se prijavljivao'}
+                        {user.emailConfirmed ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                      </TableCell>
+                      <TableCell>{formatDate(user.lastSignIn)}</TableCell>
+                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>
+                        {user.existsInDb ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog 
-                          open={isDeleteDialogOpen && deleteUserId === user.id} 
-                          onOpenChange={(open) => {
-                            setIsDeleteDialogOpen(open);
-                            if (!open) setDeleteUserId(null);
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="destructive" 
+                        <div className="flex justify-end gap-2">
+                          {!user.existsInDb && (
+                            <Button
+                              variant="outline"
                               size="sm"
-                              onClick={() => setDeleteUserId(user.id)}
-                              className="flex items-center gap-2"
+                              onClick={() => syncUser(user.id)}
+                              disabled={actionLoading}
+                              className="flex items-center gap-1"
                             >
-                              <Trash2 className="w-4 h-4" />
-                              Izbriši
+                              {actionLoading ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <UserCheck className="h-3 w-3" />
+                              )}
+                              Sinhronizuj
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Potvrda brisanja korisnika</DialogTitle>
-                              <DialogDescription>
-                                Da li ste sigurni da želite da izbrišete korisnika <strong>{user.email}</strong> iz sistema?
-                                Ova akcija je nepovratna i izbrisaće korisnika i iz baze podataka i iz Supabase Auth sistema.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <DialogFooter className="mt-4">
-                              <Button 
-                                variant="outline" 
-                                onClick={() => {
-                                  setIsDeleteDialogOpen(false);
-                                  setDeleteUserId(null);
-                                }}
-                              >
-                                Otkaži
-                              </Button>
-                              <Button 
+                          )}
+                          
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
                                 variant="destructive"
-                                onClick={() => deleteUser(user.id)}
-                                className="flex items-center gap-2"
+                                size="sm"
+                                disabled={actionLoading}
+                                className="flex items-center gap-1"
                               >
-                                <UserX className="w-4 h-4" />
-                                Izbriši korisnika
+                                <Trash className="h-3 w-3" />
+                                Obriši
                               </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => sendVerificationEmail(user.email)}
-                          className="ml-2 flex items-center gap-2"
-                        >
-                          <MailCheck className="w-4 h-4" />
-                          Verifikuj
-                        </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Da li ste sigurni?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Ova akcija će trajno obrisati korisnika <strong>{user.email}</strong> iz Supabase Auth baze.
+                                  Ovaj postupak je nepovratna operacija.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Otkaži</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteUser(user.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  {actionLoading ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Brisanje...
+                                    </>
+                                  ) : 'Obriši korisnika'}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </Card>
+        </div>
+      </div>
+    </AdminLayout>
   );
 }

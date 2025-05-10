@@ -29,7 +29,7 @@ import { adminRouter } from './routes/admin-routes';
 import { adminRoleRouter } from './routes/admin-role-routes';
 import { userRouter } from './routes/user-routes';
 // Import supabaseAuthRouter
-import { supabaseAuthRouter } from './routes/supabase-auth-routes';
+import supabaseAuthRouter from './routes/supabase-auth-routes';
 import ocrRouter from './routes/ocr-service';
 import textExtractionRouter from './routes/text-extraction';
 import { seedBlogPosts } from './scripts/seed-blog-posts';

@@ -164,10 +164,10 @@ export {
   StarHalf,
   ExternalLink,
   Link,
-  LinkOff,
+  Link2Off,
   Sun,
   Moon,
   Building,
   Brain,
-  Robot
+  Bot
 };

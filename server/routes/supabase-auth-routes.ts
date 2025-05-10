@@ -1,196 +1,193 @@
-import { Router, Request, Response } from "express";
-import supabase from "../lib/supabase";
-import { storage } from "../storage";
-import { sendEmail } from "../services/email-service";
-import { checkAdminRole } from "../middleware/auth-middleware";
-
-export const supabaseAuthRouter = Router();
-
 /**
- * Lista korisnika iz Supabase Auth - dostupno samo za administratore
+ * Rute za sinhronizaciju i upravljanje Supabase Auth korisnicima
  */
-supabaseAuthRouter.get("/list-users", checkAdminRole, async (req: Request, res: Response) => {
+
+import { Router, Request, Response } from 'express';
+import { isAdmin } from '../middleware/auth-middleware';
+import { db } from '../db';
+import { users } from '@shared/schema';
+import { createClient } from '@supabase/supabase-js';
+import { eq } from 'drizzle-orm';
+
+const router = Router();
+
+// Inicijalizacija Supabase klijenta
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('SUPABASE_URL ili SUPABASE_ANON_KEY nedostaju u env varijablama');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Ruta za pregled svih Supabase Auth korisnika
+router.get('/supabase-users', isAdmin, async (req: Request, res: Response) => {
   try {
-    const { data, error } = await supabase.auth.admin.listUsers();
+    const { data: supabaseUsers, error } = await supabase.auth.admin.listUsers();
     
     if (error) {
-      console.error("Greška pri dobavljanju korisnika iz Supabase:", error);
-      return res.status(500).json({
-        success: false,
-        message: error.message,
+      return res.status(500).json({ 
+        error: 'SupabaseError', 
+        message: 'Greška pri pribavljanju Supabase Auth korisnika',
+        details: error.message 
       });
     }
     
-    // Vraćamo listu korisnika
-    return res.status(200).json({
-      success: true,
-      users: data.users,
-    });
+    // Dobijanje korisnika iz naše baze
+    const dbUsers = await db.select().from(users);
+    
+    // Mapiranje ID-ova korisnika iz naše baze
+    const dbUserIds = new Set(dbUsers.map(user => user.id.toString()));
+    
+    // Mapiranje Supabase korisnika sa informacijom da li postoje u bazi
+    const mappedUsers = supabaseUsers.users.map(user => ({
+      id: user.id,
+      email: user.email,
+      emailConfirmed: user.email_confirmed_at !== null,
+      lastSignIn: user.last_sign_in_at,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+      existsInDb: dbUserIds.has(user.id.toString()),
+      userMetadata: user.user_metadata
+    }));
+    
+    res.json(mappedUsers);
   } catch (error: any) {
-    console.error("Izuzetak pri dobavljanju korisnika:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Interna greška pri dobavljanju korisnika",
+    res.status(500).json({ 
+      error: 'ServerError', 
+      message: 'Interna greška servera',
+      details: error.message 
     });
   }
 });
 
-/**
- * Brisanje korisnika iz Supabase Auth i iz naše baze podataka - dostupno samo za administratore
- */
-supabaseAuthRouter.delete("/users/:id", checkAdminRole, async (req: Request, res: Response) => {
-  const userId = req.params.id;
-  
+// Ruta za sinhronizaciju Supabase Auth korisnika sa našom bazom
+router.post('/sync-user/:id', isAdmin, async (req: Request, res: Response) => {
   try {
-    // Prvo brišemo korisnika iz Supabase Auth
-    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+    const { id } = req.params;
     
-    if (authError) {
-      console.error(`Greška pri brisanju korisnika ${userId} iz Supabase Auth:`, authError);
-      return res.status(500).json({
-        success: false,
-        message: authError.message,
+    // Provera da li korisnik postoji u Supabase Auth
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(id);
+    
+    if (userError || !userData.user) {
+      return res.status(404).json({ 
+        error: 'UserNotFound', 
+        message: 'Korisnik nije pronađen u Supabase Auth bazi' 
       });
     }
     
-    // Zatim brišemo korisnika iz naše baze
-    const deleted = await storage.deleteUser(userId);
+    // Provera da li korisnik već postoji u bazi
+    const [existingUser] = await db.select().from(users).where(eq(users.id, Number(id)));
     
-    if (!deleted) {
-      console.warn(`Korisnik ${userId} nije pronađen u bazi prilikom brisanja`);
-      // Nastavljamo izvršavanje jer je korisnik obrisan iz Auth sistema
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: 'UserExists', 
+        message: 'Korisnik već postoji u bazi podataka' 
+      });
     }
     
-    return res.status(200).json({
-      success: true,
-      message: "Korisnik je uspešno izbrisan iz sistema",
+    // Kreiranje korisnika u bazi
+    await db.insert(users).values({
+      id: Number(id),
+      username: userData.user.email?.split('@')[0] || `user_${id}`,
+      email: userData.user.email || '',
+      isActive: true,
+      isAdmin: false,
+      createdAt: new Date(userData.user.created_at || Date.now()),
+      updatedAt: new Date(),
+      storageQuota: 100 * 1024 * 1024, // 100 MB za besplatne korisnike
+      usedStorage: 0,
+      isPro: false,
+      referralCode: `REF${String(Number(id) * 12 + 1).padStart(5, '0')}`,
+      referrerCode: null,
+      referralCount: 0,
+      referralBonus: 0,
+      lastLoginAt: new Date(userData.user.last_sign_in_at || Date.now())
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Korisnik uspešno sinhronizovan sa bazom podataka' 
     });
   } catch (error: any) {
-    console.error(`Izuzetak pri brisanju korisnika ${userId}:`, error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Interna greška pri brisanju korisnika",
+    res.status(500).json({ 
+      error: 'ServerError', 
+      message: 'Interna greška servera',
+      details: error.message 
     });
   }
 });
 
-/**
- * Slanje verifikacionog email-a korisniku - dostupno samo za administratore
- */
-supabaseAuthRouter.post("/send-verification-email", checkAdminRole, async (req: Request, res: Response) => {
-  const { email } = req.body;
-  
-  if (!email) {
-    return res.status(400).json({
-      success: false,
-      message: "Email adresa je obavezna",
+// Ruta za brisanje korisnika iz Supabase Auth
+router.delete('/delete-auth-user/:id', isAdmin, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Brisanje korisnika iz Supabase Auth
+    const { error } = await supabase.auth.admin.deleteUser(id);
+    
+    if (error) {
+      return res.status(500).json({ 
+        error: 'SupabaseError', 
+        message: 'Greška pri brisanju korisnika iz Supabase Auth',
+        details: error.message 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Korisnik uspešno obrisan iz Supabase Auth baze' 
+    });
+  } catch (error: any) {
+    res.status(500).json({ 
+      error: 'ServerError', 
+      message: 'Interna greška servera',
+      details: error.message 
     });
   }
-  
+});
+
+// Ruta za kreiranje novog korisnika direktno u Supabase Auth
+router.post('/create-auth-user', isAdmin, async (req: Request, res: Response) => {
   try {
-    const redirectTo = `${process.env.APP_URL || 'http://localhost:5000'}/verify-email`;
+    const { email, password, metadata } = req.body;
     
-    // Koristimo supabase.auth.resend da pošaljemo verifikacioni email
-    const { error } = await supabase.auth.resend({
-      type: "signup",
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: 'InvalidInput', 
+        message: 'Email i lozinka su obavezni' 
+      });
+    }
+    
+    // Kreiranje korisnika u Supabase Auth
+    const { data, error } = await supabase.auth.admin.createUser({
       email,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
+      password,
+      email_confirm: true,
+      user_metadata: metadata || {}
     });
     
     if (error) {
-      console.error(`Greška pri slanju verifikacionog email-a na ${email}:`, error);
-      return res.status(500).json({
-        success: false,
-        message: error.message,
+      return res.status(500).json({ 
+        error: 'SupabaseError', 
+        message: 'Greška pri kreiranju korisnika u Supabase Auth',
+        details: error.message 
       });
     }
     
-    return res.status(200).json({
-      success: true,
-      message: `Verifikacioni email je poslat na ${email}`,
+    res.json({ 
+      success: true, 
+      message: 'Korisnik uspešno kreiran u Supabase Auth bazi',
+      user: data.user
     });
   } catch (error: any) {
-    console.error(`Izuzetak pri slanju verifikacionog email-a na ${email}:`, error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Interna greška pri slanju verifikacionog email-a",
+    res.status(500).json({ 
+      error: 'ServerError', 
+      message: 'Interna greška servera',
+      details: error.message 
     });
   }
 });
 
-/**
- * Sinhronizacija korisnika iz Supabase Auth sa našom bazom - dostupno samo za administratore
- * Ova ruta proverava sve korisnike u Supabase Auth sistemu i osigurava da postoje u našoj bazi
- */
-supabaseAuthRouter.post("/sync-users", checkAdminRole, async (req: Request, res: Response) => {
-  try {
-    // Dobavljamo sve korisnike iz Supabase Auth
-    const { data, error } = await supabase.auth.admin.listUsers();
-    
-    if (error) {
-      console.error("Greška pri dobavljanju korisnika iz Supabase za sinhronizaciju:", error);
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-    
-    const results = [];
-    
-    // Za svakog korisnika proveravamo da li postoji u našoj bazi
-    for (const authUser of data.users) {
-      const user = await storage.getUserByID(authUser.id);
-      
-      // Ako korisnik ne postoji u našoj bazi, kreiramo ga
-      if (!user) {
-        try {
-          const newUser = await storage.createUserFromAuth({
-            id: authUser.id,
-            email: authUser.email || "nepoznat@mail.com",
-            created_at: new Date(authUser.created_at),
-          });
-          
-          if (newUser) {
-            results.push({
-              id: authUser.id,
-              email: authUser.email,
-              action: "created",
-            });
-          }
-        } catch (err: any) {
-          console.error(`Greška pri kreiranju korisnika ${authUser.id} tokom sinhronizacije:`, err);
-          results.push({
-            id: authUser.id,
-            email: authUser.email,
-            action: "error",
-            error: err.message,
-          });
-        }
-      } else {
-        // Korisnik već postoji, nema potrebe za akcijom
-        results.push({
-          id: authUser.id,
-          email: authUser.email,
-          action: "already_exists",
-        });
-      }
-    }
-    
-    return res.status(200).json({
-      success: true,
-      message: `Sinhronizacija završena sa ${results.length} obrađenih korisnika`,
-      results,
-    });
-  } catch (error: any) {
-    console.error("Izuzetak pri sinhronizaciji korisnika:", error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || "Interna greška pri sinhronizaciji korisnika",
-    });
-  }
-});
-
-// Uklanjamo default export jer koristimo named export
-// export default supabaseAuthRouter;
+export default router;
