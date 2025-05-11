@@ -52,8 +52,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('Health check OK');
   });
   
-  // Import connect-pg-simple at the top level
-  import pgSession from 'connect-pg-simple';
+  // Import connect-pg-simple as a dynamic import
+  const { default: pgSession } = await import('connect-pg-simple');
   const PgSessionStore = pgSession(session);
 
   // Registracija Supabase Auth ruta
