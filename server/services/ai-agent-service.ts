@@ -113,9 +113,9 @@ export class AIAgentService {
       console.log(`Gemini prompt dužina: ${prompt.length} karaktera`);
       
       // Koristimo jednostavniji API poziv za Gemini
-      // Koristimo napredni model gemini-1.5-pro-latest za najbolji odgovor
+      // Koristimo model sa manjim ograničenjima zbog quota limits-a
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${config.geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${config.geminiApiKey}`,
         {
           contents: [
             {
@@ -396,10 +396,18 @@ export class AIAgentService {
       // Prvo dodaj relevantne blogove u kontekst ako postoje
       if (relevantBlogPosts.length > 0) {
         contextText += 'Relevantni postojeći blog postovi:\n\n';
-        relevantBlogPosts.forEach((post, index) => {
+        // Ograničimo na najviše 3 najrelevantnija bloga
+        const limitedPosts = relevantBlogPosts.slice(0, 3);
+        limitedPosts.forEach((post, index) => {
           contextText += `Blog ${index + 1} - ${post.title}:\n`;
-          contextText += `${post.excerpt || ''}\n\n`;
+          contextText += `${post.excerpt || ''}\n`;
+          contextText += `Link: /blog/${post.slug}\n\n`;
         });
+        
+        // Dodajemo napomenu o relevantnim blogovima koje korisnik treba da vidi
+        if (relevantBlogPosts.length > 0) {
+          contextText += `VAŽNO: U tvom odgovoru OBAVEZNO naglasi korisniku da smo već objavili blog postove na ovu temu i navedi linkove ka njima (/${limitedPosts.map(p => `blog/${p.slug}`).join(', /')}). Započni odgovor sa referencom na ove linkove!\n\n`;
+        }
       }
       
       // Zatim dodaj dokumente iz baze znanja
