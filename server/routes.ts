@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(cookieParser());
   
   // Inicijalizacija sesije
-  import pgSessionImport from 'connect-pg-simple';
+  const pgSessionImport = require('connect-pg-simple');
   const pgSession = pgSessionImport(session);
   
   app.use(session({
