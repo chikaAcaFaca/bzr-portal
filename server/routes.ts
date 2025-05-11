@@ -55,9 +55,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registracija Supabase Auth ruta
   app.use('/api/supabase-auth', supabaseAuthRouter);
 
-  // Import required modules at the top
-  import pgSessionImport from 'connect-pg-simple';
-  const pgSession = pgSessionImport(session);
+  import pgSession from 'connect-pg-simple';
+const PgSessionStore = pgSession(session);
 
   // Initialize cookie-parser middleware
   app.use(cookieParser());
