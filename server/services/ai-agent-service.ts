@@ -240,27 +240,35 @@ export class AIAgentService {
   private async getLLMResponse(messages: ChatMessage[]): Promise<string> {
     console.log('Započinjem proces dobavljanja LLM odgovora...');
     
-    // Definišemo redosled prioriteta za LLM servise
+    // Koristimo samo Gemini
+    console.log('Koristimo isključivo Gemini API za odgovore');
+    
+    // Proveravamo da li imamo Gemini API ključ
+    if (!config.geminiApiKey) {
+      throw new Error('Gemini API ključ nije postavljen. AI Agent ne može da generiše odgovor.');
+    }
+    
+    try {
+      console.log('Pokušavam sa Gemini servisom...');
+      const response = await this.getGeminiResponse(messages);
+      console.log('Gemini je uspešno dao odgovor.');
+      return response;
+    } catch (error: any) {
+      console.error('Greška pri komunikaciji sa Gemini:', error.message);
+      throw new Error('Gemini servis je trenutno nedostupan. Pokušajte kasnije.');
+    }
+    
+    // Stara implementacija koja se sada ignoriše
     const servicePriority = [
       { 
         name: 'Gemini', 
         hasKey: !!config.geminiApiKey, 
         handler: this.getGeminiResponse.bind(this)
-      },
-      { 
-        name: 'OpenRouter', 
-        hasKey: !!config.openrouterApiKey, 
-        handler: this.getOpenRouterResponse.bind(this)
-      },
-      { 
-        name: 'Anthropic', 
-        hasKey: !!config.anthropicApiKey, 
-        handler: this.getAnthropicResponse.bind(this)
       }
     ];
     
-    // Filtriramo samo servise za koje imamo ključeve
-    const availableServices = servicePriority.filter(service => service.hasKey);
+    // Uvek koristimo samo Gemini
+    const availableServices = [servicePriority[0]];
     
     if (availableServices.length === 0) {
       console.error('Nijedan LLM servis nije dostupan - nema API ključeva.');
