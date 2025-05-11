@@ -52,18 +52,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).send('Health check OK');
   });
   
+  // Import connect-pg-simple at the top level
+  import pgSession from 'connect-pg-simple';
+  const PgSessionStore = pgSession(session);
+
   // Registracija Supabase Auth ruta
   app.use('/api/supabase-auth', supabaseAuthRouter);
-
-  import pgSession from 'connect-pg-simple';
-const PgSessionStore = pgSession(session);
 
   // Initialize cookie-parser middleware
   app.use(cookieParser());
   
   // Initialize session
   app.use(session({
-    store: new pgSession({
+    store: new PgSessionStore({
       conObject: {
         connectionString: process.env.DATABASE_URL,
         ssl: { rejectUnauthorized: false }
