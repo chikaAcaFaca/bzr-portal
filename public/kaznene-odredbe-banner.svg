@@ -1,71 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
-  <!-- Gradient background -->
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff7043" />
-      <stop offset="100%" stop-color="#ff5722" />
+      <stop offset="0%" stop-color="#4a90e2"/>
+      <stop offset="100%" stop-color="#50e3c2"/>
     </linearGradient>
-    <!-- Drop shadow for text -->
-    <filter id="textShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
-    </filter>
-    <!-- Abstract shapes with transparency -->
-    <clipPath id="wavyClip">
-      <path d="M0,250 Q300,200 600,250 T1200,250 V630 H0 Z" />
-    </clipPath>
   </defs>
-  
-  <!-- Main background -->
+
+  <!-- Background -->
   <rect width="1200" height="630" fill="url(#bgGradient)"/>
-  
-  <!-- Abstract design elements -->
-  <path d="M0,250 Q300,200 600,250 T1200,250 V630 H0 Z" fill="#ffffff" fill-opacity="0.1"/>
-  <g opacity="0.15">
-    <circle cx="150" cy="150" r="100" fill="#ffffff"/>
-    <circle cx="1050" cy="500" r="120" fill="#ffffff"/>
-    <circle cx="950" cy="120" r="70" fill="#ffffff"/>
-    <circle cx="250" cy="480" r="90" fill="#ffffff"/>
+
+  <!-- Decorative circles -->
+  <circle cx="100" cy="100" r="200" fill="white" opacity="0.1"/>
+  <circle cx="1100" cy="530" r="150" fill="white" opacity="0.1"/>
+
+  <!-- Icons -->
+  <g transform="translate(400, 250)">
+    <circle cx="0" cy="0" r="60" fill="white"/>
+    <text x="0" y="20" font-family="Arial" font-size="60" text-anchor="middle" fill="#4a90e2">§</text>
   </g>
-  
-  <!-- Abstract design elements - patterns -->
-  <g opacity="0.07">
-    <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#ffffff" stroke-width="20" stroke-dasharray="40,20"/>
+
+  <g transform="translate(800, 250)">
+    <circle cx="0" cy="0" r="60" fill="white"/>
+    <text x="0" y="20" font-family="Arial" font-size="60" text-anchor="middle" fill="#50e3c2">✓</text>
   </g>
-  
-  <!-- Document icon -->
-  <g transform="translate(150, 315) scale(0.5)">
-    <rect x="-80" y="-120" width="160" height="200" rx="5" ry="5" fill="#ffffff"/>
-    <line x1="-50" y1="-80" x2="50" y2="-80" stroke="#ff5722" stroke-width="12"/>
-    <line x1="-50" y1="-40" x2="50" y2="-40" stroke="#ff5722" stroke-width="12"/>
-    <line x1="-50" y1="0" x2="30" y2="0" stroke="#ff5722" stroke-width="12"/>
-    <rect x="-50" y="40" width="100" height="30" rx="5" ry="5" fill="#ff5722"/>
-  </g>
-  
-  <!-- Warning symbol -->
-  <g transform="translate(1050, 315) scale(0.5)">
-    <path d="M-70,75 L0,-75 L70,75 Z" fill="#ffffff"/>
-    <path d="M0,-40 L0,20 Z" stroke="#ff5722" stroke-width="15" stroke-linecap="round"/>
-    <circle cx="0" cy="45" r="8" fill="#ff5722"/>
-  </g>
-  
-  <!-- Title text -->
-  <g filter="url(#textShadow)">
-    <text x="600" y="200" font-family="Arial, sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="middle">Kaznene odredbe Zakona o</text>
-    <text x="600" y="270" font-family="Arial, sans-serif" font-size="54" font-weight="bold" fill="#ffffff" text-anchor="middle">bezbednosti i zdravlju na radu</text>
-  </g>
-  
+
+  <!-- Title -->
+  <text x="600" y="400" font-family="Arial" font-size="48" font-weight="bold" fill="white" text-anchor="middle">Kaznene odredbe Zakona o</text>
+  <text x="600" y="460" font-family="Arial" font-size="48" font-weight="bold" fill="white" text-anchor="middle">bezbednosti i zdravlju na radu</text>
+
   <!-- Subtitle -->
-  <text x="600" y="340" font-family="Arial, sans-serif" font-size="36" fill="#ffffff" text-anchor="middle" opacity="0.9">Obaveza osiguranja zaposlenih</text>
-  
-  <!-- Footer text -->
-  <g transform="translate(600, 520)">
-    <rect x="-250" y="-30" width="500" height="60" rx="30" ry="30" fill="#ffffff" fill-opacity="0.2"/>
-    <text x="0" y="12" font-family="Arial, sans-serif" font-size="28" fill="#ffffff" text-anchor="middle">Član 67. Zakona o BZR</text>
-  </g>
-  
-  <!-- BZR Portal logo watermark -->
-  <g transform="translate(600, 590)">
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" text-anchor="middle" opacity="0.7">BZR Portal</text>
-  </g>
+  <rect x="300" y="480" width="600" height="60" fill="white" fill-opacity="0.2" rx="30"/>
+  <text x="600" y="520" font-family="Arial" font-size="32" fill="white" text-anchor="middle">Obaveza osiguranja zaposlenih</text>
+
+  <!-- Footer -->
+  <text x="600" y="580" font-family="Arial" font-size="24" fill="white" text-anchor="middle" opacity="0.7">BZR Portal</text>
 </svg>
