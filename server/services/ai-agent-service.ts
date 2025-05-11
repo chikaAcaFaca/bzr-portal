@@ -236,6 +236,7 @@ export class AIAgentService {
 
   /**
    * Dohvata najbolji mogući odgovor od dostupnih LLM servisa
+   * Koristi samo Gemini API
    */
   private async getLLMResponse(messages: ChatMessage[]): Promise<string> {
     console.log('Započinjem proces dobavljanja LLM odgovora...');
@@ -255,7 +256,11 @@ export class AIAgentService {
       return response;
     } catch (error: any) {
       console.error('Greška pri komunikaciji sa Gemini:', error.message);
-      throw new Error('Gemini servis je trenutno nedostupan. Pokušajte kasnije.');
+      if (error.response && error.response.status) {
+        console.log('Gemini API status:', error.response.status);
+        console.log('Gemini API odgovor:', JSON.stringify(error.response.data, null, 2));
+      }
+      throw new Error('Neuspešna komunikacija sa LLM servisom (Gemini)');
     }
     
     // Stara implementacija koja se sada ignoriše
