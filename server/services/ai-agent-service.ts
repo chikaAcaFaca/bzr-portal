@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { vectorStorageService } from './vector-storage-service';
+import { blogSearchService } from './blog-search-service';
+import { BlogPost } from '@shared/schema';
 
 // Privremena konfiguracija ako ne možemo importovati iz config
 const config = {
@@ -12,6 +14,8 @@ interface AIResponse {
   answer: string;
   sourceDocuments?: any[];
   error?: string;
+  relevantBlogPosts?: BlogPost[];
+  shouldCreateBlogPost?: boolean;
 }
 
 interface ChatMessage {
