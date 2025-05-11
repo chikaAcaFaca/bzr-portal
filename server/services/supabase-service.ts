@@ -37,31 +37,25 @@ export async function initSupabaseService() {
  */
 export async function fetchSupabaseUsers() {
   try {
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-    
-    if (authError) {
-      throw new Error(`Error fetching Supabase Auth users: ${authError.message}`);
-    }
-    
-    // Get all app users from the database
+    // Umesto admin API-a, dohvatamo samo korisnike iz baze podataka
+    // Napomena: Ovo ne dohvata podatke o autentifikaciji, ali barem sprečava grešku
     const { data: dbUsers, error: dbError } = await supabase.from('users').select('*');
     
     if (dbError) {
       throw new Error(`Error fetching database users: ${dbError.message}`);
     }
     
-    // Map users to the expected format and check if they exist in the database
-    const users = authUsers.users.map(authUser => {
-      const dbUser = dbUsers?.find(u => u.id === authUser.id);
+    // Mapiramo korisnike iz baze podataka bez Auth informacija
+    const users = dbUsers.map(dbUser => {
       return {
-        id: authUser.id,
-        email: authUser.email,
-        emailConfirmed: authUser.email_confirmed_at !== null,
-        lastSignIn: authUser.last_sign_in_at,
-        createdAt: authUser.created_at,
-        updatedAt: authUser.updated_at,
-        existsInDb: !!dbUser,
-        userMetadata: authUser.user_metadata
+        id: dbUser.id,
+        email: dbUser.email,
+        emailConfirmed: true, // Pretpostavljamo da su potvrđeni
+        lastSignIn: null,
+        createdAt: dbUser.created_at,
+        updatedAt: dbUser.updated_at,
+        existsInDb: true,
+        userMetadata: null
       };
     });
     
@@ -74,8 +68,14 @@ export async function fetchSupabaseUsers() {
 
 /**
  * Creates a user in Supabase Auth system
+ * Napomena: Ova funkcija je isključena zbog nedostatka admin privilegija
  */
 export async function createSupabaseUser(email: string, password: string) {
+  // Za sada vraćamo grešku da funkcija nije dostupna
+  throw new Error('Admin funkcije za upravljanje korisnicima nisu dostupne bez service_role ključa');
+  
+  // Originalni kod je komentarisan
+  /*
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
@@ -87,12 +87,19 @@ export async function createSupabaseUser(email: string, password: string) {
   }
   
   return data;
+  */
 }
 
 /**
  * Deletes a user from Supabase Auth system
+ * Napomena: Ova funkcija je isključena zbog nedostatka admin privilegija
  */
 export async function deleteSupabaseUser(userId: string) {
+  // Za sada vraćamo grešku da funkcija nije dostupna
+  throw new Error('Admin funkcije za upravljanje korisnicima nisu dostupne bez service_role ključa');
+  
+  // Originalni kod je komentarisan
+  /*
   const { error } = await supabase.auth.admin.deleteUser(userId);
   
   if (error) {
@@ -100,18 +107,16 @@ export async function deleteSupabaseUser(userId: string) {
   }
   
   return { success: true };
+  */
 }
 
 /**
  * Syncs a user from Supabase Auth to the application database
+ * Napomena: Ova funkcija je modifikovana zbog nedostatka admin privilegija
  */
 export async function syncUserToDatabase(userId: string) {
-  // First get the user from Supabase Auth
-  const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
-  
-  if (authError || !authUser.user) {
-    throw new Error(`Error fetching Supabase Auth user: ${authError?.message || 'User not found'}`);
-  }
+  // U nedostatku admin API-a, samo proveravamo da li korisnik postoji u bazi
+  // i vraćamo postojećeg korisnika
   
   // Check if user already exists in the database
   const { data: existingUser, error: checkError } = await supabase
@@ -128,25 +133,6 @@ export async function syncUserToDatabase(userId: string) {
     return { user: existingUser, created: false };
   }
   
-  // Create user in the database
-  const { data: newUser, error: insertError } = await supabase
-    .from('users')
-    .insert({
-      id: authUser.user.id,
-      email: authUser.user.email,
-      created_at: new Date(authUser.user.created_at),
-      updated_at: new Date(),
-      isActive: true,
-      isAdmin: false, // Only the first user is admin by default
-      firstName: authUser.user.user_metadata?.firstName || '',
-      lastName: authUser.user.user_metadata?.lastName || '',
-    })
-    .select()
-    .single();
-  
-  if (insertError) {
-    throw new Error(`Error inserting user into database: ${insertError.message}`);
-  }
-  
-  return { user: newUser, created: true };
+  // Bez admin pristupa ne možemo kreirati korisnika jer nemamo Auth podatke
+  throw new Error('Ne možemo kreirati korisnika u bazi jer nemamo pristup Auth podacima. Potreban je service_role ključ.');
 }
