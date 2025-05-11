@@ -18,15 +18,14 @@ const router = Router();
 
 /**
  * Dohvata sve korisnike iz Supabase Auth sistema i proverava da li postoje u bazi podataka
+ * Napomena: Trenutno vraća praznu listu jer nemamo pristup Supabase Auth admin funkcijama
  */
 router.get('/supabase-users', async (_req: Request, res: Response) => {
-  try {
-    const users = await fetchSupabaseUsers();
-    return res.status(200).json(users);
-  } catch (error: any) {
-    console.error('Error fetching Supabase users:', error);
-    return res.status(500).json({ message: `Greška pri dohvatanju korisnika: ${error.message}` });
-  }
+  // Privremeno rešenje - vraćamo praznu listu korisnika sa informacijom
+  return res.status(200).json({ 
+    users: [],
+    message: "Supabase Auth admin funkcije nisu dostupne u ovom okruženju. Potreban je service_role ključ za pristup admin funkcijama."
+  });
 });
 
 /**
