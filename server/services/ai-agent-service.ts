@@ -250,161 +250,195 @@ export class AIAgentService {
     const defaultResponses: Record<string, string> = {
       'obaveze poslodavca': `# Obaveze poslodavca prema Zakonu o bezbednosti i zdravlju na radu
 
-Prema Zakonu o bezbednosti i zdravlju na radu u Republici Srbiji, poslodavac ima sledeće glavne obaveze:
+Dragi korisniče, prema Zakonu o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017 - dr. zakon), svaki poslodavac u Republici Srbiji ima sledeće ključne obaveze koje mora ispuniti:
 
-1. **Organizovanje poslova bezbednosti i zdravlja na radu** - Poslodavac mora odrediti lice za bezbednost i zdravlje na radu koje ima položen stručni ispit (član 37)
+1. **Organizovanje poslova bezbednosti i zdravlja na radu** - Prema članu 37, poslodavac je dužan da organizuje poslove za bezbednost i zdravlje na radu i odredi stručno lice sa položenim stručnim ispitom. Ovo je temelj celokupnog sistema zaštite na radu u Vašoj organizaciji.
 
-2. **Donošenje akta o proceni rizika** - Mora izraditi i doneti pisani akt o proceni rizika za sva radna mesta (član 13)
+2. **Donošenje akta o proceni rizika** - Član 13 jasno propisuje da je poslodavac obavezan da donese pisani akt o proceni rizika za sva radna mesta. Ovaj dokument je ključan jer identifikuje sve potencijalne opasnosti i mere zaštite.
 
-3. **Obuka zaposlenih** - Mora obezbediti zaposlenima osposobljavanje za bezbedan rad (član 27)
+3. **Osposobljavanje zaposlenih** - Prema članu 27, zaposleni moraju biti adekvatno obučeni za bezbedan rad. Ova obuka mora biti prilagođena radnom mestu i rizicima.
 
-4. **Obezbeđivanje lične zaštitne opreme** - Dužan je obezbediti i održavati opremu za zaštitu na radu (član 15)
+4. **Obezbeđivanje sredstava i opreme za ličnu zaštitu** - Član 15 nalaže da ste kao poslodavac dužni obezbediti zaposlenima odgovarajuću zaštitnu opremu prema rizicima na radnom mestu.
 
-5. **Organizacija preventivnih i periodičnih pregleda** - Mora obezbediti preventivne i periodične preglede i ispitivanja opreme za rad i uslova radne okoline (član 15)
+5. **Ispitivanje uslova radne okoline** - Prema istom članu 15, moraju se sprovesti periodična ispitivanja uslova radne okoline i pregledi opreme za rad kako bi se osiguralo njihovo ispravno funkcionisanje.
 
-6. **Praćenje zdravstvenog stanja zaposlenih** - Obavezan je pratiti zdravstveno stanje zaposlenih kroz periodične lekarske preglede (član 16)
+6. **Praćenje zdravstvenog stanja** - Član 16 propisuje obavezu praćenja zdravstvenog stanja zaposlenih, posebno onih na radnim mestima sa povećanim rizikom, putem ciljanih lekarskih pregleda.
 
-7. **Vođenje evidencija** - Mora voditi i čuvati evidencije iz oblasti bezbednosti i zdravlja na radu (član 49)
+7. **Vođenje evidencija** - Član 49 zahteva vođenje propisanih evidencija iz oblasti BZR, što je osnova za praćenje sprovođenja mera zaštite.
 
-8. **Osiguranje zaposlenih** - Obavezan je osigurati zaposlene od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom (član 53)
+8. **Osiguranje zaposlenih** - Prema članu 53, dužni ste osigurati zaposlene od povreda na radu i profesionalnih oboljenja.
 
-Nepoštovanje ovih obaveza podleže prekršajnim odredbama zakona sa novčanim kaznama od 800.000 do 1.000.000 dinara.`,
+Važno je napomenuti da nepoštovanje ovih obaveza podleže prekršajnim odredbama sa novčanim kaznama od 800.000 do 1.000.000 dinara prema članu 69.
+
+Redovno sprovođenje ovih obaveza ne samo da osigurava usklađenost sa zakonom, već stvara bezbedno radno okruženje i smanjuje rizik od povreda i profesionalnih oboljenja.`,
 
       'bezbednost na radu': `# Bezbednost na radu - Osnovne informacije
 
-Bezbednost na radu obuhvata mere i aktivnosti usmerene na stvaranje bezbednih uslova rada i zaštitu zdravlja zaposlenih.
+Poštovani, bezbednost i zdravlje na radu predstavlja sistem pravila i mera zaštite koji se primenjuju na radnim mestima kako bi se sprečile povrede, profesionalna oboljenja i očuvalo zdravlje zaposlenih. Republika Srbija ovo područje reguliše Zakonom o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017 - dr. zakon).
 
-## Osnovni principi bezbednosti na radu:
+## Osnovni principi bezbednosti na radu definisani članom 12:
 
-1. **Prevencija** - Sprečavanje povreda i profesionalnih oboljenja je prioritet
-2. **Procena rizika** - Identifikacija opasnosti, procena verovatnoće i težine posledica
-3. **Eliminacija opasnosti** - Primena tehničkih mera za uklanjanje izvora opasnosti
-4. **Supstitucija** - Zamena opasnih materija i postupaka manje opasnim
-5. **Kolektivne mere zaštite** - Primena mera koje štite sve zaposlene
-6. **Lična zaštitna oprema** - Dodatna zaštita za specifične rizike
-7. **Obuka i informisanje** - Kontinuirana edukacija zaposlenih o rizicima i merama zaštite
+1. **Prevencija kao prioritet** - Član 12 propisuje primenu preventivnih mera pre početka rada. Ulaganje u prevenciju je uvek isplativije od saniranja posledica povreda.
 
-## Zakonska regulativa:
+2. **Procena rizika** - Prema članu 13, obavezna je izrada akta o proceni rizika koji identifikuje sve potencijalne opasnosti i štetnosti na radnom mestu.
 
-Osnovni propis koji reguliše oblast bezbednosti i zdravlja na radu u Republici Srbiji je Zakon o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017 - dr. zakon).
+3. **Hijerarhija kontrolnih mera** - Zakon u članu 15 nalaže primenu mera sledećim redosledom:
+   - **Eliminacija opasnosti** - Kada je moguće, ukloniti izvor opasnosti
+   - **Supstitucija** - Zamena opasnih materija i postupaka manje opasnim
+   - **Tehničke mere zaštite** - Ugradnja kolektivnih zaštitnih sistema
+   - **Organizacione mere** - Skraćenje vremena izlaganja, rotacija poslova
+   - **Lična zaštitna oprema** - Kao dodatna mera kada prethodne nisu dovoljne
 
-Za specifične aspekte bezbednosti na radu, konsultujte odgovarajuće pravilnike i tehničke propise koji detaljnije regulišu pojedine oblasti.`,
+4. **Kolektivne mere zaštite** - Član 15 prioritizuje kolektivnu zaštitu nad individualnom, što znači da mere koje štite sve zaposlene imaju prednost.
+
+5. **Obuka zaposlenih** - Članovi 27-30 detaljno propisuju obavezu osposobljavanja zaposlenih za bezbedan rad, kao i periodično ponavljanje obuke.
+
+## Ključni podzakonski akti:
+
+Pored osnovnog zakona, posebni pravilnici regulišu specifične oblasti poput:
+- Pravilnik o načinu i postupku procene rizika
+- Pravilnik o preventivnim merama za bezbedan i zdrav rad pri korišćenju opreme za rad
+- Pravilnik o preventivnim merama za bezbedan i zdrav rad pri izlaganju hemijskim materijama
+
+Pravilna primena ovih principa stvara zdravo i bezbedno radno okruženje, povećava produktivnost i smanjuje troškove koji nastaju usled povreda i bolovanja.`,
 
       'procena rizika': `# Procena rizika na radnom mestu
 
-Procena rizika je sistematski proces identifikacije i evaluacije potencijalnih opasnosti na radnom mestu. Ovaj postupak je temelj sistema bezbednosti i zdravlja na radu.
+Dragi korisniče, procena rizika predstavlja jedan od najvažnijih dokumenata u sistemu bezbednosti i zdravlja na radu. To je sistematski i proaktivan proces koji omogućava identifikaciju svih potencijalnih opasnosti i štetnosti kojima mogu biti izloženi zaposleni.
 
-## Proces procene rizika obuhvata:
+## Zakonski osnov:
 
-1. **Identifikacija opasnosti** - Utvrđivanje izvora potencijalnih opasnosti na radnom mestu
+Član 13. Zakona o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017) jasno propisuje: **"Poslodavac je dužan da donese akt o proceni rizika u pisanoj formi za sva radna mesta u radnoj okolini i da utvrdi način i mere za njihovo otklanjanje."** Ova obaveza je detaljnije uređena Pravilnikom o načinu i postupku procene rizika na radnom mestu i u radnoj okolini ("Sl. glasnik RS", br. 72/2006, 84/2006, 30/2010 i 102/2015).
+
+## Proces procene rizika sadrži šest ključnih koraka:
+
+1. **Identifikacija opasnosti i štetnosti** - Član 4. Pravilnika nalaže pažljivu analizu svih potencijalnih opasnosti (mehaničke, električne, požar, eksplozija) i štetnosti (hemijske, fizičke, biološke, štetni mikroklimatski uslovi).
    
-2. **Identifikacija izloženih radnika** - Određivanje koji radnici mogu biti izloženi opasnostima
+2. **Identifikacija izloženih radnika** - Prema članu 5, potrebno je utvrditi koja lica mogu biti izložena identifikovanim opasnostima, posebno uzimajući u obzir osetljive kategorije (trudnice, mladi radnici, osobe sa invaliditetom).
    
-3. **Procena nivoa rizika** - Ocena verovatnoće nastanka povrede ili oštećenja zdravlja i težine mogućih posledica
+3. **Procena nivoa rizika** - Član 6. definiše da se rizik procenjuje kombinovanjem:
+   - Verovatnoće nastanka povrede ili oštećenja zdravlja
+   - Težine potencijalnih posledica
+   Uobičajena formula je: **Rizik = Verovatnoća × Posledica** gde se obe komponente vrednuju numerički.
    
-4. **Odlučivanje o preventivnim merama** - Izbor i primena mera za eliminaciju ili smanjenje rizika
+4. **Utvrđivanje preventivnih mera** - Član 7. zahteva definisanje konkretnih mera za svaki identifikovani rizik, uz poštovanje hijerarhije kontrolnih mera propisane zakonom.
    
-5. **Dokumentovanje** - Izrada pisanog akta o proceni rizika
+5. **Izrada pisanog dokumenta** - Prema članu 8, akt o proceni rizika mora sadržati:
+   - Opšte podatke o poslodavcu
+   - Opis procesa rada
+   - Prepoznate i utvrđene opasnosti i štetnosti
+   - Procenu rizika za svako radno mesto
+   - Utvrđene mere za kontrolu i smanjenje rizika
+   - Zaključak sa pregledom radnih mesta sa povećanim rizikom
    
-6. **Periodično preispitivanje** - Revizija procene rizika pri svakoj promeni uslova rada
+6. **Periodično preispitivanje** - Član 15. propisuje obavezu revizije akta o proceni rizika u slučaju:
+   - Teške povrede na radu ili smrtnog ishoda
+   - Promene u procesu rada koje mogu uticati na rizik
+   - Kada mere zaštite nisu adekvatne
+   - Minimum svakih tri godine za radna mesta sa povećanim rizikom
 
-## Zakonska obaveza:
+Procenu rizika moraju izvršiti stručna lica sa odgovarajućim licencama, a poslodavac je odgovoran za sprovođenje utvrđenih mera. Pravilno izrađen akt o proceni rizika ne samo da ispunjava zakonsku obavezu već suštinski doprinosi prevenciji povreda i profesionalnih oboljenja.`,
 
-Prema članu 13. Zakona o bezbednosti i zdravlju na radu, poslodavac je dužan da donese akt o proceni rizika u pisanoj formi za sva radna mesta i da utvrdi mere za otklanjanje ili smanjenje rizika.
+      'lice za bezbednost': `# Lice za bezbednost i zdravlje na radu - Uloga i zakonske odgovornosti
 
-## Metodologija:
+Poštovani, lice za bezbednost i zdravlje na radu ima ključnu ulogu u implementaciji i održavanju sistema zaštite zaposlenih. Ova funkcija je detaljno uređena Zakonom o bezbednosti i zdravlju na radu, a posebno članovima 37-40.
 
-Pravilnikom o načinu i postupku procene rizika na radnom mestu i u radnoj okolini propisana je metodologija za sprovođenje procene rizika. Rizik se najčešće izračunava prema formuli:
+## Zakonski osnov:
 
-**Rizik = Verovatnoća × Posledica**
+Član 37. Zakona o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017) propisuje da je poslodavac dužan da organizuje poslove za bezbednost i zdravlje na radu, što uključuje određivanje stručnog lica - lica za bezbednost i zdravlje na radu.
 
-Procena rizika mora biti izvršena od strane stručnih lica sa odgovarajućim licencama.`,
+## Osnovne dužnosti propisane članom 40:
 
-      'lice za bezbednost': `# Lice za bezbednost i zdravlje na radu - Uloga i odgovornosti
+1. **Učestvovanje u izradi akta o proceni rizika** - Lice za bezbednost aktivno učestvuje u identifikaciji opasnosti i proceni rizika na radnim mestima.
 
-Lice za bezbednost i zdravlje na radu je stručno lice koje poslodavac angažuje za obavljanje poslova bezbednosti i zdravlja na radu.
+2. **Kreiranje i sprovođenje preventivnih mera** - Na osnovu člana 40, stav 1, tačka 3, lice za bezbednost priprema i sprovodi mere za poboljšanje uslova rada i smanjenje rizika.
 
-## Osnovne dužnosti lica za bezbednost:
+3. **Osposobljavanje zaposlenih** - Prema članu 40, stav 1, tačka 4, lice priprema i sprovodi osposobljavanje zaposlenih za bezbedan rad, što uključuje teorijsku i praktičnu obuku.
 
-1. **Sprovođenje preventivnih mera** - Učestvovanje u izradi akta o proceni rizika i sprovođenje preventivnih mera
+4. **Redovni nadzor i kontrola** - Član 40, stav 1, tačka 7 nalaže praćenje primene mera za bezbednost i zdravlje zaposlenih na radnom mestu.
 
-2. **Osposobljavanje zaposlenih** - Priprema i sprovođenje osposobljavanja zaposlenih za bezbedan rad
+5. **Praćenje povreda i profesionalnih oboljenja** - Obaveza vođenja evidencija i analize uzroka povreda, profesionalnih oboljenja i bolesti u vezi sa radom.
 
-3. **Kontrola i nadzor** - Provera primene mera za bezbedan i zdrav rad
+6. **Zabrana rada u slučaju opasnosti** - Ključno ovlašćenje propisano članom 40, stav 1, tačka 8 - pravo i obaveza da zabrani rad kada postoji neposredna opasnost po život ili zdravlje zaposlenog.
 
-4. **Praćenje stanja** - Praćenje stanja u vezi sa povredama na radu i profesionalnim oboljenjima
+7. **Saradnja sa drugim subjektima** - Prema članu 40, stav 1, tačka 10, lice sarađuje sa službom medicine rada, inspekcijom rada i drugim institucijama.
 
-5. **Zabrana rada** - Zabrana rada na radnom mestu ili upotrebe sredstva za rad kada utvrdi neposrednu opasnost po život ili zdravlje
+## Zakonski zahtevi za lice za bezbednost (član 37):
 
-6. **Saradnja** - Saradnja sa službom medicine rada i inspektorom rada
+- **Stručni ispit** - Položen stručni ispit o praktičnoj osposobljenosti za obavljanje poslova bezbednosti i zdravlja na radu
+- **Radno iskustvo** - Za poslodavce sa visokorizičnim delatnostima, najmanje tri godine radnog iskustva u struci
+- **Obrazovanje** - Visoka stručna sprema tehničke struke za poslodavce koji imaju visokorizične delatnosti ili više od 50 zaposlenih na poslovima sa povećanim rizikom
 
-## Zakonski uslovi:
+## Organizacioni zahtevi (član 37):
 
-Prema članu 37. Zakona o bezbednosti i zdravlju na radu, lice za bezbednost mora imati:
-- Položen stručni ispit o praktičnoj osposobljenosti za obavljanje poslova bezbednosti i zdravlja na radu
-- Najmanje tri godine radnog iskustva u struci (za poslodavce sa visokim rizikom)
-- Odgovarajuće obrazovanje (visoka stručna sprema za poslodavce sa visokorizičnim delatnostima)
+- Poslodavac koji ima do 20 zaposlenih može sam obavljati poslove BZR ili ih poveriti drugom licu
+- Poslodavac koji ima 21-50 zaposlenih mora odrediti jedno lice za bezbednost i zdravlje na radu
+- Poslodavac sa više od 50 zaposlenih na poslovima sa povećanim rizikom mora odrediti najmanje jedno lice isključivo za poslove bezbednosti i zdravlja na radu
 
-Poslodavci sa više od 50 zaposlenih koji rade na poslovima sa povećanim rizikom moraju odrediti barem jedno lice za bezbednost sa punim radnim vremenom.`,
+Stručno i odgovorno lice za bezbednost predstavlja temelj efikasnog sistema zaštite na radu i značajno doprinosi prevenciji povreda i profesionalnih oboljenja.`,
 
-      'ppu': `# Prethodna i periodična uverenja (PPU) - Lekarski pregledi zaposlenih
+      'ppu': `# Odgovor na pitanje o prethodnim i periodičnim lekarskim pregledima (PPU)
 
-Prethodna i periodična uverenja (PPU) su lekaraska uverenja koja proizilaze iz prethodnih i periodičnih lekarskih pregleda zaposlenih.
+Pitali ste o prethodnim i periodičnim uverenjima (PPU) koja se odnose na lekarske preglede zaposlenih. Evo konkretnog odgovora na Vaše pitanje:
 
-## Prethodni lekarski pregledi:
+Prethodna i periodična lekarska uverenja (PPU) su zakonski obavezni dokumenti koji potvrđuju zdravstvenu sposobnost zaposlenih za rad na radnim mestima sa povećanim rizikom. Ova obaveza je jasno definisana u članu 43. Zakona o bezbednosti i zdravlju na radu.
 
-- Obavljaju se **pre stupanja zaposlenog na rad** na radnom mestu sa povećanim rizikom
-- Cilj je utvrđivanje zdravstvene sposobnosti zaposlenog za rad na konkretnom radnom mestu
-- Rezultiraju izdavanjem Prethodnog lekarskog uverenja
+**Prema Vašem pitanju, evo šta je potrebno znati:**
 
-## Periodični lekarski pregledi:
+1. **Kada se obavljaju prethodni pregledi?** 
+   - Pre nego što zaposleni započne rad na radnom mestu sa povećanim rizikom
+   - Poslodavac **ne sme dozvoliti** rad zaposlenom bez ovog uverenja
 
-- Obavljaju se **u toku rada** na radnom mestu sa povećanim rizikom
-- Vrše se u rokovima utvrđenim aktom o proceni rizika (najčešće na 12 meseci)
-- Cilj je praćenje zdravstvenog stanja zaposlenih i rano otkrivanje promena
-- Rezultiraju izdavanjem Periodičnog lekarskog uverenja
+2. **Kada se obavljaju periodični pregledi?**
+   - U toku rada, u intervalima koji su definisani aktom o proceni rizika
+   - Najčešće se obavljaju na 12 meseci, ali to može varirati zavisno od vrste rizika
+   - Propuštanje ovih pregleda predstavlja prekršaj koji podleže kazni prema članu 69
 
-## Zakonska obaveza:
+3. **Ko može izdati PPU?**
+   - Isključivo služba medicine rada koja ima odgovarajuću licencu izdatu od Ministarstva zdravlja
+   - Poslodavac mora imati ugovor sa takvom službom
 
-Prema članu 43. Zakona o bezbednosti i zdravlju na radu, poslodavac je dužan da zaposlenom na radnom mestu sa povećanim rizikom pre početka rada obezbedi prethodni lekarski pregled, kao i periodični lekarski pregled u toku rada.
+4. **Šta se dešava ako zaposleni nije zdravstveno sposoban?**
+   - Poslodavac mora ponuditi drugo odgovarajuće radno mesto bez povećanog rizika
+   - Ako takvog mesta nema, zaposlenom ne može biti otkazan ugovor o radu po tom osnovu
 
-## Sadržaj pregleda:
+5. **Koje su posledice nepridržavanja ove obaveze?**
+   - Novčane kazne od 800.000 do 1.000.000 dinara za pravno lice prema članu 69
+   - Kazna od 40.000 do 50.000 dinara za odgovorno lice
 
-Sadržaj i obim lekarskih pregleda definisan je Pravilnikom o prethodnim i periodičnim lekarskim pregledima zaposlenih na radnim mestima sa povećanim rizikom i zavisi od specifičnih rizika na radnom mestu.
+Ova dokumentacija je ključna u dokazivanju da ste kao poslodavac preduzeli sve zakonske mere za zaštitu zaposlenih na radnim mestima sa povećanim rizikom.`,
 
-Preglede može obavljati samo služba medicine rada koja ima odgovarajuću licencu.`,
+      'osiguranje zaposlenih': `# Odgovor na pitanje o osiguranju zaposlenih od povreda na radu
 
-      'osiguranje zaposlenih': `# Osiguranje zaposlenih od povreda na radu i profesionalnih bolesti
+Pitali ste o osiguranju zaposlenih od povreda na radu i profesionalnih bolesti. Evo direktnog odgovora sa svim potrebnim informacijama:
 
-Osiguranje zaposlenih od povreda na radu je zakonska obaveza poslodavca u Republici Srbiji.
+**Da, osiguranje zaposlenih od povreda na radu i profesionalnih bolesti je zakonska obaveza svakog poslodavca u Republici Srbiji.** Ova obaveza je jasno definisana članom 53. Zakona o bezbednosti i zdravlju na radu, koji kaže: "Poslodavac je dužan da zaposlene osigura od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom, radi obezbeđivanja naknade štete."
 
-## Ključne informacije o osiguranju zaposlenih:
+**Što se tiče Vašeg pitanja, evo ključnih činjenica koje morate znati:**
 
-1. **Zakonski osnov** - Član 53. Zakona o bezbednosti i zdravlju na radu propisuje obavezu osiguranja
+1. **Ko mora biti osiguran?**
+   - Apsolutno svi zaposleni, bez izuzetka
+   - Obaveza važi bez obzira na vrstu ugovora o radu (određeno, neodređeno)
+   - Odnosi se i na zaposlene sa nepunim radnim vremenom
 
-2. **Ko mora biti osiguran** - Svi zaposleni, bez obzira na vrstu ugovora o radu
+2. **Ko snosi troškove osiguranja?**
+   - Isključivo poslodavac, u potpunosti (100%)
+   - Zabranjeno je prebacivanje troškova osiguranja na zaposlene
 
-3. **Od čega se osigurava** - Od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom
+3. **Kako se sprovodi osiguranje?**
+   - Zaključenjem ugovora o osiguranju sa osiguravajućim društvom
+   - Najčešće kroz polisu kolektivnog osiguranja zaposlenih
+   - Polisa mora pokrivati minimum: lečenje, invaliditet, i smrt usled povrede na radu
 
-4. **Ko plaća osiguranje** - Poslodavac u potpunosti snosi troškove premije osiguranja
+4. **Koje su posledice nepridržavanja ove obaveze?**
+   - Novčana kazna od 800.000 do 1.000.000 dinara za pravno lice (prema članu 69)
+   - Odgovorno lice može biti kažnjeno sa 40.000 do 50.000 dinara
 
-5. **Način osiguranja** - Najčešće kroz polisu kolektivnog osiguranja zaposlenih
+5. **Da li je ovo osiguranje isto što i zdravstveno osiguranje?**
+   - Ne, ovo je dodatno osiguranje pored obaveznog zdravstvenog osiguranja
+   - Njegovom svrhom se smatra obezbeđivanje naknade štete zaposlenima
 
-6. **Sankcije** - Neispunjavanje ove obaveze podleže novčanim kaznama prema članu 69. Zakona
-
-## Pokriće osiguranja:
-
-Standardno pokriće osiguranja obično uključuje:
-- Troškove lečenja usled nezgode
-- Dnevne naknade za bolovanje
-- Naknade za trajni invaliditet
-- Naknade u slučaju smrti usled nezgode
-
-## Preporuke:
-
-- Osiguranje treba ugovoriti sa renomiranim osiguravajućim društvom
-- Iznos osiguranja treba prilagoditi stepenu rizika u delatnosti
-- Poželjno je obuhvatiti sve rizike koji su identifikovani aktom o proceni rizika`
+Bitno je napomenuti da je prema nedavnim tumačenjima Ministarstva za rad, vođenje evidencije o polisi osiguranja sastavni deo obavezne dokumentacije iz oblasti BZR koju poslodavac mora imati.`
     };
     
     // Tražimo najbolje podudaranje u ključnim rečima
@@ -414,34 +448,40 @@ Standardno pokriće osiguranja obično uključuje:
       }
     }
     
-    // Ako nema konkretnog podudaranja, vraćamo generalni odgovor o BZR
-    return `# Bezbednost i zdravlje na radu
+    // Pošto pitanje nije prepoznato u konkretnim odgovorima, pokušaćemo da damo direktan odgovor na osnovu sadržaja pitanja
+    
+    // Pokušavamo izvući ključne reči iz pitanja
+    const keywords = normalizedQuery.split(' ').filter(word => word.length > 3);
+    
+    // Pokušavamo odrediti koje zakonske odredbe bi mogle biti relevantne
+    let relevantArticles = '';
+    
+    if (normalizedQuery.includes('kazn') || normalizedQuery.includes('prekršaj')) {
+      relevantArticles = `Kazne za prekršaje u oblasti BZR definisane su članovima 69-73 Zakona o bezbednosti i zdravlju na radu, a kreću se od 800.000 do 1.000.000 dinara za pravna lica za teže prekršaje.`;
+    } else if (normalizedQuery.includes('osposobljavanje') || normalizedQuery.includes('obuka')) {
+      relevantArticles = `Osposobljavanje za bezbedan rad regulisano je članovima 27-31 Zakona o bezbednosti i zdravlju na radu i mora se sprovesti pre početka rada zaposlenog.`;
+    } else if (normalizedQuery.includes('oprema') || normalizedQuery.includes('sredstva')) {
+      relevantArticles = `Sredstva i oprema za ličnu zaštitu regulisani su članom 15 Zakona i Pravilnikom o preventivnim merama za bezbedan i zdrav rad pri korišćenju sredstava i opreme za ličnu zaštitu na radu.`;
+    }
+    
+    return `# Odgovor na Vaše pitanje o bezbednosti i zdravlju na radu
 
-Bezbednost i zdravlje na radu (BZR) je multidisciplinarno polje koje se bavi zaštitom bezbednosti, zdravlja i dobrobiti ljudi uključenih u rad ili zaposlenje.
+Poštovani, na osnovu Vašeg pitanja "${query}", mogu Vam pružiti sledeće informacije:
 
-## Osnovni principi BZR:
+Zakon o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017) reguliše ovu oblast i propisuje konkretne obaveze i mere koje moraju biti implementirane na radnim mestima.
 
-1. **Prevencija je prioritet** - Sprečavanje povreda i bolesti je efikasnije od rešavanja problema nakon što se dogode
-   
-2. **Odgovornost poslodavca** - Poslodavac ima primarnu odgovornost za obezbeđivanje bezbednog radnog okruženja
-   
-3. **Uključenost zaposlenih** - Zaposleni moraju biti uključeni u odluke o bezbednosti i zdravlju
-   
-4. **Kontinuirano unapređenje** - Sistem bezbednosti i zdravlja mora se redovno ažurirati i poboljšavati
-   
-5. **Kultura bezbednosti** - Promovisanje pozitivne kulture bezbednosti u celoj organizaciji
+${relevantArticles}
 
-## Glavni elementi sistema BZR:
+Da bih Vam pružio/la precizniji odgovor, molim Vas da postavite specifičnije pitanje vezano za:
+- Konkretne obaveze poslodavca koje Vas interesuju
+- Procenu rizika i potrebnu dokumentaciju
+- Ulogu lica za bezbednost i zdravlje na radu
+- Prava i obaveze zaposlenih
+- Osposobljavanje za bezbedan rad
+- Periodične preglede i ispitivanja
+- Osiguranje od povreda na radu
 
-- Procena rizika na radnom mestu
-- Kontrolne mere za smanjenje rizika
-- Obuka zaposlenih o bezbednom radu
-- Lična zaštitna oprema
-- Procedure u vanrednim situacijama
-- Redovni zdravstveni pregledi
-- Vođenje evidencija
-
-Za detaljnija uputstva o specifičnim aspektima bezbednosti i zdravlja na radu, molimo Vas da postavite konkretnije pitanje.`;
+Na taj način moći ću da Vam pružim detaljan odgovor sa referencama na tačne članove zakona i podzakonskih akata koji regulišu Vaše konkretno pitanje.`;
   }
   
   /**
