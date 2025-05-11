@@ -72,9 +72,9 @@ export default function LandingPage() {
       return data;
     },
   });
-  
+
   const recentPosts = recentPostsData?.blogs || [];
-  
+
   // Dodajemo IntersectionObserver da bismo detektovali kada je sekcija osiguranja vidljiva
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -87,7 +87,7 @@ export default function LandingPage() {
       },
       { threshold: 0.2 } // Aktivira se kada je 20% elementa vidljivo
     );
-    
+
     if (insuranceSectionRef.current) {
       observer.observe(insuranceSectionRef.current);
     }
@@ -160,7 +160,7 @@ export default function LandingPage() {
         {/* Ukrasni elementi u pozadini */}
         <div className="absolute -right-12 -top-12 w-40 h-40 bg-orange-300 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute -left-12 -bottom-12 w-32 h-32 bg-amber-200 rounded-full opacity-20"></div>
-        
+
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
             <div className="md:w-2/3 mb-6 md:mb-0 md:pr-10">
@@ -226,7 +226,7 @@ export default function LandingPage() {
                   ✕
                 </Button>
               </div>
-              
+
               <QualificationQuestionnaire 
                 onComplete={() => {
                   setShowQuestionnaire(false);
@@ -273,7 +273,7 @@ export default function LandingPage() {
               requiresAuth={true}
               requiresPro={true}
             />
-            
+
             <FeatureCard
               title="Usklađenost sa zakonima"
               description="Portal se redovno ažurira u skladu sa najnovijim propisima i zakonima vezanim za bezbednost i zdravlje na radu u Srbiji."
@@ -289,7 +289,7 @@ export default function LandingPage() {
               requiresAuth={true}
               requiresPro={false}
             />
-            
+
             <FeatureCard
               title="Centralizovana dokumentacija"
               description="Sve važne dokumente možete čuvati na jednom mestu, organizovati ih i pristupiti im u bilo kom trenutku."
@@ -305,7 +305,7 @@ export default function LandingPage() {
               requiresAuth={true}
               requiresPro={true}
             />
-            
+
             <FeatureCard
               title="AI asistent za BZR"
               description="Specijalizovani AI asistent sa znanjem o zakonskoj regulativi i praksi BZR u Srbiji odgovara na vaša pitanja."
@@ -321,7 +321,7 @@ export default function LandingPage() {
               requiresAuth={true}
               requiresPro={false}
             />
-            
+
             <FeatureCard
               title="Upravljanje rizicima"
               description="Identifikujte, procenite i upravljajte rizicima na radnom mestu. Kreirajte mere za smanjenje rizika."
@@ -337,7 +337,7 @@ export default function LandingPage() {
               requiresAuth={true}
               requiresPro={true}
             />
-            
+
             <FeatureCard
               title="Referalni program"
               description="Podelite BZR Portal sa kolegama i partnerima i zaradite dodatni prostor za skladištenje."
@@ -372,7 +372,7 @@ export default function LandingPage() {
                 poslodavci u određenim delatnostima sa manje od 20 zaposlenih mogu sami obavljati poslove bezbednosti i zdravlja na radu,
                 bez angažovanja spoljnog lica sa licencom.
               </p>
-              
+
               <div className="bg-white rounded-lg p-6 shadow-md mb-8">
                 <h3 className="text-xl font-bold mb-4 text-blue-800">Kvalifikovane delatnosti</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -399,7 +399,7 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-              
+
               <Button 
                 size="lg" 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -436,7 +436,7 @@ export default function LandingPage() {
                   {post.imageUrl && (
                     <div className="w-full h-48 overflow-hidden">
                       <img 
-                        src={post.imageUrl} 
+                        src={post.imageUrl || "/kaznene-odredbe-banner.svg"} 
                         alt={post.title} 
                         className="w-full h-full object-cover transition-transform hover:scale-105 duration-300" 
                       />
