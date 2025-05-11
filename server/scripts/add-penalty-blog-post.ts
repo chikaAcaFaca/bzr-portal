@@ -17,7 +17,7 @@ function generateSlug(title: string): string {
 /**
  * Funkcija za dodavanje blog posta o kaznenim odredbama
  */
-export async function addPenaltyBlogPost() {
+async function addPenaltyBlogPost() {
   try {
     console.log('Dodavanje blog posta o kaznenim odredbama...');
     
@@ -133,9 +133,7 @@ Poštovanje zakonske obaveze osiguranja zaposlenih predstavlja temelj odgovornog
   }
 }
 
-// Izvršavamo funkciju automatski samo ako je direktno pozvana 
-// Moramo koristiti drugačiju metodu u ES modulima
-
+// Izvršavamo funkciju samo ako je direktno pozvana
 // Provera da li je datoteka direktno pokrenuta (izvor: https://stackoverflow.com/a/67276477)
 const isDirectlyExecuted = process.argv[1] === fileURLToPath(import.meta.url);
 
@@ -151,3 +149,6 @@ if (isDirectlyExecuted) {
       process.exit(1);
     });
 }
+
+// Export funkcije za korišćenje iz drugih datoteka
+export { addPenaltyBlogPost };

@@ -65,6 +65,7 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
+    // Vraćamo na port 5000 koji očekuje Replit workflow
     const port = process.env.PORT || 5000;
     console.log('Pokretanje servera na portu ' + port + '...');
     server.listen(Number(port), "0.0.0.0", () => {
