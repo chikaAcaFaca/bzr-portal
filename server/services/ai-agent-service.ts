@@ -93,40 +93,57 @@ export class AIAgentService {
 
   /**
    * Dohvata odgovor od Gemini API-ja kao primarni servis
+   * Koristi pojednostavljenu strukturu poruka za Gemini API
    */
   private async getGeminiResponse(messages: ChatMessage[]): Promise<string> {
     try {
       console.log('Pozivanje Gemini API-ja...');
       
-      // Konvertujemo ChatMessage format u Gemini format
-      // Gemini ima drugačije uloge: 'user', 'model' (umesto 'assistant') i 'system'
-      const geminiMessages = messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : msg.role,
-        parts: [{ text: msg.content }]
-      }));
+      // Za Gemini je najbolje koristiti jednostavniji model sa jednom porukom
+      // izdvajamo sistemsku poruku
+      const systemMessage = messages.find(msg => msg.role === 'system')?.content || '';
       
-      // Prikaz detalja zahteva za debug
-      console.log(`Gemini API URL: ${this.geminiUrl}?key=API_KEY_HIDDEN`);
-      console.log('Gemini API zahtev (struktura):', JSON.stringify({
-        contents: `${geminiMessages.length} poruka`,
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2000,
-          topP: 0.95,
-          topK: 50
-        }
-      }));
-
+      // izdvajamo korisničku poruku (poslednju)
+      const userMessages = messages.filter(msg => msg.role === 'user');
+      const lastUserMessage = userMessages[userMessages.length - 1]?.content || '';
+      
+      // pravimo jednostavniji format koji sigurno radi sa Gemini
+      const prompt = `${systemMessage}\n\n${lastUserMessage}`;
+      
+      console.log(`Gemini prompt dužina: ${prompt.length} karaktera`);
+      
+      // Koristimo jednostavniji API poziv za Gemini
       const response = await axios.post(
-        `${this.geminiUrl}?key=${config.geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${config.geminiApiKey}`,
         {
-          contents: geminiMessages,
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 2000,
-            topP: 0.95,
-            topK: 50
-          }
+            topP: 0.95
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         },
         {
           headers: {
@@ -135,20 +152,55 @@ export class AIAgentService {
         }
       );
       
-      // Provera odgovora da bismo bili sigurni da je ispravan
-      if (!response.data || !response.data.candidates || !response.data.candidates[0]) {
-        console.error('Gemini API je vratio neočekivan format odgovora:', response.data);
-        throw new Error('Neočekivan format odgovora od Gemini API-ja');
+      console.log('Gemini API odgovor primljen, provera strukture...');
+      
+      // Provera odgovora i prikaz potencijalnih problema
+      if (!response.data) {
+        console.error('Gemini API je vratio prazan odgovor');
+        throw new Error('Prazan odgovor od Gemini API-ja');
       }
       
-      console.log('Gemini API je uspešno odgovorio');
-      return response.data.candidates[0].content.parts[0].text;
+      if (response.data.promptFeedback && response.data.promptFeedback.blockReason) {
+        console.error('Gemini je blokirao prompt:', response.data.promptFeedback);
+        throw new Error(`Gemini je blokirao prompt: ${response.data.promptFeedback.blockReason}`);
+      }
+      
+      if (!response.data.candidates || response.data.candidates.length === 0) {
+        console.error('Gemini nije vratio kandidate:', response.data);
+        throw new Error('Nema kandidata u odgovoru od Gemini API-ja');
+      }
+      
+      const candidate = response.data.candidates[0];
+      
+      if (candidate.finishReason === 'SAFETY') {
+        console.error('Gemini je blokirao odgovor iz sigurnosnih razloga:', candidate.safetyRatings);
+        throw new Error('Gemini je blokirao odgovor iz sigurnosnih razloga');
+      }
+      
+      if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+        console.error('Gemini odgovor nema sadržaj:', candidate);
+        throw new Error('Nepotpun odgovor od Gemini API-ja');
+      }
+      
+      const text = candidate.content.parts[0].text;
+      
+      if (!text) {
+        console.error('Gemini odgovor nema tekst:', candidate.content.parts[0]);
+        throw new Error('Nema teksta u odgovoru od Gemini API-ja');
+      }
+      
+      console.log('Gemini API je uspešno odgovorio, dužina odgovora:', text.length);
+      return text;
     } catch (error: any) {
       // Detaljniji prikaz greške za debugging
       console.error('Greška pri komunikaciji sa Gemini:', error.message);
       if (error.response) {
         console.error('Gemini API status:', error.response.status);
-        console.error('Gemini API odgovor:', error.response.data);
+        console.error('Gemini API odgovor:', JSON.stringify(error.response.data, null, 2));
+      } else if (error.request) {
+        console.error('Gemini API zahtev poslat ali nema odgovora');
+      } else {
+        console.error('Greška pre slanja zahteva:', error.message);
       }
       throw new Error('Neuspešna komunikacija sa LLM servisom (Gemini)');
     }
