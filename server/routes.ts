@@ -47,8 +47,8 @@ import cookieParser from 'cookie-parser';
 import { knowledgeReferenceService } from './services/knowledge-reference-service';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check route for deployments
-  app.get('/', (_req: Request, res: Response) => {
+  // Health check route premešten na /api/health
+  app.get('/api/health', (_req: Request, res: Response) => {
     res.status(200).send('Health check OK');
   });
   
