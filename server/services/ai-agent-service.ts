@@ -28,7 +28,7 @@ interface ChatMessage {
  */
 export class AIAgentService {
   private readonly openrouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private readonly geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+  private readonly geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent';
   private readonly anthropicUrl = 'https://api.anthropic.com/v1/messages';
   private ready = false;
 
@@ -92,14 +92,29 @@ export class AIAgentService {
   }
 
   /**
-   * Dohvata odgovor od Gemini API-ja kao fallback
+   * Dohvata odgovor od Gemini API-ja kao primarni servis
    */
   private async getGeminiResponse(messages: ChatMessage[]): Promise<string> {
     try {
+      console.log('Pozivanje Gemini API-ja...');
+      
       // Konvertujemo ChatMessage format u Gemini format
+      // Gemini ima drugačije uloge: 'user', 'model' (umesto 'assistant') i 'system'
       const geminiMessages = messages.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : msg.role,
         parts: [{ text: msg.content }]
+      }));
+      
+      // Prikaz detalja zahteva za debug
+      console.log(`Gemini API URL: ${this.geminiUrl}?key=API_KEY_HIDDEN`);
+      console.log('Gemini API zahtev (struktura):', JSON.stringify({
+        contents: `${geminiMessages.length} poruka`,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 2000,
+          topP: 0.95,
+          topK: 50
+        }
       }));
 
       const response = await axios.post(
@@ -119,10 +134,22 @@ export class AIAgentService {
           }
         }
       );
-
+      
+      // Provera odgovora da bismo bili sigurni da je ispravan
+      if (!response.data || !response.data.candidates || !response.data.candidates[0]) {
+        console.error('Gemini API je vratio neočekivan format odgovora:', response.data);
+        throw new Error('Neočekivan format odgovora od Gemini API-ja');
+      }
+      
+      console.log('Gemini API je uspešno odgovorio');
       return response.data.candidates[0].content.parts[0].text;
-    } catch (error) {
-      console.error('Greška pri komunikaciji sa Gemini:', error);
+    } catch (error: any) {
+      // Detaljniji prikaz greške za debugging
+      console.error('Greška pri komunikaciji sa Gemini:', error.message);
+      if (error.response) {
+        console.error('Gemini API status:', error.response.status);
+        console.error('Gemini API odgovor:', error.response.data);
+      }
       throw new Error('Neuspešna komunikacija sa LLM servisom (Gemini)');
     }
   }
@@ -159,35 +186,56 @@ export class AIAgentService {
    * Dohvata najbolji mogući odgovor od dostupnih LLM servisa
    */
   private async getLLMResponse(messages: ChatMessage[]): Promise<string> {
-    // Prvo probamo Gemini kao primarni servis
-    if (config.geminiApiKey) {
+    console.log('Započinjem proces dobavljanja LLM odgovora...');
+    
+    // Definišemo redosled prioriteta za LLM servise
+    const servicePriority = [
+      { 
+        name: 'Gemini', 
+        hasKey: !!config.geminiApiKey, 
+        handler: this.getGeminiResponse.bind(this)
+      },
+      { 
+        name: 'OpenRouter', 
+        hasKey: !!config.openrouterApiKey, 
+        handler: this.getOpenRouterResponse.bind(this)
+      },
+      { 
+        name: 'Anthropic', 
+        hasKey: !!config.anthropicApiKey, 
+        handler: this.getAnthropicResponse.bind(this)
+      }
+    ];
+    
+    // Filtriramo samo servise za koje imamo ključeve
+    const availableServices = servicePriority.filter(service => service.hasKey);
+    
+    if (availableServices.length === 0) {
+      console.error('Nijedan LLM servis nije dostupan - nema API ključeva.');
+      throw new Error('Nijedan LLM API ključ nije postavljen. AI Agent ne može da generiše odgovor.');
+    }
+    
+    console.log(`Dostupni LLM servisi (${availableServices.length}): ${availableServices.map(s => s.name).join(', ')}`);
+    
+    // Pokušaj redom sa svakim dostupnim servisom
+    let lastError = null;
+    
+    for (const service of availableServices) {
       try {
-        return await this.getGeminiResponse(messages);
-      } catch (error) {
-        console.warn('Gemini nedostupan, prebacujem na OpenRouter...', error);
+        console.log(`Pokušavam sa ${service.name} servisom...`);
+        const response = await service.handler(messages);
+        console.log(`${service.name} je uspešno dao odgovor.`);
+        return response;
+      } catch (error: any) {
+        console.warn(`${service.name} servis nije dostupan: ${error.message}`);
+        lastError = error;
+        // Nastavljamo sa sledećim servisom
       }
     }
-
-    // Zatim probamo OpenRouter kao sekundarni
-    if (config.openrouterApiKey) {
-      try {
-        return await this.getOpenRouterResponse(messages);
-      } catch (error) {
-        console.warn('OpenRouter nedostupan, prebacujem na Anthropic...', error);
-      }
-    }
-
-    // Na kraju probamo Anthropic
-    if (config.anthropicApiKey) {
-      try {
-        return await this.getAnthropicResponse(messages);
-      } catch (error) {
-        console.error('Svi LLM servisi su nedostupni.', error);
-        throw new Error('Svi LLM servisi su trenutno nedostupni. Pokušajte kasnije.');
-      }
-    }
-
-    throw new Error('Nijedan LLM API ključ nije postavljen. AI Agent ne može da generiše odgovor.');
+    
+    // Ako smo došli dovde, znači da nijedan servis nije uspeo
+    console.error('Svi LLM servisi su nedostupni.', lastError);
+    throw new Error('Svi LLM servisi su trenutno nedostupni. Pokušajte kasnije.');
   }
 
   /**
