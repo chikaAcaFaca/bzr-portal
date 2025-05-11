@@ -3,6 +3,9 @@ import { vectorStorageService } from './vector-storage-service';
 import { blogSearchService } from './blog-search-service';
 import { BlogPost } from '@shared/schema';
 
+// Konstanta koja određuje koliko blog postova treba da bude pronađeno da se ne bi kreirao novi
+const BLOG_POST_THRESHOLD = 3;
+
 // Privremena konfiguracija ako ne možemo importovati iz config
 const config = {
   openrouterApiKey: process.env.OPENROUTER_API_KEY,
@@ -363,19 +366,29 @@ export class AIAgentService {
       let relevantBlogPosts: BlogPost[] = [];
       let shouldCreateBlogPost = true;
       
-      // Limit blog postova koji se smatraju dovoljnim
-      const BLOG_POST_THRESHOLD = 3;
-      
       if (options?.checkExistingBlogs !== false) {
         console.log(`Provera postojećih blog postova za pitanje: "${query}"`);
         try {
-          relevantBlogPosts = await blogSearchService.findRelevantBlogPosts(query, 0.4); // Minimum 40% relevantnosti
-          console.log(`Pronađeno ${relevantBlogPosts.length} relevantnih blog postova.`);
+          // Tražimo blog postove sa većom relevantnošću (50%)
+          relevantBlogPosts = await blogSearchService.findRelevantBlogPosts(query, 0.5);
+          console.log(`Pronađeno ${relevantBlogPosts.length} visoko relevantnih blog postova.`);
           
-          // Ako ima dovoljno postojećih blog postova, ne kreiraj novi
+          // Ako ima dovoljno postojećih visoko relevantnih blog postova, ne kreiraj novi
           if (relevantBlogPosts.length >= BLOG_POST_THRESHOLD) {
-            console.log(`Postoji ${relevantBlogPosts.length} relevantnih blog postova, nećemo kreirati novi.`);
+            console.log(`Postoji ${relevantBlogPosts.length} visoko relevantnih blog postova, nećemo kreirati novi.`);
             shouldCreateBlogPost = false;
+          } else {
+            // Ako nemamo dovoljno visoko relevantnih postova, probamo sa manjom relevantnošću
+            const moreRelaxedPosts = await blogSearchService.findRelevantBlogPosts(query, 0.3);
+            console.log(`Pronađeno ${moreRelaxedPosts.length} delimično relevantnih blog postova.`);
+            
+            if (moreRelaxedPosts.length >= BLOG_POST_THRESHOLD) {
+              console.log(`Postoji ${moreRelaxedPosts.length} delimično relevantnih blog postova, nećemo kreirati novi.`);
+              relevantBlogPosts = moreRelaxedPosts;
+              shouldCreateBlogPost = false;
+            } else {
+              console.log(`Nema dovoljno relevantnih blog postova, potrebno je kreirati novi.`);
+            }
           }
         } catch (error) {
           console.error('Greška pri pretrazi blog postova:', error);
@@ -406,7 +419,15 @@ export class AIAgentService {
         
         // Dodajemo napomenu o relevantnim blogovima koje korisnik treba da vidi
         if (relevantBlogPosts.length > 0) {
-          contextText += `VAŽNO: U tvom odgovoru OBAVEZNO naglasi korisniku da smo već objavili blog postove na ovu temu i navedi linkove ka njima (/${limitedPosts.map(p => `blog/${p.slug}`).join(', /')}). Započni odgovor sa referencom na ove linkove!\n\n`;
+          contextText += `VAŽNO: U tvom odgovoru OBAVEZNO prvo naglasi korisniku da smo već objavili blog postove na ovu temu. 
+Format obaveštenja treba da bude sledeći:
+
+"Na našem portalu već imamo detaljne članke o ovoj temi. Preporučujemo da pogledate:
+- [${limitedPosts[0]?.title || 'Članak 1'}](/blog/${limitedPosts[0]?.slug || ''})
+${limitedPosts[1] ? `- [${limitedPosts[1]?.title}](/blog/${limitedPosts[1]?.slug})\n` : ''}${limitedPosts[2] ? `- [${limitedPosts[2]?.title}](/blog/${limitedPosts[2]?.slug})\n` : ''}
+Nakon toga možeš ukratko odgovoriti na pitanje."
+
+Započni odgovor sa ovim obaveštenjem i nakon toga daj kratak odgovor na pitanje.\n\n`;
         }
       }
       

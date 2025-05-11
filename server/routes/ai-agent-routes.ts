@@ -61,7 +61,15 @@ export async function setupAIAgentRoutes(app: any) {
       
       // Ako je zatraženo kreiranje bloga, nema relevantnih postojećih blogova i odgovor je kvalitetan
       let blogPost = null;
-      if (createBlog && aiResponse.shouldCreateBlogPost && aiResponse.answer.length > 200) {
+      let blogCreationStatus = "not_needed"; // Statusi: "not_needed", "created", "failed", "existing_blogs"
+      
+      // Ako postoje relevantni blog postovi, ne kreiramo novi
+      if (aiResponse.relevantBlogPosts && aiResponse.relevantBlogPosts.length >= 3) {
+        console.log(`Koristiće se postojeći blog postovi (${aiResponse.relevantBlogPosts.length}). Nema potrebe za kreiranjem novog.`);
+        blogCreationStatus = "existing_blogs";
+      } 
+      // Inače, ako je zatraženo kreiranje bloga, nema dovoljno relevantnih blogova i odgovor je kvalitetan
+      else if (createBlog && aiResponse.shouldCreateBlogPost && aiResponse.answer.length > 200) {
         try {
           // Kategorija se može izvući iz sadržaja pitanja
           let category = 'general';
@@ -85,6 +93,7 @@ export async function setupAIAgentRoutes(app: any) {
           });
           
           console.log(`Blog post kreiran! ID: ${blogPost.id}, Naslov: ${blogPost.title}`);
+          blogCreationStatus = "created";
           
           // Pošalji notifikaciju administratorima o novom blog postu za odobrenje
           try {
@@ -96,10 +105,9 @@ export async function setupAIAgentRoutes(app: any) {
           }
         } catch (blogError) {
           console.error('Greška pri kreiranju blog posta:', blogError);
+          blogCreationStatus = "failed";
           // Nastavljamo sa izvršavanjem iako je kreiranje bloga neuspelo
         }
-      } else if (!aiResponse.shouldCreateBlogPost && aiResponse.relevantBlogPosts && aiResponse.relevantBlogPosts.length > 0) {
-        console.log(`Koristiće se postojeći blog postovi. Nema potrebe za kreiranjem novog.`);
       }
       
       // Uspešan odgovor
@@ -109,7 +117,8 @@ export async function setupAIAgentRoutes(app: any) {
         sourceDocuments: aiResponse.sourceDocuments,
         relevantBlogPosts: aiResponse.relevantBlogPosts,
         shouldCreateBlogPost: aiResponse.shouldCreateBlogPost,
-        blogPost: blogPost // Vraćamo podatke o kreiranom blog postu (ako je kreiran)
+        blogPost: blogPost, // Vraćamo podatke o kreiranom blog postu (ako je kreiran)
+        blogCreationStatus: blogCreationStatus // Status kreiranja bloga za bolju informisanost klijenta
       });
     } catch (error: any) {
       console.error('Greška pri komunikaciji sa AI agentom:', error);
