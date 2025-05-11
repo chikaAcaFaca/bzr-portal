@@ -183,6 +183,63 @@ export default function AIAssistant() {
                     >
                       <div className="whitespace-pre-wrap">{message.content}</div>
                       
+                      {/* Prikaz relevantnih blog postova ako postoje */}
+                      {message.role === 'assistant' && message.relevantBlogPosts && message.relevantBlogPosts.length > 0 && (
+                        <div className="mt-4 pt-2 border-t border-yellow-200">
+                          <div 
+                            className="text-sm cursor-pointer flex items-center gap-1 mt-1 text-yellow-700 hover:text-yellow-900 bg-yellow-50 p-2 rounded-md"
+                            onClick={() => toggleBlogPosts(index)}
+                          >
+                            <BookOpen size={16} />
+                            <span className="font-medium">
+                              {showBlogPosts[index] ? 'Sakrij blog postove' : 'Prikaži relevantne blog postove'} ({message.relevantBlogPosts.length})
+                            </span>
+                          </div>
+                          
+                          {showBlogPosts[index] && (
+                            <div className="mt-2 space-y-3 text-sm">
+                              <div className="font-semibold text-yellow-800">
+                                Pronađeni relevantni blog postovi o ovoj temi:
+                              </div>
+                              <div className="grid gap-3">
+                                {message.relevantBlogPosts.map((post, postIndex) => (
+                                  <Card key={postIndex} className="overflow-hidden border-yellow-200 hover:shadow-md transition-shadow duration-300">
+                                    <CardHeader className="p-4 pb-2">
+                                      <Link href={`/blog/${post.slug}`}>
+                                        <CardTitle className="text-base font-medium text-yellow-700 hover:text-yellow-900 cursor-pointer flex items-center">
+                                          {post.title}
+                                          <ExternalLink size={14} className="ml-1 inline" />
+                                        </CardTitle>
+                                      </Link>
+                                    </CardHeader>
+                                    <CardContent className="p-4 pt-0">
+                                      {post.excerpt && (
+                                        <p className="text-muted-foreground text-xs line-clamp-2">
+                                          {post.excerpt}
+                                        </p>
+                                      )}
+                                      <div className="mt-2 flex gap-1 flex-wrap">
+                                        {post.tags && post.tags.slice(0, 3).map((tag, tagIndex) => (
+                                          <Badge key={tagIndex} variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                            {tag}
+                                          </Badge>
+                                        ))}
+                                        {post.category && (
+                                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                            {post.category}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Prikaz izvora iz dokumentacije */}
                       {message.sources && message.sources.length > 0 && (
                         <div className="mt-2">
                           <div 
