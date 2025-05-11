@@ -4,6 +4,10 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedBlogPosts } from "./scripts/seed-blog-posts";
 
 const app = express();
+// Health check route for deployments
+app.get('/', (_req, res) => {
+  res.status(200).send('Health check OK');
+});
 // Povećavamo maksimalne veličine za json i url-encoded zahteve
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
@@ -63,11 +67,7 @@ app.use((req, res, next) => {
 
     const port = process.env.PORT || 5000;
     console.log('Pokretanje servera na portu ' + port + '...');
-    server.listen({
-      port: Number(port),
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
+    server.listen(Number(port), "0.0.0.0", () => {
       console.log(`===================================`);
       console.log(`Server ready and listening on port ${port}`);
       console.log(`===================================`);
