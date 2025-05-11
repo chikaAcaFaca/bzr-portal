@@ -113,8 +113,9 @@ export class AIAgentService {
       console.log(`Gemini prompt dužina: ${prompt.length} karaktera`);
       
       // Koristimo jednostavniji API poziv za Gemini
+      // Koristimo napredni model gemini-1.5-pro-latest za najbolji odgovor
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${config.geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${config.geminiApiKey}`,
         {
           contents: [
             {

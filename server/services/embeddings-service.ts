@@ -142,6 +142,7 @@ export class EmbeddingsService {
       
       try {
         // Gemini embeddings model koristi drugačiju strukturu zahteva
+        // Koristimo najnoviji model za embeddings
         const response = await axios.post(
           'https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedText',
           {
