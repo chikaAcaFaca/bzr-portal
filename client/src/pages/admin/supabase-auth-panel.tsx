@@ -88,8 +88,18 @@ function SupabaseAuthPanelContent() {
       }
       
       const data = await response.json();
-      setUsers(data);
-      setFilteredUsers(data);
+      // Provera da li je data.users niz, ako nije, koristimo prazan niz
+      const userArray = Array.isArray(data.users) ? data.users : [];
+      setUsers(userArray);
+      setFilteredUsers(userArray);
+      
+      // Prikazujemo poruku ako postoji
+      if (data.message) {
+        toast({
+          title: 'Informacija',
+          description: data.message,
+        });
+      }
     } catch (error: any) {
       toast({
         title: 'Greška pri učitavanju',
