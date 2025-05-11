@@ -61,13 +61,16 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    const port = 5000;
+    const port = process.env.PORT || 5000;
+    console.log('Pokretanje servera na portu ' + port + '...');
     server.listen({
-      port,
+      port: Number(port),
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
+      console.log(`===================================`);
       console.log(`Server ready and listening on port ${port}`);
+      console.log(`===================================`);
     });
 
     // Handle graceful shutdown

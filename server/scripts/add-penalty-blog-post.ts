@@ -1,5 +1,6 @@
 import { storage } from '../storage';
 import { transliterate } from '../utils/transliterate';
+import { fileURLToPath } from 'url';
 
 /**
  * Funkcija za generisanje slug-a iz naslova
@@ -132,14 +133,21 @@ Poštovanje zakonske obaveze osiguranja zaposlenih predstavlja temelj odgovornog
   }
 }
 
-// Izvršavanje funkcije odmah
-console.log('Dodavanje blog posta o kaznenim odredbama...');
-addPenaltyBlogPost()
-  .then(() => {
-    console.log('Skripta uspešno izvršena.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Greška prilikom izvršavanja skripte:', error);
-    process.exit(1);
-  });
+// Izvršavamo funkciju automatski samo ako je direktno pozvana 
+// Moramo koristiti drugačiju metodu u ES modulima
+
+// Provera da li je datoteka direktno pokrenuta (izvor: https://stackoverflow.com/a/67276477)
+const isDirectlyExecuted = process.argv[1] === fileURLToPath(import.meta.url);
+
+if (isDirectlyExecuted) {
+  console.log('Direktno pokretanje skripte za dodavanje blog posta o kaznenim odredbama...');
+  addPenaltyBlogPost()
+    .then(() => {
+      console.log('Skripta uspešno izvršena.');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Greška prilikom izvršavanja skripte:', error);
+      process.exit(1);
+    });
+}
