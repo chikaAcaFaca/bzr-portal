@@ -239,21 +239,234 @@ export class AIAgentService {
   }
 
   /**
+   * Vraća fiksne odgovore za najčešća pitanja iz oblasti BZR
+   * Koristi se kao failback kada Gemini API nije dostupan
+   */
+  private getDefaultResponses(query: string): string | null {
+    // Normalizujemo upit za pretragu
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Fiksni odgovori za najčešća pitanja
+    const defaultResponses: Record<string, string> = {
+      'obaveze poslodavca': `# Obaveze poslodavca prema Zakonu o bezbednosti i zdravlju na radu
+
+Prema Zakonu o bezbednosti i zdravlju na radu u Republici Srbiji, poslodavac ima sledeće glavne obaveze:
+
+1. **Organizovanje poslova bezbednosti i zdravlja na radu** - Poslodavac mora odrediti lice za bezbednost i zdravlje na radu koje ima položen stručni ispit (član 37)
+
+2. **Donošenje akta o proceni rizika** - Mora izraditi i doneti pisani akt o proceni rizika za sva radna mesta (član 13)
+
+3. **Obuka zaposlenih** - Mora obezbediti zaposlenima osposobljavanje za bezbedan rad (član 27)
+
+4. **Obezbeđivanje lične zaštitne opreme** - Dužan je obezbediti i održavati opremu za zaštitu na radu (član 15)
+
+5. **Organizacija preventivnih i periodičnih pregleda** - Mora obezbediti preventivne i periodične preglede i ispitivanja opreme za rad i uslova radne okoline (član 15)
+
+6. **Praćenje zdravstvenog stanja zaposlenih** - Obavezan je pratiti zdravstveno stanje zaposlenih kroz periodične lekarske preglede (član 16)
+
+7. **Vođenje evidencija** - Mora voditi i čuvati evidencije iz oblasti bezbednosti i zdravlja na radu (član 49)
+
+8. **Osiguranje zaposlenih** - Obavezan je osigurati zaposlene od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom (član 53)
+
+Nepoštovanje ovih obaveza podleže prekršajnim odredbama zakona sa novčanim kaznama od 800.000 do 1.000.000 dinara.`,
+
+      'bezbednost na radu': `# Bezbednost na radu - Osnovne informacije
+
+Bezbednost na radu obuhvata mere i aktivnosti usmerene na stvaranje bezbednih uslova rada i zaštitu zdravlja zaposlenih.
+
+## Osnovni principi bezbednosti na radu:
+
+1. **Prevencija** - Sprečavanje povreda i profesionalnih oboljenja je prioritet
+2. **Procena rizika** - Identifikacija opasnosti, procena verovatnoće i težine posledica
+3. **Eliminacija opasnosti** - Primena tehničkih mera za uklanjanje izvora opasnosti
+4. **Supstitucija** - Zamena opasnih materija i postupaka manje opasnim
+5. **Kolektivne mere zaštite** - Primena mera koje štite sve zaposlene
+6. **Lična zaštitna oprema** - Dodatna zaštita za specifične rizike
+7. **Obuka i informisanje** - Kontinuirana edukacija zaposlenih o rizicima i merama zaštite
+
+## Zakonska regulativa:
+
+Osnovni propis koji reguliše oblast bezbednosti i zdravlja na radu u Republici Srbiji je Zakon o bezbednosti i zdravlju na radu ("Sl. glasnik RS", br. 101/2005, 91/2015 i 113/2017 - dr. zakon).
+
+Za specifične aspekte bezbednosti na radu, konsultujte odgovarajuće pravilnike i tehničke propise koji detaljnije regulišu pojedine oblasti.`,
+
+      'procena rizika': `# Procena rizika na radnom mestu
+
+Procena rizika je sistematski proces identifikacije i evaluacije potencijalnih opasnosti na radnom mestu. Ovaj postupak je temelj sistema bezbednosti i zdravlja na radu.
+
+## Proces procene rizika obuhvata:
+
+1. **Identifikacija opasnosti** - Utvrđivanje izvora potencijalnih opasnosti na radnom mestu
+   
+2. **Identifikacija izloženih radnika** - Određivanje koji radnici mogu biti izloženi opasnostima
+   
+3. **Procena nivoa rizika** - Ocena verovatnoće nastanka povrede ili oštećenja zdravlja i težine mogućih posledica
+   
+4. **Odlučivanje o preventivnim merama** - Izbor i primena mera za eliminaciju ili smanjenje rizika
+   
+5. **Dokumentovanje** - Izrada pisanog akta o proceni rizika
+   
+6. **Periodično preispitivanje** - Revizija procene rizika pri svakoj promeni uslova rada
+
+## Zakonska obaveza:
+
+Prema članu 13. Zakona o bezbednosti i zdravlju na radu, poslodavac je dužan da donese akt o proceni rizika u pisanoj formi za sva radna mesta i da utvrdi mere za otklanjanje ili smanjenje rizika.
+
+## Metodologija:
+
+Pravilnikom o načinu i postupku procene rizika na radnom mestu i u radnoj okolini propisana je metodologija za sprovođenje procene rizika. Rizik se najčešće izračunava prema formuli:
+
+**Rizik = Verovatnoća × Posledica**
+
+Procena rizika mora biti izvršena od strane stručnih lica sa odgovarajućim licencama.`,
+
+      'lice za bezbednost': `# Lice za bezbednost i zdravlje na radu - Uloga i odgovornosti
+
+Lice za bezbednost i zdravlje na radu je stručno lice koje poslodavac angažuje za obavljanje poslova bezbednosti i zdravlja na radu.
+
+## Osnovne dužnosti lica za bezbednost:
+
+1. **Sprovođenje preventivnih mera** - Učestvovanje u izradi akta o proceni rizika i sprovođenje preventivnih mera
+
+2. **Osposobljavanje zaposlenih** - Priprema i sprovođenje osposobljavanja zaposlenih za bezbedan rad
+
+3. **Kontrola i nadzor** - Provera primene mera za bezbedan i zdrav rad
+
+4. **Praćenje stanja** - Praćenje stanja u vezi sa povredama na radu i profesionalnim oboljenjima
+
+5. **Zabrana rada** - Zabrana rada na radnom mestu ili upotrebe sredstva za rad kada utvrdi neposrednu opasnost po život ili zdravlje
+
+6. **Saradnja** - Saradnja sa službom medicine rada i inspektorom rada
+
+## Zakonski uslovi:
+
+Prema članu 37. Zakona o bezbednosti i zdravlju na radu, lice za bezbednost mora imati:
+- Položen stručni ispit o praktičnoj osposobljenosti za obavljanje poslova bezbednosti i zdravlja na radu
+- Najmanje tri godine radnog iskustva u struci (za poslodavce sa visokim rizikom)
+- Odgovarajuće obrazovanje (visoka stručna sprema za poslodavce sa visokorizičnim delatnostima)
+
+Poslodavci sa više od 50 zaposlenih koji rade na poslovima sa povećanim rizikom moraju odrediti barem jedno lice za bezbednost sa punim radnim vremenom.`,
+
+      'ppu': `# Prethodna i periodična uverenja (PPU) - Lekarski pregledi zaposlenih
+
+Prethodna i periodična uverenja (PPU) su lekaraska uverenja koja proizilaze iz prethodnih i periodičnih lekarskih pregleda zaposlenih.
+
+## Prethodni lekarski pregledi:
+
+- Obavljaju se **pre stupanja zaposlenog na rad** na radnom mestu sa povećanim rizikom
+- Cilj je utvrđivanje zdravstvene sposobnosti zaposlenog za rad na konkretnom radnom mestu
+- Rezultiraju izdavanjem Prethodnog lekarskog uverenja
+
+## Periodični lekarski pregledi:
+
+- Obavljaju se **u toku rada** na radnom mestu sa povećanim rizikom
+- Vrše se u rokovima utvrđenim aktom o proceni rizika (najčešće na 12 meseci)
+- Cilj je praćenje zdravstvenog stanja zaposlenih i rano otkrivanje promena
+- Rezultiraju izdavanjem Periodičnog lekarskog uverenja
+
+## Zakonska obaveza:
+
+Prema članu 43. Zakona o bezbednosti i zdravlju na radu, poslodavac je dužan da zaposlenom na radnom mestu sa povećanim rizikom pre početka rada obezbedi prethodni lekarski pregled, kao i periodični lekarski pregled u toku rada.
+
+## Sadržaj pregleda:
+
+Sadržaj i obim lekarskih pregleda definisan je Pravilnikom o prethodnim i periodičnim lekarskim pregledima zaposlenih na radnim mestima sa povećanim rizikom i zavisi od specifičnih rizika na radnom mestu.
+
+Preglede može obavljati samo služba medicine rada koja ima odgovarajuću licencu.`,
+
+      'osiguranje zaposlenih': `# Osiguranje zaposlenih od povreda na radu i profesionalnih bolesti
+
+Osiguranje zaposlenih od povreda na radu je zakonska obaveza poslodavca u Republici Srbiji.
+
+## Ključne informacije o osiguranju zaposlenih:
+
+1. **Zakonski osnov** - Član 53. Zakona o bezbednosti i zdravlju na radu propisuje obavezu osiguranja
+
+2. **Ko mora biti osiguran** - Svi zaposleni, bez obzira na vrstu ugovora o radu
+
+3. **Od čega se osigurava** - Od povreda na radu, profesionalnih oboljenja i oboljenja u vezi sa radom
+
+4. **Ko plaća osiguranje** - Poslodavac u potpunosti snosi troškove premije osiguranja
+
+5. **Način osiguranja** - Najčešće kroz polisu kolektivnog osiguranja zaposlenih
+
+6. **Sankcije** - Neispunjavanje ove obaveze podleže novčanim kaznama prema članu 69. Zakona
+
+## Pokriće osiguranja:
+
+Standardno pokriće osiguranja obično uključuje:
+- Troškove lečenja usled nezgode
+- Dnevne naknade za bolovanje
+- Naknade za trajni invaliditet
+- Naknade u slučaju smrti usled nezgode
+
+## Preporuke:
+
+- Osiguranje treba ugovoriti sa renomiranim osiguravajućim društvom
+- Iznos osiguranja treba prilagoditi stepenu rizika u delatnosti
+- Poželjno je obuhvatiti sve rizike koji su identifikovani aktom o proceni rizika`
+    };
+    
+    // Tražimo najbolje podudaranje u ključnim rečima
+    for (const [key, response] of Object.entries(defaultResponses)) {
+      if (normalizedQuery.includes(key)) {
+        return response;
+      }
+    }
+    
+    // Ako nema konkretnog podudaranja, vraćamo generalni odgovor o BZR
+    return `# Bezbednost i zdravlje na radu
+
+Bezbednost i zdravlje na radu (BZR) je multidisciplinarno polje koje se bavi zaštitom bezbednosti, zdravlja i dobrobiti ljudi uključenih u rad ili zaposlenje.
+
+## Osnovni principi BZR:
+
+1. **Prevencija je prioritet** - Sprečavanje povreda i bolesti je efikasnije od rešavanja problema nakon što se dogode
+   
+2. **Odgovornost poslodavca** - Poslodavac ima primarnu odgovornost za obezbeđivanje bezbednog radnog okruženja
+   
+3. **Uključenost zaposlenih** - Zaposleni moraju biti uključeni u odluke o bezbednosti i zdravlju
+   
+4. **Kontinuirano unapređenje** - Sistem bezbednosti i zdravlja mora se redovno ažurirati i poboljšavati
+   
+5. **Kultura bezbednosti** - Promovisanje pozitivne kulture bezbednosti u celoj organizaciji
+
+## Glavni elementi sistema BZR:
+
+- Procena rizika na radnom mestu
+- Kontrolne mere za smanjenje rizika
+- Obuka zaposlenih o bezbednom radu
+- Lična zaštitna oprema
+- Procedure u vanrednim situacijama
+- Redovni zdravstveni pregledi
+- Vođenje evidencija
+
+Za detaljnija uputstva o specifičnim aspektima bezbednosti i zdravlja na radu, molimo Vas da postavite konkretnije pitanje.`;
+  }
+  
+  /**
    * Dohvata najbolji mogući odgovor od dostupnih LLM servisa
-   * Koristi samo Gemini API
+   * Koristi samo Gemini API sa fallback na fiksne odgovore
    */
   private async getLLMResponse(messages: ChatMessage[]): Promise<string> {
     console.log('Započinjem proces dobavljanja LLM odgovora...');
     
-    // Koristimo samo Gemini
-    console.log('Koristimo isključivo Gemini API za odgovore');
+    // Izvlačimo korisničko pitanje
+    const userMessages = messages.filter(msg => msg.role === 'user');
+    const lastUserMessage = userMessages[userMessages.length - 1]?.content || '';
     
     // Proveravamo da li imamo Gemini API ključ
     if (!config.geminiApiKey) {
-      throw new Error('Gemini API ključ nije postavljen. AI Agent ne može da generiše odgovor.');
+      console.log('Gemini API ključ nije postavljen. Koristim fiksne odgovore.');
+      const defaultResponse = this.getDefaultResponses(lastUserMessage);
+      if (defaultResponse) {
+        return defaultResponse;
+      }
+      return 'Nije moguće generisati odgovor. Molimo kontaktirajte administratora.';
     }
     
     try {
+      // Prvo pokušavamo sa Gemini servisom
       console.log('Pokušavam sa Gemini servisom...');
       const response = await this.getGeminiResponse(messages);
       console.log('Gemini je uspešno dao odgovor.');
@@ -264,47 +477,18 @@ export class AIAgentService {
         console.log('Gemini API status:', error.response.status);
         console.log('Gemini API odgovor:', JSON.stringify(error.response.data, null, 2));
       }
+      
+      console.log('Preuzimam fiksni odgovor kao zamenu...');
+      const defaultResponse = this.getDefaultResponses(lastUserMessage);
+      if (defaultResponse) {
+        return defaultResponse;
+      }
+      
       throw new Error('Neuspešna komunikacija sa LLM servisom (Gemini)');
     }
     
-    // Stara implementacija koja se sada ignoriše
-    const servicePriority = [
-      { 
-        name: 'Gemini', 
-        hasKey: !!config.geminiApiKey, 
-        handler: this.getGeminiResponse.bind(this)
-      }
-    ];
-    
-    // Uvek koristimo samo Gemini
-    const availableServices = [servicePriority[0]];
-    
-    if (availableServices.length === 0) {
-      console.error('Nijedan LLM servis nije dostupan - nema API ključeva.');
-      throw new Error('Nijedan LLM API ključ nije postavljen. AI Agent ne može da generiše odgovor.');
-    }
-    
-    console.log(`Dostupni LLM servisi (${availableServices.length}): ${availableServices.map(s => s.name).join(', ')}`);
-    
-    // Pokušaj redom sa svakim dostupnim servisom
-    let lastError = null;
-    
-    for (const service of availableServices) {
-      try {
-        console.log(`Pokušavam sa ${service.name} servisom...`);
-        const response = await service.handler(messages);
-        console.log(`${service.name} je uspešno dao odgovor.`);
-        return response;
-      } catch (error: any) {
-        console.warn(`${service.name} servis nije dostupan: ${error.message}`);
-        lastError = error;
-        // Nastavljamo sa sledećim servisom
-      }
-    }
-    
-    // Ako smo došli dovde, znači da nijedan servis nije uspeo
-    console.error('Svi LLM servisi su nedostupni.', lastError);
-    throw new Error('Svi LLM servisi su trenutno nedostupni. Pokušajte kasnije.');
+
+    // Kraj metode
   }
 
   /**
