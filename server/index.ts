@@ -4,8 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedBlogPosts } from "./scripts/seed-blog-posts";
 
 const app = express();
-// Health check route for deployments
-app.get('/', (_req, res) => {
+// Health check route premešten na /api/health
+app.get('/api/health', (_req, res) => {
   res.status(200).send('Health check OK');
 });
 // Povećavamo maksimalne veličine za json i url-encoded zahteve
@@ -44,10 +44,7 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Dodajemo health check na zasebnu rutu umesto na '/'
-    app.get('/api/health', (_req: Request, res: Response) => {
-      res.status(200).send('OK');
-    });
+    // Health check je već postavljen na /api/health
 
     const server = await registerRoutes(app);
 
