@@ -235,6 +235,7 @@ export class AIAgentService {
     includePublic?: boolean;
     contextLimit?: number;
     history?: ChatMessage[];
+    checkExistingBlogs?: boolean;
   }): Promise<AIResponse> {
     if (!this.ready) {
       return {
@@ -244,6 +245,30 @@ export class AIAgentService {
     }
 
     try {
+      // 0. Provera postojećih blog postova za ovo pitanje
+      let relevantBlogPosts: BlogPost[] = [];
+      let shouldCreateBlogPost = true;
+      
+      // Limit blog postova koji se smatraju dovoljnim
+      const BLOG_POST_THRESHOLD = 3;
+      
+      if (options?.checkExistingBlogs !== false) {
+        console.log(`Provera postojećih blog postova za pitanje: "${query}"`);
+        try {
+          relevantBlogPosts = await blogSearchService.findRelevantBlogPosts(query, 0.4); // Minimum 40% relevantnosti
+          console.log(`Pronađeno ${relevantBlogPosts.length} relevantnih blog postova.`);
+          
+          // Ako ima dovoljno postojećih blog postova, ne kreiraj novi
+          if (relevantBlogPosts.length >= BLOG_POST_THRESHOLD) {
+            console.log(`Postoji ${relevantBlogPosts.length} relevantnih blog postova, nećemo kreirati novi.`);
+            shouldCreateBlogPost = false;
+          }
+        } catch (error) {
+          console.error('Greška pri pretrazi blog postova:', error);
+          // Nastavljamo sa izvršavanjem i ignorišemo grešku
+        }
+      }
+
       // 1. Dohvati relevantni kontekst iz baze znanja
       const contextDocs = await this.getRelevantContext(query, {
         limit: options?.contextLimit || 5,
@@ -253,8 +278,19 @@ export class AIAgentService {
 
       // 2. Pripremi kontekst za AI model
       let contextText = '';
+      
+      // Prvo dodaj relevantne blogove u kontekst ako postoje
+      if (relevantBlogPosts.length > 0) {
+        contextText += 'Relevantni postojeći blog postovi:\n\n';
+        relevantBlogPosts.forEach((post, index) => {
+          contextText += `Blog ${index + 1} - ${post.title}:\n`;
+          contextText += `${post.excerpt || ''}\n\n`;
+        });
+      }
+      
+      // Zatim dodaj dokumente iz baze znanja
       if (contextDocs.length > 0) {
-        contextText = 'Relevantni kontekst iz baze znanja:\n\n';
+        contextText += 'Relevantni kontekst iz baze znanja:\n\n';
         
         contextDocs.forEach((doc, index) => {
           contextText += `Dokument ${index + 1}: ${doc.metadata.filename || 'Nepoznat dokument'}\n`;
@@ -312,10 +348,12 @@ Tvoj cilj je da korisniku pružiš korisne i stručne informacije o zaštiti na 
       // 4. Dobavi odgovor od LLM-a
       const answer = await this.getLLMResponse(messages);
 
-      // 5. Vrati odgovor i izvore
+      // 5. Vrati odgovor, izvore i informacije o pronađenim blog postovima
       return {
         answer,
-        sourceDocuments: contextDocs.length > 0 ? contextDocs : undefined
+        sourceDocuments: contextDocs.length > 0 ? contextDocs : undefined,
+        relevantBlogPosts: relevantBlogPosts.length > 0 ? relevantBlogPosts : undefined,
+        shouldCreateBlogPost
       };
     } catch (error: any) {
       console.error('Greška pri generisanju odgovora:', error);

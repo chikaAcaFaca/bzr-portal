@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, SendHorizontal, FileText, Upload } from 'lucide-react';
+import { Loader2, SendHorizontal, FileText, Upload, BookOpen, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -9,6 +9,17 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { apiRequest } from '@/lib/queryClient';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Link } from 'wouter';
+
+type BlogPost = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string;
+  category?: string;
+  tags?: string[];
+};
 
 type Message = {
   role: 'user' | 'assistant';
@@ -21,6 +32,8 @@ type Message = {
       fileType: string;
     }
   }[];
+  relevantBlogPosts?: BlogPost[];
+  shouldCreateBlogPost?: boolean;
 };
 
 export default function AIAssistant() {
@@ -28,6 +41,7 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSources, setShowSources] = useState<Record<number, boolean>>({});
+  const [showBlogPosts, setShowBlogPosts] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -58,7 +72,11 @@ export default function AIAssistant() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ query: input }),
+        body: JSON.stringify({ 
+          query: input,
+          createBlog: true,  // Dozvoli automatsko kreiranje bloga ako je potrebno
+          checkExistingBlogs: true // Uvek proveri da li postoje postojeći blogovi
+        }),
         credentials: 'include'
       });
       
@@ -76,10 +94,26 @@ export default function AIAssistant() {
         role: 'assistant',
         content: data.answer,
         timestamp: new Date(),
-        sources: data.sourceDocuments
+        sources: data.sourceDocuments,
+        relevantBlogPosts: data.relevantBlogPosts,
+        shouldCreateBlogPost: data.shouldCreateBlogPost
       };
       
+      // Ako su pronađeni relevantni blogovi, automatski ih prikaži
+      if (data.relevantBlogPosts && data.relevantBlogPosts.length > 0) {
+        const messageIndex = messages.length; // Indeks nove poruke
+        setShowBlogPosts(prev => ({ ...prev, [messageIndex]: true }));
+      }
+      
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
+      
+      // Ako je kreiran novi blog post, prikaži obaveštenje
+      if (data.blogPost) {
+        toast({
+          title: "Blog post kreiran",
+          description: "Vaše pitanje je kreiralo blog post koji čeka odobrenje administratora",
+        });
+      }
     } catch (error: any) {
       console.error('Greška:', error);
       toast({
@@ -94,6 +128,13 @@ export default function AIAssistant() {
 
   const toggleSources = (index: number) => {
     setShowSources(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+  
+  const toggleBlogPosts = (index: number) => {
+    setShowBlogPosts(prev => ({
       ...prev,
       [index]: !prev[index]
     }));

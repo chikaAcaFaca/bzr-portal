@@ -21,7 +21,7 @@ export async function setupAIAgentRoutes(app: any) {
    */
   router.post('/chat', async (req: Request, res: Response) => {
     try {
-      const { query, userId, includePublic, contextLimit, history, createBlog } = req.body;
+      const { query, userId, includePublic, contextLimit, history, createBlog, checkExistingBlogs } = req.body;
       
       if (!query || typeof query !== 'string' || query.trim() === '') {
         return res.status(400).json({
@@ -41,12 +41,13 @@ export async function setupAIAgentRoutes(app: any) {
       }
       */
       
-      // Poziv AI agenta
+      // Poziv AI agenta sa proverom postojećih blog postova
       const aiResponse = await aiAgentService.generateAnswer(query, {
         userId: userId || (req.user ? (req.user as any).id : undefined),
         includePublic: includePublic !== false, // podrazumevano true
         contextLimit,
-        history
+        history,
+        checkExistingBlogs: checkExistingBlogs !== false // podrazumevano true
       });
       
       // Provera da li je došlo do greške
@@ -58,9 +59,9 @@ export async function setupAIAgentRoutes(app: any) {
         });
       }
       
-      // Ako je zatraženo kreiranje bloga i ako je odgovor kvalitetan (min 200 karaktera)
+      // Ako je zatraženo kreiranje bloga, nema relevantnih postojećih blogova i odgovor je kvalitetan
       let blogPost = null;
-      if (createBlog && aiResponse.answer.length > 200) {
+      if (createBlog && aiResponse.shouldCreateBlogPost && aiResponse.answer.length > 200) {
         try {
           // Kategorija se može izvući iz sadržaja pitanja
           let category = 'general';
@@ -97,6 +98,8 @@ export async function setupAIAgentRoutes(app: any) {
           console.error('Greška pri kreiranju blog posta:', blogError);
           // Nastavljamo sa izvršavanjem iako je kreiranje bloga neuspelo
         }
+      } else if (!aiResponse.shouldCreateBlogPost && aiResponse.relevantBlogPosts && aiResponse.relevantBlogPosts.length > 0) {
+        console.log(`Koristiće se postojeći blog postovi. Nema potrebe za kreiranjem novog.`);
       }
       
       // Uspešan odgovor
@@ -104,6 +107,8 @@ export async function setupAIAgentRoutes(app: any) {
         success: true,
         answer: aiResponse.answer,
         sourceDocuments: aiResponse.sourceDocuments,
+        relevantBlogPosts: aiResponse.relevantBlogPosts,
+        shouldCreateBlogPost: aiResponse.shouldCreateBlogPost,
         blogPost: blogPost // Vraćamo podatke o kreiranom blog postu (ako je kreiran)
       });
     } catch (error: any) {
