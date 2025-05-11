@@ -2,7 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedBlogPosts } from "./scripts/seed-blog-posts";
-import path from "path";
 
 const app = express();
 // Health check route premešten na /api/health
@@ -57,10 +56,6 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     });
 
-    // Za rutu '/' uvek koristimo serveStatic da bismo prikazali frontend
-    app.use('/', express.static(path.resolve(import.meta.dirname, '..', 'client')));
-    
-    // Za ostal slučajeve koristimo setupVite ili serveStatic u zavisnosti od režima
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
