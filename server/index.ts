@@ -44,8 +44,8 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Add health check route first
-    app.get('/', (_req: Request, res: Response) => {
+    // Dodajemo health check na zasebnu rutu umesto na '/'
+    app.get('/api/health', (_req: Request, res: Response) => {
       res.status(200).send('OK');
     });
 
