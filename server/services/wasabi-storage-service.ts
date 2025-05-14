@@ -42,8 +42,20 @@ const WASABI_ENDPOINT = 'https://s3.eu-west-2.wasabisys.com';
 
 class WasabiStorageService {
   private s3Client: S3Client;
+  private cache: Map<string, {
+    buffer: Buffer,
+    timestamp: number,
+    hits: number
+  }>;
+  private readonly CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+  private readonly MAX_CACHE_SIZE = 100; // Maximum number of cached items
+  private readonly MIN_HITS_FOR_CACHE = 3; // Minimum hits to keep in cache
 
   constructor() {
+    this.cache = new Map();
+    
+    // Clean cache periodically
+    setInterval(() => this.cleanCache(), 1000 * 60 * 5); // Every 5 minutes
     // Pravimo Wasabi klijenta koristeći AWS SDK za S3
     this.s3Client = new S3Client({
       region: WASABI_REGION,
@@ -102,7 +114,36 @@ class WasabiStorageService {
    * @param bucket Opciono ime bucket-a (defaultno koristnički dokumenti)
    * @returns Buffer sa sadržajem fajla
    */
+  private cleanCache(): void {
+    const now = Date.now();
+    for (const [key, value] of this.cache.entries()) {
+      if (now - value.timestamp > this.CACHE_TTL || value.hits < this.MIN_HITS_FOR_CACHE) {
+        this.cache.delete(key);
+      }
+    }
+    
+    // If still over size limit, remove least accessed items
+    if (this.cache.size > this.MAX_CACHE_SIZE) {
+      const entries = Array.from(this.cache.entries())
+        .sort((a, b) => b[1].hits - a[1].hits)
+        .slice(0, this.MAX_CACHE_SIZE);
+      
+      this.cache.clear();
+      entries.forEach(([key, value]) => this.cache.set(key, value));
+    }
+  }
+
   async getFile(key: string, bucket?: string): Promise<Buffer> {
+    const cacheKey = `${bucket || WASABI_USER_DOCUMENTS_BUCKET}:${key}`;
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      cached.hits++;
+      cached.timestamp = Date.now();
+      return cached.buffer;
+    }
+
     try {
       const bucketName = bucket || WASABI_USER_DOCUMENTS_BUCKET;
 
@@ -120,7 +161,16 @@ class WasabiStorageService {
         }
       }
 
-      return Buffer.concat(chunks);
+      const buffer = Buffer.concat(chunks);
+      
+      // Cache the result
+      this.cache.set(cacheKey, {
+        buffer,
+        timestamp: Date.now(),
+        hits: 1
+      });
+
+      return buffer;
     } catch (error) {
       console.error('Greška pri preuzimanju fajla sa Wasabi-ja:', error);
       throw error;
