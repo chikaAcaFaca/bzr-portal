@@ -11,7 +11,9 @@ import {
   employeeTrainings, type EmployeeTraining, type InsertEmployeeTraining,
   commonInstructions, type CommonInstruction, type InsertCommonInstruction,
   knowledgeReferences, type KnowledgeReference, type InsertKnowledgeReference,
-  blogPosts, type BlogPost, type InsertBlogPost
+  blogPosts, type BlogPost, type InsertBlogPost,
+  clientDocuments, type ClientDocument, type InsertClientDocument,
+  generatedDocuments, type GeneratedDocument, type InsertGeneratedDocument
 } from "@shared/schema";
 
 export interface IStorage {
@@ -24,6 +26,29 @@ export interface IStorage {
   createUserFromAuth(authUser: { id: string; email: string; created_at: Date }): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   getUsersByRole(role: string): Promise<User[]>;
+  
+  // Client Documents
+  getClientDocument(id: number): Promise<ClientDocument | undefined>;
+  getClientDocumentsByUser(userId: number | string): Promise<ClientDocument[]>;
+  getClientDocumentsByCompany(companyId: number): Promise<ClientDocument[]>;
+  getClientDocumentsByType(documentType: string, userId: number | string): Promise<ClientDocument[]>;
+  getAllClientDocuments(): Promise<ClientDocument[]>;
+  createClientDocument(document: InsertClientDocument): Promise<ClientDocument>;
+  updateClientDocument(id: number, document: Partial<InsertClientDocument>): Promise<ClientDocument | undefined>;
+  markClientDocumentAsProcessed(id: number, extractedText: string, notes?: string): Promise<ClientDocument | undefined>;
+  deleteClientDocument(id: number): Promise<boolean>;
+  
+  // Generated Documents
+  getGeneratedDocument(id: number): Promise<GeneratedDocument | undefined>;
+  getGeneratedDocumentsByUser(userId: number | string): Promise<GeneratedDocument[]>;
+  getGeneratedDocumentsByCompany(companyId: number): Promise<GeneratedDocument[]>;
+  getGeneratedDocumentsByType(documentType: string, userId: number | string): Promise<GeneratedDocument[]>;
+  getGeneratedDocumentsByStatus(status: string, userId?: number | string): Promise<GeneratedDocument[]>;
+  getAllGeneratedDocuments(): Promise<GeneratedDocument[]>;
+  createGeneratedDocument(document: InsertGeneratedDocument): Promise<GeneratedDocument>;
+  updateGeneratedDocument(id: number, document: Partial<InsertGeneratedDocument>): Promise<GeneratedDocument | undefined>;
+  updateGeneratedDocumentStatus(id: number, status: string, notes?: string): Promise<GeneratedDocument | undefined>;
+  deleteGeneratedDocument(id: number): Promise<boolean>;
 
   // Base Documents
   getBaseDocument(id: number): Promise<BaseDocument | undefined>;
@@ -137,6 +162,8 @@ export class MemStorage implements IStorage {
   private commonInstructions: Map<number, CommonInstruction>;
   private knowledgeReferences: Map<number, KnowledgeReference>;
   private blogPosts: Map<number, BlogPost>;
+  private clientDocuments: Map<number, ClientDocument>;
+  private generatedDocuments: Map<number, GeneratedDocument>;
   
   private userCurrentId: number;
   private baseDocumentCurrentId: number;
@@ -151,6 +178,8 @@ export class MemStorage implements IStorage {
   private commonInstructionCurrentId: number;
   private knowledgeReferenceCurrentId: number;
   private blogPostCurrentId: number;
+  private clientDocumentCurrentId: number;
+  private generatedDocumentCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -830,6 +859,167 @@ export class MemStorage implements IStorage {
     };
     this.blogPosts.set(id, updatedPost);
     return updatedPost;
+  }
+  
+  // Client Documents
+  async getClientDocument(id: number): Promise<ClientDocument | undefined> {
+    return this.clientDocuments.get(id);
+  }
+
+  async getClientDocumentsByUser(userId: number | string): Promise<ClientDocument[]> {
+    return Array.from(this.clientDocuments.values()).filter(
+      (doc) => doc.userId === Number(userId)
+    );
+  }
+
+  async getClientDocumentsByCompany(companyId: number): Promise<ClientDocument[]> {
+    return Array.from(this.clientDocuments.values()).filter(
+      (doc) => doc.companyId === companyId
+    );
+  }
+
+  async getClientDocumentsByType(documentType: string, userId: number | string): Promise<ClientDocument[]> {
+    return Array.from(this.clientDocuments.values()).filter(
+      (doc) => doc.documentType === documentType && doc.userId === Number(userId)
+    );
+  }
+
+  async getAllClientDocuments(): Promise<ClientDocument[]> {
+    return Array.from(this.clientDocuments.values());
+  }
+
+  async createClientDocument(document: InsertClientDocument): Promise<ClientDocument> {
+    const id = this.clientDocumentCurrentId++;
+    const now = new Date();
+    
+    const clientDocument: ClientDocument = {
+      ...document,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.clientDocuments.set(id, clientDocument);
+    return clientDocument;
+  }
+
+  async updateClientDocument(id: number, document: Partial<InsertClientDocument>): Promise<ClientDocument | undefined> {
+    const existingDocument = this.clientDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const now = new Date();
+    const updatedDocument: ClientDocument = {
+      ...existingDocument,
+      ...document,
+      updatedAt: now
+    };
+    
+    this.clientDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async markClientDocumentAsProcessed(id: number, extractedText: string, notes?: string): Promise<ClientDocument | undefined> {
+    const existingDocument = this.clientDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const now = new Date();
+    const updatedDocument: ClientDocument = {
+      ...existingDocument,
+      isProcessed: true,
+      extractedText,
+      processingNotes: notes || existingDocument.processingNotes,
+      updatedAt: now
+    };
+    
+    this.clientDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async deleteClientDocument(id: number): Promise<boolean> {
+    return this.clientDocuments.delete(id);
+  }
+
+  // Generated Documents
+  async getGeneratedDocument(id: number): Promise<GeneratedDocument | undefined> {
+    return this.generatedDocuments.get(id);
+  }
+
+  async getGeneratedDocumentsByUser(userId: number | string): Promise<GeneratedDocument[]> {
+    return Array.from(this.generatedDocuments.values()).filter(
+      (doc) => doc.userId === Number(userId)
+    );
+  }
+
+  async getGeneratedDocumentsByCompany(companyId: number): Promise<GeneratedDocument[]> {
+    return Array.from(this.generatedDocuments.values()).filter(
+      (doc) => doc.companyId === companyId
+    );
+  }
+
+  async getGeneratedDocumentsByType(documentType: string, userId: number | string): Promise<GeneratedDocument[]> {
+    return Array.from(this.generatedDocuments.values()).filter(
+      (doc) => doc.documentType === documentType && doc.userId === Number(userId)
+    );
+  }
+
+  async getGeneratedDocumentsByStatus(status: string, userId?: number | string): Promise<GeneratedDocument[]> {
+    return Array.from(this.generatedDocuments.values()).filter(
+      (doc) => doc.generationStatus === status && (userId ? doc.userId === Number(userId) : true)
+    );
+  }
+
+  async getAllGeneratedDocuments(): Promise<GeneratedDocument[]> {
+    return Array.from(this.generatedDocuments.values());
+  }
+
+  async createGeneratedDocument(document: InsertGeneratedDocument): Promise<GeneratedDocument> {
+    const id = this.generatedDocumentCurrentId++;
+    const now = new Date();
+    
+    const generatedDocument: GeneratedDocument = {
+      ...document,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.generatedDocuments.set(id, generatedDocument);
+    return generatedDocument;
+  }
+
+  async updateGeneratedDocument(id: number, document: Partial<InsertGeneratedDocument>): Promise<GeneratedDocument | undefined> {
+    const existingDocument = this.generatedDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const now = new Date();
+    const updatedDocument: GeneratedDocument = {
+      ...existingDocument,
+      ...document,
+      updatedAt: now
+    };
+    
+    this.generatedDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async updateGeneratedDocumentStatus(id: number, status: string, notes?: string): Promise<GeneratedDocument | undefined> {
+    const existingDocument = this.generatedDocuments.get(id);
+    if (!existingDocument) return undefined;
+    
+    const now = new Date();
+    const updatedDocument: GeneratedDocument = {
+      ...existingDocument,
+      generationStatus: status as any,
+      generationNotes: notes !== undefined ? notes : existingDocument.generationNotes,
+      updatedAt: now
+    };
+    
+    this.generatedDocuments.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async deleteGeneratedDocument(id: number): Promise<boolean> {
+    return this.generatedDocuments.delete(id);
   }
   
   async deleteBlogPost(id: number): Promise<boolean> {
