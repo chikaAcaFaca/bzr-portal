@@ -80,12 +80,44 @@ export function DocumentProcessorUploadForm() {
     setProcessingResults(null);
   };
 
+  const [processingProgress, setProcessingProgress] = useState<number>(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setProcessingResults(null);
+      setProcessingProgress(0);
     }
+  }
+
+  const trackProgress = async (docId: string) => {
+    const eventSource = new EventSource(`/api/process/job-positions-file?docId=${docId}`);
+    
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.progress) {
+        setProcessingProgress(data.progress);
+      }
+      
+      if (data.type === 'completed') {
+        setIsProcessing(false);
+        eventSource.close();
+        // Handle completion
+      }
+      
+      if (data.type === 'failed') {
+        setIsProcessing(false);
+        eventSource.close();
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: data.error
+        });
+      }
+    };
   };
 
   const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {

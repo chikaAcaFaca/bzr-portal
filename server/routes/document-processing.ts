@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { openRouterService } from '../services/openrouter-service';
 import { db } from '../db';
 import { jobPositions, riskCategories, risks } from '../../shared/schema';
+import { documentQueueService } from '../services/document-queue-service';
+import { upload } from '../middleware/upload-middleware';
 
 export async function setupDocumentProcessingRoutes(app: any) {
   // Endpoint za generisanje kategorija rizika na osnovu postojećih radnih mesta
@@ -9,7 +11,7 @@ export async function setupDocumentProcessingRoutes(app: any) {
     try {
       // Dobavi sva radna mesta iz baze
       const positions = await db.select().from(jobPositions);
-      
+
       if (!positions.length) {
         return res.status(400).json({
           success: false,
@@ -37,13 +39,13 @@ export async function setupDocumentProcessingRoutes(app: any) {
             description: category.description,
             riskLevel: category.riskLevel
           }).returning();
-          
+
           // Za svaki ID radnog mesta, poveži sa kategorijom rizika
           if (category.jobPositionIds && category.jobPositionIds.length > 0) {
             for (const jobId of category.jobPositionIds) {
               // Proveri da li radno mesto postoji
               const [position] = await db.select().from(jobPositions).where(({ id }) => id.equals(jobId));
-              
+
               if (position) {
                 // Ažuriraj radno mesto sa kategorijom rizika
                 await db.update(jobPositions)
@@ -52,7 +54,7 @@ export async function setupDocumentProcessingRoutes(app: any) {
               }
             }
           }
-          
+
           // Dodaj dummy rizike za svaku kategoriju
           const defaultRisks = [
             {
@@ -68,11 +70,11 @@ export async function setupDocumentProcessingRoutes(app: any) {
               preventionMeasures: ['Upotreba zaštitne opreme', 'Redovni zdravstveni pregledi']
             }
           ];
-          
+
           for (const risk of defaultRisks) {
             await db.insert(risks).values(risk);
           }
-          
+
           savedCategories.push({
             ...savedCategory,
             jobPositions: category.jobPositionIds || []
@@ -93,6 +95,45 @@ export async function setupDocumentProcessingRoutes(app: any) {
         success: false,
         error: error.message || 'Interna greška servera'
       });
+    }
+  });
+
+  // Endpoint za obradu radnih mesta iz fajla
+  app.post('/api/process/job-positions-file', upload.single('file'), async (req: Request, res: Response) => {
+    // Set up SSE for progress tracking
+    if (req.headers.accept === 'text/event-stream') {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const docId = req.query.docId as string;
+      if (!docId) {
+        res.write('data: {"error": "Missing document ID"}\n\n');
+        res.end();
+        return;
+      }
+
+      documentQueueService.onProgress((data) => {
+        if (data.id === docId) {
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+        }
+      });
+
+      documentQueueService.onCompleted((data) => {
+        if (data.id === docId) {
+          res.write(`data: ${JSON.stringify({ ...data, type: 'completed' })}\n\n`);
+          res.end();
+        }
+      });
+
+      documentQueueService.onFailed((data) => {
+        if (data.id === docId) {
+          res.write(`data: ${JSON.stringify({ ...data, type: 'failed' })}\n\n`);
+          res.end();
+        }
+      });
+
+      return;
     }
   });
 }
