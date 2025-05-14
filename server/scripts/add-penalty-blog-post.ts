@@ -108,7 +108,7 @@ Poslodavci bi trebalo da shvate osiguranje zaposlenih ne samo kao zakonsku obave
 Poštovanje zakonske obaveze osiguranja zaposlenih predstavlja temelj odgovornog poslovanja i doprinosi stvaranju bezbednog i zdravog radnog okruženja za sve zaposlene.`;
     
     const excerpt = 'Detaljno objašnjenje kaznenih odredbi Zakona o bezbednosti i zdravlju na radu, s posebnim osvrtom na obavezu osiguranja zaposlenih prema članu 67 i kazne za nepoštovanje ove obaveze prema članu 101.';
-    const imageUrl = '/kaznene-odredbe-banner.svg';
+    const imageUrl = '/blog-images/kaznene-odredbe-cover.png';
     
     // Kreiranje blog posta
     const blogPost = await storage.createBlogPost({

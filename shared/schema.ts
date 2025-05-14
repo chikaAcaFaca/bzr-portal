@@ -389,3 +389,78 @@ export type InsertKnowledgeReference = z.infer<typeof insertKnowledgeReferenceSc
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+// Enum za tipove korisničkih dokumenata
+export const clientDocumentTypeEnum = pgEnum('client_document_type', [
+  'ugovor_o_radu', 
+  'sistematizacija', 
+  'opis_poslova',
+  'akt_o_proceni_rizika',
+  'pravilnik_bzr',
+  'obuka_zaposlenih',
+  'lekarski_pregled',
+  'osiguranje',
+  'ostalo'
+]);
+
+// Enum za status generisanja dokumenta
+export const documentGenerationStatusEnum = pgEnum('document_generation_status', [
+  'na_cekanju',
+  'u_toku',
+  'zavrseno',
+  'greska'
+]);
+
+// Korisnički dokumenti
+export const clientDocuments = pgTable("client_documents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // ID korisnika koji je postavio dokument
+  companyId: integer("company_id").notNull(), // ID kompanije kojoj dokument pripada
+  title: text("title").notNull(), // Naslov dokumenta
+  description: text("description"), // Opis dokumenta
+  documentType: clientDocumentTypeEnum("document_type").notNull(), // Tip dokumenta
+  wasabiPath: text("wasabi_path").notNull(), // Putanja do dokumenta na Wasabi storidžu
+  originalFilename: text("original_filename").notNull(), // Originalno ime fajla
+  fileSize: integer("file_size").notNull(), // Veličina fajla u bajtovima
+  mimeType: text("mime_type").notNull(), // MIME tip fajla
+  isProcessed: boolean("is_processed").notNull().default(false), // Da li je dokument obrađen od strane AI
+  processingNotes: text("processing_notes"), // Beleške o obradi dokumenta
+  extractedText: text("extracted_text"), // Izvučeni tekst iz dokumenta
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertClientDocumentSchema = createInsertSchema(clientDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Generisani dokumenti
+export const generatedDocuments = pgTable("generated_documents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // ID korisnika za kojeg je generisan dokument
+  companyId: integer("company_id").notNull(), // ID kompanije za koju je generisan dokument
+  title: text("title").notNull(), // Naslov generisanog dokumenta
+  description: text("description"), // Opis dokumenta
+  documentType: clientDocumentTypeEnum("document_type").notNull(), // Tip generisanog dokumenta
+  wasabiPath: text("wasabi_path"), // Putanja do generisanog dokumenta na Wasabi storidžu
+  content: text("content").notNull(), // Sadržaj generisanog dokumenta
+  sourceDocumentIds: integer("source_document_ids").array(), // ID-jevi izvornih dokumenata
+  generationStatus: documentGenerationStatusEnum("generation_status").notNull(), // Status generisanja
+  generationNotes: text("generation_notes"), // Beleške o generisanju
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertGeneratedDocumentSchema = createInsertSchema(generatedDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ClientDocument = typeof clientDocuments.$inferSelect;
+export type InsertClientDocument = z.infer<typeof insertClientDocumentSchema>;
+
+export type GeneratedDocument = typeof generatedDocuments.$inferSelect;
+export type InsertGeneratedDocument = z.infer<typeof insertGeneratedDocumentSchema>;
