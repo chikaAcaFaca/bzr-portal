@@ -1,0 +1,92 @@
+Opis funkcionalnosti platforme: BZR-Portal.com
+BZR-Portal.com je specijalizovana online platforma namenjena stručnjacima iz oblasti bezbednosti i zdravlja na radu (BZR), kao i zaštite na radu uopšte. Portal omogućava profesionalno upravljanje dokumentacijom, automatizaciju procesa izrade akata, vođenje evidencija, kao i pravovremeno informisanje i podsećanje na zakonske i operativne obaveze.
+
+1. Korisnički prostor i skladištenje podataka
+Svaki korisnik na platformi dobija određenu količinu prostora za skladištenje dokumenata, u rasponu od 50MB do 50GB, u zavisnosti od tipa naloga (Free ili PRO).
+
+Za skladištenje dokumenata koristi se Wasabi.com cloud storage.
+
+Svaki korisnik ima svoj izolovani prostor (directory ili bucket) koji je zaštićen i nevidljiv drugim korisnicima.
+
+Svi korisnički dokumenti tretiraju se kao poverljivi (ugovori, sistematizacija radnih mesta, akti sa ličnim podacima itd.) i moraju biti zaštićeni u skladu sa pravilima o zaštiti poslovne tajne i GDPR-om.
+
+Baza znanja AI agenta nalazi se u posebnom, izdvojenom bucket-u, odvojenom od korisničkih fajlova.
+
+2. AI asistent za dokumentaciju i preporuke
+Korisnici sa PRO članstvom mogu koristiti AI asistenta za:
+
+Automatsku izradu dokumenata koji nedostaju (npr. Akt o proceni rizika, različite evidencije, analize).
+
+Analizu priloženih dokumenata i identifikaciju dokumenata koji nedostaju.
+
+AI asistent daje preporuke za izradu novih dokumenata na osnovu:
+
+Uvida u postojeću dokumentaciju,
+
+Zakonskih obaveza,
+
+Znanja iz baze i prethodnog iskustva (fine-tuned model).
+
+Kada dokumentacija zahteva dodatne informacije koje nisu dostupne (npr. ime i prezime radnika, JMBG, adresa), agent traži te podatke direktno od korisnika.
+
+Na osnovu stečenog znanja i sličnih prethodnih zadataka, agent postaje sve autonomniji i stručniji u predlaganju rešenja.
+
+3. Korisnički dashboard
+Dashboard prikazuje:
+
+Sve do sada urađene zadatke i dokumente,
+
+Kalendar sa nadolazećim obavezama, koje se unose ručno ili automatski.
+
+Primer automatskog unosa: slanje radnika na lekarski pregled (prethodni ili periodični), u skladu sa pravilima za konkretno radno mesto (npr. na svake 1, 2 ili 3 godine).
+
+Kalendar i dashboard omogućavaju pravovremeno planiranje i izvršavanje zakonskih obaveza.
+
+4. Sistemske notifikacije i zakonske promene
+Platforma redovno obaveštava korisnike o:
+
+Zakonskim izmenama i novim obavezama koje se odnose na oblast BZR,
+
+Opštim i sistemskim obavezama (npr. nova pravila, nove uredbe),
+
+Obavezama koje su korisnički specifične (na osnovu dokumentacije).
+
+5. AI asistent kao edukativni i informativni alat (BZR Blog AI)
+Korisnici mogu postavljati pitanja AI asistentu iz oblasti bezbednosti i zdravlja na radu.
+
+Odgovor koji agent generiše koristi se i kao osnova za automatski blog post, koji sadrži:
+
+Konkretnu informaciju i stručan odgovor,
+
+Edukativni sadržaj,
+
+Suptilan poziv na akciju (engagement element).
+
+Sadržaj se automatski šalje Admin panelu na pregled. Administrator može:
+
+Izmeniti naslov, sliku, ili deo sadržaja,
+
+Ili jednostavno odobriti post za objavu.
+
+Na taj način, svako korisno pitanje obogaćuje zajedničku bazu znanja i blog sekciju portala.
+
+Napomena: Agent odgovara isključivo na pitanja iz domena bezbednosti i zdravlja na radu. Na pitanja koja nisu relevantna ne odgovara i ne kreira blog sadržaj.
+
+Tehničke i sigurnosne smernice
+Svaki korisnik mora imati izolovan, bezbedan prostor za dokumentaciju.
+
+Bucket za znanje AI agenta mora biti odvojen od korisničkih dokumenata.
+
+Sve operacije AI agenta moraju biti logovane, radi kasnijeg pregleda, revizije i eventualnog otklanjanja grešaka.
+
+Agent mora raditi na osnovu INSTRUCTIONS.md fajla koji opisuje:
+
+Arhitekturu sistema,
+
+Pravila pristupa,
+
+Dozvoljene vrste operacija,
+
+Pravila zaštite podataka,
+
+Pravila za generisanje sadržaja (dokument, blog, odgovor)
