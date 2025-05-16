@@ -13,6 +13,8 @@ interface AppConfig {
   openrouterApiKey: string | undefined;
   geminiApiKey: string | undefined;
   anthropicApiKey: string | undefined;
+  stabilityApiKey?: string;
+  huggingfaceApiKey?: string;
 }
 
 // Konfiguracione vrednosti iz env varijabli
@@ -28,5 +30,7 @@ export const config: AppConfig = {
   },
   openrouterApiKey: process.env.OPENROUTER_API_KEY,
   geminiApiKey: process.env.GEMINI_API_KEY,
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+  stabilityApiKey: process.env.STABILITY_API_KEY,
+  huggingfaceApiKey: process.env.HUGGINGFACE_API_KEY
 };

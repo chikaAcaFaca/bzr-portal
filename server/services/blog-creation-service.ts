@@ -3,6 +3,8 @@ import { InsertBlogPost } from '@shared/schema';
 import { transliterate } from '../utils/transliterate';
 import { notificationService } from './notification-service';
 import { SitemapService } from './sitemap-service';
+import fs from 'fs';
+import axios from 'axios';
 
 // Protokol i host za domen
 const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
@@ -222,14 +224,36 @@ class BlogCreationService {
   }
 
   /**
-   * Dobavlja relevantnu sliku za blog post
+   * Dobavlja relevantnu sliku za blog post koristeći AI generisanje slika
    */
   private async getImageForBlogPost(title: string, category: string): Promise<string> {
-    // Ova funkcija bi trebala da koristi neki servis za dobavljanje slika
-    // poput Unsplash API ili Pixabay API
-    // Za sada vraćamo neki default URL
+    try {
+      // Uvezemo servis za generisanje slika
+      const { imageGenerationService } = await import('./image-generation-service');
+      
+      // Generišemo optimizovani prompt za sliku
+      const prompt = imageGenerationService.getOptimizedPrompt(title, category);
+      
+      // Pokušavamo generisati sliku
+      console.log('Generisanje slike za blog post:', title);
+      console.log('Prompt za sliku:', prompt);
+      
+      const imageUrl = await imageGenerationService.generateImage(prompt, {
+        width: 1200,
+        height: 630,
+        category
+      });
+      
+      if (imageUrl) {
+        console.log('Uspešno generisana AI slika za blog post:', imageUrl);
+        return imageUrl;
+      }
+    } catch (error) {
+      console.error('Greška pri generisanju AI slike:', error);
+      // Nastavljamo sa default slikama ako je došlo do greške
+    }
     
-    // Mapiranje kategorija na predefinisane slike
+    // Mapiranje kategorija na predefinisane slike (fallback opcija)
     const categoryImages: Record<string, string> = {
       'general': 'https://images.unsplash.com/photo-1618044733300-9472054094ee?q=80&w=1000',
       'regulative': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=1000',
@@ -239,6 +263,7 @@ class BlogCreationService {
     };
     
     // Vrati sliku za kategoriju, ili default sliku ako kategorija ne postoji
+    console.log('Korišćenje default slike za kategoriju:', category);
     return categoryImages[category] || categoryImages['general'];
   }
   

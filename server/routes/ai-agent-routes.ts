@@ -92,6 +92,8 @@ export async function setupAIAgentRoutes(app: any) {
             tags: ['ai-generisano', 'bzr', 'bezbednost']
           });
           
+          console.log(`Blog post kreiran sa slikom: ${blogPost.imageUrl}`);
+          
           console.log(`Blog post kreiran! ID: ${blogPost.id}, Naslov: ${blogPost.title}`);
           blogCreationStatus = "created";
           
