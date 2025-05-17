@@ -1,8 +1,8 @@
 
-const ftp = require("basic-ftp");
+import { Client } from "basic-ftp";
 
 async function uploadFiles() {
-    const client = new ftp.Client();
+    const client = new Client();
     try {
         await client.access({
             host: process.env.FTP_HOST || "your-ftp-host",
