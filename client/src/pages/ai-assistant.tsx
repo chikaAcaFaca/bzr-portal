@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, SendHorizontal, FileText, Upload, BookOpen, ExternalLink } from 'lucide-react';
+import { Loader2, SendHorizontal, FileText, Upload, BookOpen, ExternalLink, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
+
+// Tipovi za Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -42,6 +50,9 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [showSources, setShowSources] = useState<Record<number, boolean>>({});
   const [showBlogPosts, setShowBlogPosts] = useState<Record<number, boolean>>({});
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
   const { toast } = useToast();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -52,6 +63,39 @@ export default function AIAssistant() {
   React.useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Inicijalizuj speech recognition
+  React.useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'sr-RS';
+      
+      recognitionInstance.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        toast({
+          title: 'Greška',
+          description: 'Greška pri prepoznavanju govora',
+          variant: 'destructive'
+        });
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
+  }, [toast]);
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
@@ -107,6 +151,11 @@ export default function AIAssistant() {
       
       setMessages(prevMessages => [...prevMessages, assistantMessage]);
       
+      // Automatski izgovori odgovor
+      setTimeout(() => {
+        speakText(data.answer);
+      }, 500);
+      
       // Ako je kreiran novi blog post, prikaži obaveštenje
       if (data.blogPost) {
         toast({
@@ -147,6 +196,68 @@ export default function AIAssistant() {
     }
   };
 
+  // Text-to-speech funkcija
+  const speakText = (text: string) => {
+    if ('speechSynthesis' in window) {
+      // Prekini trenutni govor
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Konfiguracija za mlađi muški glas - srećan i razdragan
+      utterance.rate = 1.1; // Brzina govora
+      utterance.pitch = 1.2; // Viši ton za mlađi zvuk
+      utterance.volume = 0.8; // Glasnoća
+      utterance.lang = 'sr-RS'; // Srpski jezik
+      
+      // Pokušaj pronaći muški glas
+      const voices = window.speechSynthesis.getVoices();
+      const serbianVoice = voices.find(voice => 
+        voice.lang.includes('sr') || voice.lang.includes('rs')
+      );
+      
+      if (serbianVoice) {
+        utterance.voice = serbianVoice;
+      }
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Speech-to-text funkcija
+  const startListening = () => {
+    if (recognition && !isListening) {
+      setIsListening(true);
+      recognition.start();
+    }
+  };
+
+  const stopListening = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsListening(false);
+    }
+  };
+
+  const toggleSpeech = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-w-6xl mx-auto">
       <div className="flex flex-col gap-6 py-8 px-4 md:px-8">
@@ -182,6 +293,21 @@ export default function AIAssistant() {
                       }`}
                     >
                       <div className="whitespace-pre-wrap">{message.content}</div>
+                      
+                      {/* Dugme za izgovaranje odgovora */}
+                      {message.role === 'assistant' && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => speakText(message.content)}
+                            className="text-xs"
+                          >
+                            {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                            {isSpeaking ? 'Prekini' : 'Izgovori'}
+                          </Button>
+                        </div>
+                      )}
                       
                       {/* Prikaz relevantnih blog postova ako postoje */}
                       {message.role === 'assistant' && message.relevantBlogPosts && message.relevantBlogPosts.length > 0 && (
@@ -292,13 +418,33 @@ export default function AIAssistant() {
                 </Tooltip>
               </TooltipProvider>
               
+              {/* Dugme za speech-to-text */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="icon" 
+                      variant={isListening ? "default" : "outline"}
+                      className="flex-shrink-0"
+                      onClick={toggleListening}
+                      disabled={loading}
+                    >
+                      {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isListening ? 'Prekini slušanje' : 'Govori pitanje'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
               <Textarea
-                placeholder="Postavite pitanje o bezbednosti i zdravlju na radu..."
+                placeholder={isListening ? "Slušam vas..." : "Postavite pitanje o bezbednosti i zdravlju na radu..."}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="flex-1 min-h-[60px] resize-none"
-                disabled={loading}
+                disabled={loading || isListening}
               />
               
               <Button
