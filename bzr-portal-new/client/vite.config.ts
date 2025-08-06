@@ -15,7 +15,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           supabase: ['@supabase/supabase-js'],
-          ui: ['lucide-react', 'react-router-dom']
+          ui: ['lucide-react', 'wouter']
         }
       }
     },
@@ -59,7 +59,7 @@ export default defineConfig({
       'react',
       'react-dom', 
       '@supabase/supabase-js',
-      'react-router-dom',
+      'wouter',
       'lucide-react'
     ]
   }
